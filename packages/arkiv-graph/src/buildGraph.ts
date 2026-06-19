@@ -34,6 +34,23 @@ function walletLabel(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
+/** The display label an edge gets for a rule. Shared by buildGraph (edge labels)
+ *  and buildTables (relationship summary) so the two views never disagree. */
+export function labelForRule(rule: LinkRule): string {
+  switch (rule.type) {
+    case "reference":
+      return rule.label ?? rule.attribute;
+    case "shared":
+      return rule.label ?? rule.attribute;
+    case "join":
+      return rule.label ?? rule.entityType;
+    case "tag":
+      return rule.attribute;
+    case "owner":
+      return rule.label ?? (rule.byCreator ? "created by" : "owned by");
+  }
+}
+
 /**
  * Turn a flat list of Arkiv entities into a graph. Nodes are entities; edges are
  * derived from the `links` you supply (Arkiv has no native joins, so YOU declare
@@ -95,9 +112,17 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
   // ── 2. external chain nodes (from references the entities already store) ─────
   if (options.external?.enabled !== false) {
     const internalKeys = new Set(byKey.keys());
+    // a top-level nativeChainId is folded into external.nativeChainIds
+    const externalCfg = {
+      ...options.external,
+      nativeChainIds: [
+        ...(options.external?.nativeChainIds ?? []),
+        ...(options.nativeChainId != null ? [options.nativeChainId] : []),
+      ],
+    };
     for (const key of entityNodeKeys) {
       const e = byKey.get(key);
-      if (e) addExternalForEntity(e, key, options.external, ensureNode, addEdge, internalKeys);
+      if (e) addExternalForEntity(e, key, externalCfg, ensureNode, addEdge, internalKeys);
     }
   }
 
@@ -129,7 +154,7 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
             source: key,
             target: id,
             kind: "owner",
-            label: rule.label ?? (rule.byCreator ? "created by" : "owned by"),
+            label: labelForRule(rule),
             directed: true,
           });
         }
@@ -146,7 +171,7 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
               source: key,
               target: id,
               kind: "tag",
-              label: rule.attribute,
+              label: labelForRule(rule),
               attribute: rule.attribute,
             });
           }
@@ -202,7 +227,7 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
             source: key,
             target: tk,
             kind: "reference",
-            label: rule.label ?? rule.attribute,
+            label: labelForRule(rule),
             attribute: rule.attribute,
             directed: rule.directed !== false,
           });
@@ -234,7 +259,7 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
                 source: m,
                 target: hubId,
                 kind: "shared",
-                label: rule.label ?? rule.attribute,
+                label: labelForRule(rule),
                 attribute: rule.attribute,
               });
             }
@@ -249,7 +274,7 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
                   source: a,
                   target: b,
                   kind: "shared",
-                  label: rule.label ?? rule.attribute,
+                  label: labelForRule(rule),
                   attribute: rule.attribute,
                 });
               }
@@ -301,7 +326,7 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
             source: sId,
             target: dId,
             kind: "join",
-            label: rule.label ?? rule.entityType,
+            label: labelForRule(rule),
             directed: rule.directed !== false,
             viaEntityKey: e.key,
           });

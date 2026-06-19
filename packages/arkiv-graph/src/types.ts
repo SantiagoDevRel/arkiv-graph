@@ -229,4 +229,10 @@ export interface BuildGraphOptions {
   createPlaceholders?: boolean;
   /** explorer base for Arkiv entity nodes, no trailing slash. */
   arkivExplorer?: string;
+  /**
+   * The active Arkiv chain id — treated as "native" (never external). Convenience
+   * for direct buildGraph consumers; equivalent to setting `external.nativeChainIds`.
+   * Defaults to Braga when neither is set.
+   */
+  nativeChainId?: number;
 }

@@ -1,21 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ArkivGraph } from "arkiv-graph/react";
-import type { Graph } from "arkiv-graph";
+import { ArkivGraph, ArkivTables } from "arkiv-graph/react";
+import type { Graph, TablesModel } from "arkiv-graph";
 
 interface GraphResponse {
   mode: "demo" | "wallet";
   address: string;
   blockTiming: { currentBlock: number; currentBlockTime: number; blockDuration: number } | null;
   graph: Graph;
+  tables: TablesModel;
 }
 
 const HANDLES = ["alice", "bob", "carol", "dave", "erin", "frank"];
 const ADDR_RE = /^0x[0-9a-fA-F]{40}$/;
 
-export function Showcase({ writesEnabled, owner }: { writesEnabled: boolean; project: string; owner: string }) {
+export function Showcase({ writesEnabled, owner, networkName }: { writesEnabled: boolean; project: string; owner: string; networkName: string }) {
   const [mode, setMode] = useState<"demo" | "wallet">("demo");
+  const [view, setView] = useState<"graph" | "tables">("graph");
   const [addressInput, setAddressInput] = useState("");
   const [activeAddress, setActiveAddress] = useState<string | null>(null);
   const [data, setData] = useState<GraphResponse | null>(null);
@@ -112,6 +114,15 @@ export function Showcase({ writesEnabled, owner }: { writesEnabled: boolean; pro
           </button>
         </div>
 
+        <div className="seg">
+          <button className={view === "graph" ? "active" : ""} onClick={() => setView("graph")}>
+            ◍ Graph
+          </button>
+          <button className={view === "tables" ? "active" : ""} onClick={() => setView("tables")}>
+            ▦ Tables
+          </button>
+        </div>
+
         {mode === "wallet" ? (
           <form className="addr-form" onSubmit={submitAddress}>
             <input
@@ -137,7 +148,11 @@ export function Showcase({ writesEnabled, owner }: { writesEnabled: boolean; pro
 
       <div className="graph-shell">
         {g && g.nodes.length > 0 ? (
-          <ArkivGraph data={g} height={600} />
+          view === "tables" && data?.tables ? (
+            <ArkivTables model={data.tables} graph={g} height={600} />
+          ) : (
+            <ArkivGraph data={g} height={600} />
+          )
         ) : (
           <div style={{ height: 600, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)", textAlign: "center", padding: 20 }}>
             {loading
@@ -147,7 +162,7 @@ export function Showcase({ writesEnabled, owner }: { writesEnabled: boolean; pro
                 : mode === "wallet" && !activeAddress
                   ? "Paste a wallet address above to see its Arkiv entities as a graph."
                   : mode === "wallet"
-                    ? "This wallet currently owns 0 live entities on Braga. Arkiv entities expire by design — they may have lapsed, or live on a different network."
+                    ? `This wallet currently owns 0 live entities on ${networkName}. Arkiv entities expire by design — they may have lapsed, or live on a different network.`
                     : "No entities found. Has the demo been seeded? (run `pnpm seed`)"}
           </div>
         )}
@@ -174,8 +189,8 @@ export function Showcase({ writesEnabled, owner }: { writesEnabled: boolean; pro
         <div className="compose">
           <h3>Write to the graph, live</h3>
           <p className="sub">
-            This creates a real <code className="inline">post</code> entity on Braga signed by the demo wallet, then the
-            new node appears in the graph. Pick which user it&apos;s from.
+            This creates a real <code className="inline">post</code> entity on {networkName} signed by the demo wallet,
+            then the new node appears in the graph. Pick which user it&apos;s from.
           </p>
           <div className="compose-row">
             <select value={handle} onChange={(e) => setHandle(e.target.value)} aria-label="author">

@@ -1,14 +1,27 @@
 import { buildGraph } from "./buildGraph.js";
+import { BRAGA_CHAIN_ID, BRAGA_EXPLORER } from "./chains.js";
+import { type ArkivChainLike, explorerOf, rpcOf } from "./network.js";
 import type { ArkivEntityLike, BlockTiming, BuildGraphOptions, Graph } from "./types.js";
 
 export interface FetchArkivGraphOptions extends BuildGraphOptions {
   /**
-   * A pre-built Arkiv public client (`createPublicClient({ chain: braga, ... })`).
+   * A pre-built Arkiv public client (`createPublicClient({ chain, ... })`).
    * Pass this to avoid a dynamic SDK import (e.g. in the browser).
    */
   client?: ArkivPublicClientLike;
-  /** RPC url, when no client is given. Defaults to the Braga public RPC. */
+  /**
+   * The Arkiv chain to read from (the SDK's `braga` export, a future network
+   * export, or one from `defineArkivNetwork`). Drives RPC, the explorer for
+   * entity links, and the "native" chain id for external detection. If omitted,
+   * falls back to the SDK's bundled Braga chain.
+   */
+  chain?: ArkivChainLike;
+  /** RPC url, when no client/chain is given. Defaults to the Braga public RPC. */
   rpcUrl?: string;
+  /** explorer base for Arkiv entity links. Defaults to the chain's explorer, then Braga. */
+  explorerUrl?: string;
+  /** chain id treated as "native" (not external). Defaults to chain.id, then Braga. */
+  nativeChainId?: number;
   /** filter: entities tagged with this `project` attribute. */
   project?: string;
   /** filter: extra equality predicates (attribute key → value). */
@@ -31,6 +44,8 @@ export interface FetchArkivGraphResult {
   entities: ArkivEntityLike[];
   graph: Graph;
   blockTiming?: BlockTiming;
+  /** true if the result hit `limit` — you may be seeing a partial view. */
+  truncated?: boolean;
 }
 
 const PAGE = 200; // Arkiv max page size
@@ -47,12 +62,16 @@ function assertAddress(addr: string | undefined, field: string): void {
   }
 }
 
-async function defaultBragaClient(rpcUrl?: string): Promise<ArkivPublicClientLike> {
+async function makeClient(chain: ArkivChainLike | undefined, rpcUrl?: string): Promise<ArkivPublicClientLike> {
   const sdk: any = await import("@arkiv-network/sdk");
-  const chains: any = await import("@arkiv-network/sdk/chains");
+  let resolved = chain;
+  if (!resolved) {
+    const chains: any = await import("@arkiv-network/sdk/chains");
+    resolved = chains.braga; // default network when none is provided
+  }
   return sdk.createPublicClient({
-    chain: chains.braga,
-    transport: sdk.http(rpcUrl),
+    chain: resolved,
+    transport: sdk.http(rpcUrl ?? rpcOf(resolved)),
   });
 }
 
@@ -70,8 +89,13 @@ export async function fetchArkivGraph(
   assertAddress(options.createdBy, "createdBy");
   assertAddress(options.ownedBy, "ownedBy");
 
-  const client = options.client ?? (await defaultBragaClient(options.rpcUrl));
+  const client = options.client ?? (await makeClient(options.chain, options.rpcUrl));
   const { eq }: any = await import("@arkiv-network/sdk/query");
+
+  // Network-derived config — nothing here is hardcoded to Braga; it follows the
+  // chain you pass (so swapping testnets is a config change, not a code change).
+  const explorerUrl = options.explorerUrl ?? explorerOf(options.chain) ?? BRAGA_EXPLORER;
+  const nativeChainId = options.nativeChainId ?? options.chain?.id ?? BRAGA_CHAIN_ID;
 
   const limit = options.limit ?? 500;
   const preds: any[] = [];
@@ -112,6 +136,13 @@ export async function fetchArkivGraph(
     /* TTL fade just won't render */
   }
 
-  const graph = buildGraph(entities, { ...options, blockTiming });
-  return { entities, graph, blockTiming };
+  const graph = buildGraph(entities, {
+    ...options,
+    blockTiming,
+    arkivExplorer: options.arkivExplorer ?? explorerUrl,
+    nativeChainId,
+  });
+  // true when we hit the limit — the caller may be seeing a partial view
+  const truncated = entities.length >= limit;
+  return { entities, graph, blockTiming, truncated };
 }

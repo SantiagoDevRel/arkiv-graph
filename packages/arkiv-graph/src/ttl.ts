@@ -21,6 +21,9 @@ export function computeTtl(
 ): Ttl {
   if (!timing || expiresAtBlock == null) return {};
   const current = Number(timing.currentBlock);
+  // Block heights are tiny on Arkiv today, but guard against precision loss so a
+  // huge value degrades to "unknown TTL" rather than a wrong number.
+  if (!Number.isSafeInteger(current) || !Number.isSafeInteger(expiresAtBlock)) return {};
   const dur = timing.blockDuration || 2;
   const blocksLeft = expiresAtBlock - current;
   const ttlSeconds = blocksLeft * dur;

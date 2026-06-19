@@ -11,12 +11,41 @@ import { privateKeyToAccount } from "@arkiv-network/sdk/accounts";
 import { braga } from "@arkiv-network/sdk/chains";
 import { eq } from "@arkiv-network/sdk/query";
 import { jsonToPayload, ExpirationTime } from "@arkiv-network/sdk/utils";
+import { defineArkivNetwork, explorerOf, rpcOf } from "arkiv-graph";
 
 dotenv.config({ path: new URL("../.env.local", import.meta.url) });
 dotenv.config({ path: new URL("../.env", import.meta.url) });
 
+// Network plug-and-play (same env vars + fail-closed rule as the app): default
+// Braga, or a COMPLETE custom set (ARKIV_CHAIN_ID + ARKIV_RPC_URL + ARKIV_EXPLORER_URL).
+const e = process.env;
+const anyCustom = !!(e.ARKIV_CHAIN_ID || e.ARKIV_RPC_URL || e.ARKIV_EXPLORER_URL || e.ARKIV_WS_URL || e.ARKIV_GAS_TOKEN || e.ARKIV_NETWORK_NAME || e.ARKIV_FAUCET_URL);
+let CHAIN, EXPLORER, FAUCET, RPC_URL;
+if (!anyCustom) {
+  CHAIN = braga;
+  EXPLORER = (explorerOf(braga) ?? "").replace(/\/$/, "");
+  FAUCET = "https://braga.hoodi.arkiv.network/faucet/";
+  RPC_URL = rpcOf(braga);
+} else {
+  const missing = [!e.ARKIV_CHAIN_ID && "ARKIV_CHAIN_ID", !e.ARKIV_RPC_URL && "ARKIV_RPC_URL", !e.ARKIV_EXPLORER_URL && "ARKIV_EXPLORER_URL"].filter(Boolean);
+  if (missing.length) {
+    console.error(`✗ Custom Arkiv network is partially configured — missing ${missing.join(", ")}. Set ARKIV_CHAIN_ID, ARKIV_RPC_URL and ARKIV_EXPLORER_URL together, or unset all ARKIV_* network vars to use Braga.`);
+    process.exit(1);
+  }
+  CHAIN = defineArkivNetwork(braga, {
+    chainId: Number(e.ARKIV_CHAIN_ID),
+    rpcUrl: e.ARKIV_RPC_URL,
+    explorerUrl: e.ARKIV_EXPLORER_URL,
+    name: e.ARKIV_NETWORK_NAME,
+    wsUrl: e.ARKIV_WS_URL,
+    gasToken: e.ARKIV_GAS_TOKEN,
+  });
+  EXPLORER = e.ARKIV_EXPLORER_URL.replace(/\/$/, "");
+  FAUCET = e.ARKIV_FAUCET_URL ?? "";
+  RPC_URL = e.ARKIV_RPC_URL;
+}
+
 const PROJECT = process.env.ARKIV_PROJECT ?? "arkiv-graph-demo-v1";
-const EXPLORER = "https://explorer.braga.hoodi.arkiv.network";
 const TTL = ExpirationTime.fromDays(30);
 const RESEED = process.argv.includes("--reseed");
 
@@ -26,8 +55,9 @@ if (!PK) {
   process.exit(1);
 }
 const account = privateKeyToAccount(PK);
-const pub = createPublicClient({ chain: braga, transport: http(process.env.ARKIV_RPC_URL) });
-const wallet = createWalletClient({ chain: braga, transport: http(process.env.ARKIV_RPC_URL), account });
+const pub = createPublicClient({ chain: CHAIN, transport: http(RPC_URL) });
+const wallet = createWalletClient({ chain: CHAIN, transport: http(RPC_URL), account });
+console.log(`→ network ${CHAIN.name} (chainId ${CHAIN.id})`);
 
 const hex = (seed, len) =>
   "0x" + crypto.createHash("sha256").update(seed).digest("hex").repeat(Math.ceil(len / 64)).slice(0, len);
@@ -173,7 +203,7 @@ async function main() {
   const bal = await pub.getBalance({ address: account.address });
   console.log(`→ balance ${Number(bal) / 1e18} GLM`);
   if (bal === 0n) {
-    console.error("✗ wallet has 0 GLM. Fund it at https://braga.hoodi.arkiv.network/faucet/");
+    console.error(`✗ wallet has 0 balance. Fund it at the faucet: ${FAUCET}`);
     process.exit(1);
   }
 

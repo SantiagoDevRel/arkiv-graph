@@ -2,7 +2,9 @@
 
 The live showcase for [`arkiv-graph`](../../packages/arkiv-graph): **https://arkiv-graph-example.vercel.app**
 
-A tiny social app — **Arkiv Social** — whose users, posts, comments, follows and likes live entirely as entities on the **Braga testnet**. The page reads them back and renders them with `<ArkivGraph>`. A few entities reference other chains (an NFT pfp on Base, a mint on Ethereum, a tip on Optimism) so you can see external-chain nodes.
+A tiny social app — **Arkiv Social** — whose users, posts, comments, follows and likes live entirely as entities on an **Arkiv testnet** (Braga today). The page reads them back and renders them two ways — a **Graph** view (`<ArkivGraph>`, drag a node to pin it) and a **Tables** view (`<ArkivTables>`, a Supabase-like browser) — toggle between them. A few entities reference other chains (an NFT pfp on Base, a mint on Ethereum, a tip on Optimism) so you can see external-chain nodes.
+
+**Network is plug-and-play:** Braga is the default; set `ARKIV_CHAIN_ID` + `ARKIV_RPC_URL` + `ARKIV_EXPLORER_URL` together (see [`.env.local.example`](./.env.local.example)) to point at the next testnet — no code change. Partial config fails loudly rather than silently mixing networks.
 
 ## Run locally
 

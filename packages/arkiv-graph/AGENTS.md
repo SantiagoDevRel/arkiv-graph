@@ -3,9 +3,9 @@
 Guidance for an AI assistant integrating `arkiv-graph` into someone's app. Follow this; don't reinvent the decisions the library already makes.
 
 ## What it is
-A library that turns **Arkiv entities into an interactive graph**. Two entry points:
-- `arkiv-graph` — pure-TS core: `buildGraph(entities, options)` and `fetchArkivGraph(options)`.
-- `arkiv-graph/react` — `<ArkivGraph data={graph} />`, a force-directed renderer (canvas).
+A library that turns **Arkiv entities into an interactive graph OR relational-style tables**. Entry points:
+- `arkiv-graph` — pure-TS core: `buildGraph(entities, options)`, `buildTables(graph, entities, options)`, `fetchArkivGraph(options)`, `defineArkivNetwork(base, overrides)`.
+- `arkiv-graph/react` — `<ArkivGraph data={graph} />` (force-directed) and `<ArkivTables model={tables} graph={graph} />` (Supabase-like data browser). Both are client components.
 
 Arkiv has **no joins / foreign keys**. Relationships exist only as shared attribute values or attributes holding another entity's key/id. The consumer declares them via **link rules** — this is the core concept; get it right.
 
@@ -41,6 +41,7 @@ Inspect the user's entities first (what `entityType`s exist, which attributes po
 3. **TTL fade is intentional.** Arkiv entities expire; faded/"ghost" nodes are correct, not a bug. `fetchArkivGraph` pulls block timing for you.
 4. **External chains are inferred, never fetched.** External nodes come from attribute names like `*ChainId` / `*Contract` / `*Tx` in the user's own entities. The library makes zero RPC calls to other chains. Don't add chain-reading code.
 5. **Node 20–22** for any server-side `@arkiv-network/sdk` use (Node 24 hangs writes). The library itself is isomorphic.
+6. **Network is config-driven — don't hardcode a testnet.** Pass `chain` to `fetchArkivGraph` (the SDK's `braga` export, a future export, or `defineArkivNetwork(braga, {chainId, rpcUrl, explorerUrl})`). When you pass a `client` instead, also pass `explorerUrl` + `nativeChainId` so entity links and external detection follow your network. Arkiv testnets rotate — swapping should be config, never a code edit.
 6. `@arkiv-network/sdk`, `react`, `react-dom` are **optional peer deps** — only needed for the paths that use them.
 
 ## What to ask the developer

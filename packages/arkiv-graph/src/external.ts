@@ -92,11 +92,16 @@ export function addExternalForEntity(
   internalKeys?: Set<string>,
 ): void {
   if (cfg?.enabled === false) return;
-  const native = new Set<number | string>([
-    BRAGA_CHAIN_ID,
-    String(BRAGA_CHAIN_ID),
-    ...(cfg?.nativeChainIds ?? []),
-  ]);
+  // The active network is authoritative: if the caller supplied nativeChainIds,
+  // use ONLY those (so a post-sunset reference to the OLD chain is no longer
+  // wrongly treated as native). Braga is only the fallback when none are given.
+  const ids = cfg?.nativeChainIds?.length ? cfg.nativeChainIds : [BRAGA_CHAIN_ID];
+  const native = new Set<number | string>();
+  for (const id of ids) {
+    native.add(id);
+    native.add(String(id));
+    native.add(Number(id));
+  }
   const groups = detectGroups(e, cfg, internalKeys);
 
   for (const g of groups) {

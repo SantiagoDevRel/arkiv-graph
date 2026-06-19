@@ -21,7 +21,22 @@ export {
   addressExplorerUrl,
 } from "./chains.js";
 
+export { defineArkivNetwork, explorerOf, rpcOf, entityExplorerUrl } from "./network.js";
+export type { ArkivChainLike, ArkivNetworkOverrides } from "./network.js";
+
 export { detectGroups } from "./external.js";
+
+export { buildTables } from "./tables.js";
+export type {
+  BuildTablesOptions,
+  EntityTable,
+  RelRef,
+  TableColumn,
+  TableColumnKind,
+  TableRelationship,
+  TableRow,
+  TablesModel,
+} from "./tables.js";
 
 export type {
   ArkivAttribute,

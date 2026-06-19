@@ -1,6 +1,6 @@
 import { Showcase } from "./showcase";
 import { writesEnabled } from "@/lib/guards";
-import { PROJECT, TRUSTED_ADDRESS } from "@/lib/arkiv";
+import { NETWORK_NAME, PROJECT, TRUSTED_ADDRESS } from "@/lib/arkiv";
 
 export default function Page() {
   return (
@@ -34,11 +34,11 @@ export default function Page() {
           <code className="inline">arkiv-graph</code> is a drop-in library that turns your Arkiv entities into an
           interactive graph — nodes are entities, edges are the relationships you define, and references to other chains
           show up as external nodes. Everything below is real: a tiny social app whose users, posts, comments, follows
-          and likes live entirely on the <strong>Braga testnet</strong>.
+          and likes live entirely on the <strong>{NETWORK_NAME} testnet</strong>.
         </p>
       </section>
 
-      <Showcase writesEnabled={writesEnabled()} project={PROJECT} owner={TRUSTED_ADDRESS} />
+      <Showcase writesEnabled={writesEnabled()} project={PROJECT} owner={TRUSTED_ADDRESS} networkName={NETWORK_NAME} />
 
       <section className="legend-cols">
         <div className="card">
@@ -69,7 +69,7 @@ export default function Page() {
 
       <footer className="foot">
         Built by Arkiv DevRel as a dogfooding demo — Arkiv is a queryable database on Ethereum. The signing wallet is a
-        throwaway Braga testnet burner holding only valueless test GLM, and data here expires by design.{" "}
+        throwaway {NETWORK_NAME} testnet burner holding only valueless test gas, and data here expires by design.{" "}
         <code className="inline">arkiv-graph</code> never reads external chains; external nodes come purely from
         references stored in your own entities.
       </footer>

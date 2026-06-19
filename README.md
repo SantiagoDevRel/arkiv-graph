@@ -2,10 +2,13 @@
 
 **See your [Arkiv](https://docs.arkiv.network) database as a live graph.** A drop-in library + a real, on-chain showcase.
 
-- 📦 **Library** ([`packages/arkiv-graph`](./packages/arkiv-graph)) — `npm i arkiv-graph`. Turns Arkiv entities into an interactive force-directed graph. Nodes are entities; edges are the relationships you define; references to other chains appear as external nodes (drawn without reading those chains).
-- 🌐 **Showcase** ([`apps/example`](./apps/example)) — **https://arkiv-graph-example.vercel.app**. A tiny social app (users, posts, comments, follows, likes) stored **entirely on the Braga testnet**, visualized with the library. Includes a live "write a post on-chain" button.
+- 📦 **Library** ([`packages/arkiv-graph`](./packages/arkiv-graph)) — `npm i arkiv-graph`. Turns Arkiv entities into an interactive **force-directed graph** (drag a node to pin it) **or a Supabase-like tables view**. Nodes/rows are entities; edges/foreign-keys are the relationships you define; references to other chains appear as external nodes (drawn without reading those chains).
+- 🌐 **Showcase** ([`apps/example`](./apps/example)) — **https://arkiv-graph-example.vercel.app**. A tiny social app (users, posts, comments, follows, likes) stored **entirely on an Arkiv testnet** (Braga today), visualized with the library — Graph **and** Tables views, plus a live "write a post on-chain" button.
 
-![arkiv-graph showcase](./docs/screenshot.png)
+![arkiv-graph graph view](./docs/screenshot.png)
+![arkiv-graph tables view](./docs/tables.png)
+
+> **Network plug-and-play:** Arkiv testnets rotate (Braga is sunset ~mid-2026). Nothing is hardcoded to one network — swapping is an **env/config change**, never a code edit. See [Pointing at a different Arkiv network](./packages/arkiv-graph/README.md#pointing-at-a-different-arkiv-network-plug-and-play) and the [`.env.local.example`](./apps/example/.env.local.example).
 
 ## Why
 

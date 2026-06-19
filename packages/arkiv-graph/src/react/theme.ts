@@ -48,19 +48,15 @@ export const ARKIV_THEME: ArkivGraphTheme = {
   relPalette: ["#ffb020", "#43d6a6", "#ff5d8f", "#7aa2ff", "#c0e060", "#ff924d", "#5ad1e6", "#b388ff", "#f25c54", "#54d6c2"],
 };
 
-/** Stable colour per distinct relationship label, assigned from relPalette. */
+/** Stable colour per distinct relationship label. Labels are sorted first so the
+ *  graph and the tables view assign identical colours regardless of input order. */
 export function buildRelationshipColors(
   labels: string[],
   theme: ArkivGraphTheme = ARKIV_THEME,
 ): Map<string, string> {
   const map = new Map<string, string>();
-  let i = 0;
-  for (const label of labels) {
-    if (!map.has(label)) {
-      map.set(label, theme.relPalette[i % theme.relPalette.length]!);
-      i++;
-    }
-  }
+  const unique = [...new Set(labels)].sort();
+  unique.forEach((label, i) => map.set(label, theme.relPalette[i % theme.relPalette.length]!));
   return map;
 }
 

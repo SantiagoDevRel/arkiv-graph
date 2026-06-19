@@ -52,8 +52,24 @@ That's it: query Arkiv → get a graph → render it. Click any node for its pay
 
 `arkiv-graph` has two layers:
 
-1. **Core (framework-agnostic, zero UI deps)** — `buildGraph(entities, options)` turns a flat list of Arkiv entities into `{ nodes, edges }`. `fetchArkivGraph(options)` queries Arkiv (paginated, with block timing for TTL) and builds the graph in one call.
-2. **React (`arkiv-graph/react`)** — `<ArkivGraph data={graph} />`, a force-directed canvas renderer with filters, search, a detail panel, and TTL fade. It loads its renderer client-side, so it's safe to import in Next.js / SSR apps.
+1. **Core (framework-agnostic, zero UI deps)** — `buildGraph(entities, options)` turns a flat list of Arkiv entities into `{ nodes, edges }`. `buildTables(graph, entities)` turns the same data into relational-style tables. `fetchArkivGraph(options)` queries Arkiv (paginated, with block timing for TTL) and builds the graph in one call.
+2. **React (`arkiv-graph/react`)** — `<ArkivGraph data={graph} />` (force-directed canvas) and `<ArkivTables model={tables} graph={graph} />` (a Supabase-like data browser). Both load client-side, so they're safe to import in Next.js / SSR apps.
+
+### Two views of the same data
+
+```tsx
+import { fetchArkivGraph, buildTables } from "arkiv-graph";
+import { ArkivGraph, ArkivTables } from "arkiv-graph/react";
+
+const { graph, entities } = await fetchArkivGraph({ project, createdBy, links });
+const tables = buildTables(graph, entities, { links });
+
+// pick one:
+<ArkivGraph data={graph} />                       // force-directed graph
+<ArkivTables model={tables} graph={graph} />      // tables: one per entityType, with FK chips
+```
+
+`<ArkivTables>` renders one **collection table per entityType** (columns = your attributes, plus owner/TTL), a **junction table** for each join relationship (the like/follow rows themselves, for debugging), **foreign-key chips** that link related rows (coloured to match the graph's edges), client-side sort of the loaded rows, and a **schema tab** that lists your link rules and flags issues (unresolved references, zero-match rules, soon-to-expire rows). It's a data browser, not SQL — Arkiv has no joins, foreign keys, or migrations.
 
 ### Link rules — you declare the relationships
 
@@ -94,6 +110,32 @@ If an entity stores a reference to another chain, `arkiv-graph` draws it as an e
 ```
 
 Customize via the `external` option (`chainIdKeys`, `contractKeys`, `txKeys`, `registry`, `nativeChainIds`).
+
+### Pointing at a different Arkiv network (plug-and-play)
+
+Arkiv testnets rotate. Nothing in `arkiv-graph` is hardcoded to one network — pass the chain you want and RPC, explorer links, and the "native" chain id for external detection all follow:
+
+```ts
+import { braga } from "@arkiv-network/sdk/chains";
+import { defineArkivNetwork, fetchArkivGraph } from "arkiv-graph";
+
+// today: the SDK's bundled chain
+await fetchArkivGraph({ chain: braga, project, createdBy, links });
+
+// next testnet, no code change — build it from config…
+const next = defineArkivNetwork(braga, {
+  chainId: 12345,
+  rpcUrl: "https://<new-testnet>/rpc",
+  explorerUrl: "https://explorer.<new-testnet>",
+});
+await fetchArkivGraph({ chain: next, project, createdBy, links });
+
+// …or, when the SDK ships the new network as its own export, just pass that:
+// import { newnet } from "@arkiv-network/sdk/chains";
+// await fetchArkivGraph({ chain: newnet, ... });
+```
+
+`defineArkivNetwork(base, overrides)` clones the base chain's Arkiv protocol internals (viem `formatters`/`fees`/`serializers`) and overrides only the identity, so writes/reads keep working. If you pass a `client` instead of a `chain`, also pass `explorerUrl` and `nativeChainId` so links and external detection match your network. With no `chain`/`client`, it falls back to the SDK's bundled Braga chain.
 
 ---
 

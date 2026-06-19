@@ -1,5 +1,5 @@
-import { fetchArkivGraph } from "arkiv-graph";
-import { EXPLORER, EXTERNAL_CONFIG, PROJECT, publicClient, SOCIAL_LINKS, trustedAddress } from "@/lib/arkiv";
+import { buildTables, fetchArkivGraph } from "arkiv-graph";
+import { EXPLORER, EXTERNAL_CONFIG, NATIVE_CHAIN_ID, PROJECT, publicClient, SOCIAL_LINKS, trustedAddress } from "@/lib/arkiv";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,12 +30,16 @@ export async function GET(req: Request) {
       external: EXTERNAL_CONFIG,
       labelKey: undefined,
       arkivExplorer: EXPLORER,
+      explorerUrl: EXPLORER,
+      nativeChainId: NATIVE_CHAIN_ID, // active Arkiv network is "native", not external
       limit: address ? 400 : 600,
     };
 
     const result = address
       ? await fetchArkivGraph({ ...common, ownedBy: address })
       : await fetchArkivGraph({ ...common, project: PROJECT, createdBy: trustedAddress() });
+
+    const tables = buildTables(result.graph, result.entities, { links: SOCIAL_LINKS, blockTiming: result.blockTiming });
 
     return json({
       mode: address ? "wallet" : "demo",
@@ -50,6 +54,7 @@ export async function GET(req: Request) {
           }
         : null,
       graph: result.graph,
+      tables,
     });
   } catch (err) {
     console.error("graph route error:", (err as Error)?.message);

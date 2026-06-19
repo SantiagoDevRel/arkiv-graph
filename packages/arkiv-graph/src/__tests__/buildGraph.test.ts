@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildGraph } from "../buildGraph.js";
+import { buildTables } from "../tables.js";
 import { detectGroups } from "../external.js";
 import { normalizeEntity } from "../normalize.js";
 import type { ArkivEntityLike, LinkRule } from "../types.js";
@@ -204,5 +205,35 @@ describe("external chain detection", () => {
     const entities = [entity(POST_1, "post", { text: "x" }, { from: hex40(0x1) })];
     const g = buildGraph(entities);
     expect(g.nodes.some((n) => n.kind === "external")).toBe(false);
+  });
+});
+
+describe("buildTables", () => {
+  it("builds collection tables per type, a junction table for joins, and a relationship summary", () => {
+    const entities = [
+      entity(USER_A, "user", { handle: "alice" }),
+      entity(USER_B, "user", { handle: "bob" }),
+      entity(POST_1, "post", { text: "hi" }, { authorKey: USER_A }),
+      entity(LIKE_1, "like", {}, { userKey: USER_B, postKey: POST_1 }),
+    ];
+    const g = buildGraph(entities, { links: SOCIAL_LINKS });
+    const t = buildTables(g, entities, { links: SOCIAL_LINKS });
+
+    const userTable = t.tables.find((x) => x.type === "user");
+    const postTable = t.tables.find((x) => x.type === "post");
+    const likeTable = t.tables.find((x) => x.type === "like");
+    expect(userTable?.kind).toBe("collection");
+    expect(userTable?.count).toBe(2);
+    expect(postTable?.count).toBe(1);
+    // like is a junction table, not a collection
+    expect(likeTable?.kind).toBe("junction");
+    expect(likeTable?.count).toBe(1);
+    // post has a relationship column for "by" with a chip to the author
+    const byCol = postTable!.columns.find((c) => c.id === "rel:by");
+    expect(byCol?.kind).toBe("relationship");
+    const cell = postTable!.rows[0]!.cells["rel:by"];
+    expect(Array.isArray(cell) && cell[0]?.targetId).toBe(USER_A);
+    // relationship summary counts edges
+    expect(t.relationships.find((r) => r.label === "likes")?.count).toBe(1);
   });
 });

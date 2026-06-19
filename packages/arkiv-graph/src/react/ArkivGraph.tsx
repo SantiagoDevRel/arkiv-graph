@@ -302,6 +302,15 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
         ctx.strokeStyle = "#ffffff";
         ctx.stroke();
       }
+      if (node.__pinned) {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, r + 2.5, 0, 2 * Math.PI);
+        ctx.lineWidth = 1.2 / scale;
+        ctx.strokeStyle = theme.accent;
+        ctx.setLineDash([2, 2]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
 
       const showLabel =
         node.kind === "external" ||
@@ -323,7 +332,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
       }
       ctx.globalAlpha = 1;
     },
-    [colorOf, fadeExpiring, matches, q, selected, neighborIds, theme.muted, theme.text],
+    [colorOf, fadeExpiring, matches, q, selected, neighborIds, theme.muted, theme.text, theme.accent],
   );
 
   const drawPointerArea = useCallback((node: any, color: string, ctx: CanvasRenderingContext2D) => {
@@ -333,6 +342,8 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
     ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
     ctx.fill();
   }, []);
+
+  const lastClickRef = useRef<{ id: string; t: number } | null>(null);
 
   const linkIncident = useCallback(
     (l: any): boolean => {
@@ -346,11 +357,32 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
 
   const handleNodeClick = useCallback(
     (node: any) => {
+      // double-click a pinned node to release it back into the simulation
+      const last = lastClickRef.current;
+      const now = typeof performance !== "undefined" ? performance.now() : 0;
+      if (last && last.id === node.id && now - last.t < 320) {
+        node.fx = undefined;
+        node.fy = undefined;
+        node.__pinned = false;
+        try {
+          fgRef.current?.d3ReheatSimulation?.();
+        } catch {
+          /* noop */
+        }
+      }
+      lastClickRef.current = { id: node.id, t: now };
       setSelected(node as GraphNode);
       onNodeClick?.(node as GraphNode);
     },
     [onNodeClick],
   );
+
+  // Pin a node where you drop it (drag to move a node aside; it stays put).
+  const handleNodeDragEnd = useCallback((node: any) => {
+    node.fx = node.x;
+    node.fy = node.y;
+    node.__pinned = true;
+  }, []);
 
   const toggleCat = (key: string) =>
     setHidden((prev) => {
@@ -464,6 +496,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
           linkDirectionalParticleWidth={1.6}
           linkDirectionalParticleSpeed={0.006}
           onNodeClick={handleNodeClick}
+          onNodeDragEnd={handleNodeDragEnd}
           onBackgroundClick={() => setSelected(null)}
           cooldownTicks={120}
           onEngineStop={() => {
@@ -501,7 +534,8 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
         >
           <div>
             <span style={{ color: theme.text }}>{data.nodes.length}</span> nodes ·{" "}
-            <span style={{ color: theme.text }}>{data.edges.length}</span> edges · click a node to trace its links
+            <span style={{ color: theme.text }}>{data.edges.length}</span> edges · click to trace · drag a node to pin it
+            (double-click to release)
           </div>
           {relationshipLegend.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 12px", marginTop: 6 }}>

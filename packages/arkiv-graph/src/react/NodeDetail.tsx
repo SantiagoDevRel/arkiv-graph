@@ -2,6 +2,7 @@ import * as React from "react";
 import type { GraphNode } from "../types.js";
 import { formatTtl } from "../ttl.js";
 import { ARKIV_THEME, type ArkivGraphTheme, nodeColorFor } from "./theme.js";
+import { ensureScrollbarStyle } from "./scrollbar.js";
 
 /** One relationship from the selected node to another (used in the detail card). */
 export interface NodeConnection {
@@ -91,13 +92,16 @@ export function NodeDetail({ node, connections = [], onClose, theme = ARKIV_THEM
   const payload = node.payload && typeof node.payload === "object" ? (node.payload as Record<string, unknown>) : null;
   const payloadEntries = payload ? Object.entries(payload) : [];
 
+  const scrollClass = ensureScrollbarStyle(theme);
+
   return (
     <div
+      className={scrollClass}
       style={{
         position: "absolute",
         top: 12,
         right: 12,
-        width: 304,
+        width: "min(304px, calc(100% - 24px))",
         maxHeight: "calc(100% - 24px)",
         overflowY: "auto",
         background: "rgba(16,19,26,0.97)",

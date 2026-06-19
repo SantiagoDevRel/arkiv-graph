@@ -2,7 +2,7 @@
   "name": "@arkiv-graph/example",
   "version": "0.1.0",
   "private": true,
-  "description": "Live showcase for arkiv-graph — a fake social app stored entirely on Arkiv (Braga), visualized as a graph.",
+  "description": "Live showcase for arkiv-graph — a fake social app stored entirely on an Arkiv testnet, visualized as a graph and tables.",
   "type": "module",
   "scripts": {
     "prebuild": "pnpm --filter arkiv-graph build",
