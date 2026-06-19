@@ -11,8 +11,10 @@ export interface ArkivGraphTheme {
   walletColor: string;
   tagColor: string;
   unresolvedColor: string;
-  /** edge colours by kind. */
+  /** edge colours by kind (fallback when no per-relationship colour applies). */
   edgeColors: Record<string, string>;
+  /** vivid, distinct palette used to colour each relationship (edge label). */
+  relPalette: string[];
   accent: string;
 }
 
@@ -43,7 +45,24 @@ export const ARKIV_THEME: ArkivGraphTheme = {
     owner: "#7a6a30",
     external: "#9aa3b2",
   },
+  relPalette: ["#ffb020", "#43d6a6", "#ff5d8f", "#7aa2ff", "#c0e060", "#ff924d", "#5ad1e6", "#b388ff", "#f25c54", "#54d6c2"],
 };
+
+/** Stable colour per distinct relationship label, assigned from relPalette. */
+export function buildRelationshipColors(
+  labels: string[],
+  theme: ArkivGraphTheme = ARKIV_THEME,
+): Map<string, string> {
+  const map = new Map<string, string>();
+  let i = 0;
+  for (const label of labels) {
+    if (!map.has(label)) {
+      map.set(label, theme.relPalette[i % theme.relPalette.length]!);
+      i++;
+    }
+  }
+  return map;
+}
 
 let paletteCursor = 0;
 const assigned = new Map<string, string>();

@@ -1,8 +1,13 @@
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Graph, GraphEdge, GraphNode } from "../types.js";
-import { ARKIV_THEME, type ArkivGraphTheme, nodeColorFor, nodeRadiusFor } from "./theme.js";
-import { NodeDetail } from "./NodeDetail.js";
+import { ARKIV_THEME, type ArkivGraphTheme, buildRelationshipColors, nodeColorFor, nodeRadiusFor } from "./theme.js";
+import { NodeDetail, type NodeConnection } from "./NodeDetail.js";
+
+/** the relationship name shown to users for an edge. */
+function relLabel(edge: GraphEdge): string {
+  return edge.label ?? edge.kind;
+}
 
 export interface ArkivGraphProps {
   data: Graph;
@@ -113,6 +118,83 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
     return { nodes: data.nodes, links };
   }, [data]);
 
+  const nodeById = useMemo(() => {
+    const m = new Map<string, GraphNode>();
+    for (const n of data.nodes) m.set(n.id, n);
+    return m;
+  }, [data.nodes]);
+
+  // One colour per distinct relationship (edge label). External edges instead
+  // take the colour of the chain they reach, so the cords read at a glance.
+  const relColors = useMemo(() => {
+    const labels: string[] = [];
+    for (const e of data.edges) if (e.kind !== "external") labels.push(relLabel(e));
+    return buildRelationshipColors(labels, theme);
+  }, [data.edges, theme]);
+
+  const externalColorOf = useCallback(
+    (edge: GraphEdge): string => {
+      const s = nodeById.get(typeof edge.source === "string" ? edge.source : (edge.source as any)?.id);
+      const t = nodeById.get(typeof edge.target === "string" ? edge.target : (edge.target as any)?.id);
+      return s?.external?.color ?? t?.external?.color ?? theme.edgeColors.external ?? theme.muted;
+    },
+    [nodeById, theme],
+  );
+
+  const relColorOf = useCallback(
+    (edge: GraphEdge): string => {
+      if (edge.kind === "external") return externalColorOf(edge);
+      return relColors.get(relLabel(edge)) ?? theme.edgeColors[edge.kind] ?? theme.muted;
+    },
+    [relColors, externalColorOf, theme],
+  );
+
+  // The relationship legend (semantic relationships only; external edges follow
+  // chain colours, already shown in the filter chips).
+  const relationshipLegend = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const e of data.edges) {
+      if (e.kind === "external") continue;
+      const l = relLabel(e);
+      if (!seen.has(l)) seen.set(l, relColorOf(e));
+    }
+    return [...seen.entries()].map(([label, color]) => ({ label, color }));
+  }, [data.edges, relColorOf]);
+
+  // Connections of the selected node (for the detail card + edge highlighting).
+  const connections = useMemo<NodeConnection[]>(() => {
+    if (!selected) return [];
+    const out: NodeConnection[] = [];
+    for (const e of data.edges) {
+      const sId = typeof e.source === "string" ? e.source : (e.source as any)?.id;
+      const tId = typeof e.target === "string" ? e.target : (e.target as any)?.id;
+      if (sId !== selected.id && tId !== selected.id) continue;
+      const outgoing = sId === selected.id;
+      const otherId = outgoing ? tId : sId;
+      const other = nodeById.get(otherId);
+      out.push({
+        relationship: relLabel(e),
+        color: relColorOf(e),
+        otherLabel: other?.label ?? otherId,
+        direction: e.directed ? (outgoing ? "out" : "in") : "both",
+      });
+    }
+    return out;
+  }, [selected, data.edges, nodeById, relColorOf]);
+
+  // Node ids adjacent to the selected node (to highlight on selection).
+  const neighborIds = useMemo(() => {
+    const s = new Set<string>();
+    if (!selected) return s;
+    for (const e of data.edges) {
+      const sId = typeof e.source === "string" ? e.source : (e.source as any)?.id;
+      const tId = typeof e.target === "string" ? e.target : (e.target as any)?.id;
+      if (sId === selected.id) s.add(tId);
+      else if (tId === selected.id) s.add(sId);
+    }
+    return s;
+  }, [selected, data.edges]);
+
   // Reset the one-time auto-fit when the dataset changes.
   useEffect(() => {
     fittedRef.current = false;
@@ -198,6 +280,8 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
         alpha = 0.4 + 0.6 * node.ttlFraction;
       }
       if (q && !matches(node)) alpha *= 0.18;
+      // when a node is selected, dim everything that isn't it or a direct neighbor
+      if (selected && node.id !== selected.id && !neighborIds.has(node.id)) alpha *= 0.22;
       const color = colorOf(node);
 
       ctx.globalAlpha = alpha;
@@ -239,7 +323,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
       }
       ctx.globalAlpha = 1;
     },
-    [colorOf, fadeExpiring, matches, q, selected, theme.muted, theme.text],
+    [colorOf, fadeExpiring, matches, q, selected, neighborIds, theme.muted, theme.text],
   );
 
   const drawPointerArea = useCallback((node: any, color: string, ctx: CanvasRenderingContext2D) => {
@@ -249,6 +333,16 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
     ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
     ctx.fill();
   }, []);
+
+  const linkIncident = useCallback(
+    (l: any): boolean => {
+      if (!selected) return false;
+      const sId = typeof l.source === "string" ? l.source : l.source?.id;
+      const tId = typeof l.target === "string" ? l.target : l.target?.id;
+      return sId === selected.id || tId === selected.id;
+    },
+    [selected],
+  );
 
   const handleNodeClick = useCallback(
     (node: any) => {
@@ -350,11 +444,23 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
           linkVisibility={linkVisible}
           nodeCanvasObject={drawNode}
           nodePointerAreaPaint={drawPointerArea}
-          linkColor={(l: any) => `${theme.edgeColors[l.kind] ?? theme.muted}aa`}
-          linkWidth={(l: any) => (l.kind === "join" ? 1.6 : 1)}
+          linkColor={(l: any) => {
+            const base = relColorOf(l);
+            if (selected) return linkIncident(l) ? base : `${base}1f`;
+            return `${base}cc`;
+          }}
+          linkWidth={(l: any) => {
+            const inc = !!selected && linkIncident(l);
+            if (inc) return l.kind === "join" ? 2.8 : 2.4;
+            return l.kind === "join" ? 1.6 : 1.1;
+          }}
           linkDirectionalArrowLength={(l: any) => (l.directed ? 3.2 : 0)}
           linkDirectionalArrowRelPos={1}
-          linkDirectionalParticles={(l: any) => (animate && (l.kind === "join" || l.kind === "external") ? 1 : 0)}
+          linkDirectionalParticles={(l: any) => {
+            if (!animate) return 0;
+            if (selected) return linkIncident(l) ? 2 : 0;
+            return l.kind === "join" || l.kind === "external" ? 1 : 0;
+          }}
           linkDirectionalParticleWidth={1.6}
           linkDirectionalParticleSpeed={0.006}
           onNodeClick={handleNodeClick}
@@ -387,19 +493,36 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
             fontSize: 11,
             color: theme.muted,
             fontFamily: SANS,
-            background: "rgba(16,19,26,0.7)",
+            background: "rgba(16,19,26,0.78)",
             borderRadius: 8,
-            padding: "6px 9px",
-            maxWidth: 240,
+            padding: "7px 10px",
+            maxWidth: "56%",
           }}
         >
-          <span style={{ color: theme.text }}>{data.nodes.length}</span> nodes ·{" "}
-          <span style={{ color: theme.text }}>{data.edges.length}</span> edges
-          <div style={{ marginTop: 2, opacity: 0.8 }}>drag to pan · scroll to zoom · click a node</div>
+          <div>
+            <span style={{ color: theme.text }}>{data.nodes.length}</span> nodes ·{" "}
+            <span style={{ color: theme.text }}>{data.edges.length}</span> edges · click a node to trace its links
+          </div>
+          {relationshipLegend.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 12px", marginTop: 6 }}>
+              {relationshipLegend.map((r) => (
+                <span key={r.label} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                  <span style={{ width: 14, height: 3, borderRadius: 2, background: r.color, display: "inline-block" }} />
+                  <span style={{ color: theme.text }}>{r.label}</span>
+                </span>
+              ))}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, opacity: 0.85 }}>
+                <span style={{ width: 14, height: 3, borderRadius: 2, background: theme.edgeColors.external, display: "inline-block" }} />
+                other chains
+              </span>
+            </div>
+          )}
         </div>
       )}
 
-      {showDetail && selected && <NodeDetail node={selected} theme={theme} onClose={() => setSelected(null)} />}
+      {showDetail && selected && (
+        <NodeDetail node={selected} connections={connections} theme={theme} onClose={() => setSelected(null)} />
+      )}
     </div>
   );
 }

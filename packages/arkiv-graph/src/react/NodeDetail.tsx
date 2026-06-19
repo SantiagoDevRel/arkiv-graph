@@ -3,13 +3,52 @@ import type { GraphNode } from "../types.js";
 import { formatTtl } from "../ttl.js";
 import { ARKIV_THEME, type ArkivGraphTheme, nodeColorFor } from "./theme.js";
 
+/** One relationship from the selected node to another (used in the detail card). */
+export interface NodeConnection {
+  relationship: string;
+  /** the colour of the cord in the graph — so the card matches what you see. */
+  color: string;
+  otherLabel: string;
+  direction: "in" | "out" | "both";
+}
+
 export interface NodeDetailProps {
   node: GraphNode | null;
+  /** relationships of this node — rendered with their cord colours. */
+  connections?: NodeConnection[];
   onClose?: () => void;
   theme?: ArkivGraphTheme;
 }
 
 const mono = "ui-monospace, SFMono-Regular, Menlo, monospace";
+
+function ConnectionsSection({ connections, theme }: { connections: NodeConnection[]; theme: ArkivGraphTheme }) {
+  if (!connections.length) return null;
+  // group by relationship so a high-degree node stays readable
+  const groups = new Map<string, { color: string; others: string[] }>();
+  for (const c of connections) {
+    const g = groups.get(c.relationship) ?? { color: c.color, others: [] };
+    const arrow = c.direction === "out" ? "→ " : c.direction === "in" ? "← " : "";
+    g.others.push(`${arrow}${c.otherLabel}`);
+    groups.set(c.relationship, g);
+  }
+  return (
+    <div style={{ marginTop: 10, paddingTop: 8, borderTop: `1px solid ${theme.muted}22` }}>
+      <div style={{ color: theme.muted, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>
+        connected by ({connections.length})
+      </div>
+      {[...groups.entries()].map(([rel, g]) => (
+        <div key={rel} style={{ display: "flex", gap: 8, padding: "3px 0", fontSize: 12, lineHeight: 1.45 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 92, flexShrink: 0 }}>
+            <span style={{ width: 14, height: 3, borderRadius: 2, background: g.color, flexShrink: 0 }} />
+            <span style={{ color: theme.text }}>{rel}</span>
+          </span>
+          <span style={{ color: theme.muted, wordBreak: "break-word" }}>{g.others.join(", ")}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function Row({ k, v, theme }: { k: string; v: React.ReactNode; theme: ArkivGraphTheme }) {
   return (
@@ -21,7 +60,7 @@ function Row({ k, v, theme }: { k: string; v: React.ReactNode; theme: ArkivGraph
   );
 }
 
-export function NodeDetail({ node, onClose, theme = ARKIV_THEME }: NodeDetailProps): React.ReactElement | null {
+export function NodeDetail({ node, connections = [], onClose, theme = ARKIV_THEME }: NodeDetailProps): React.ReactElement | null {
   if (!node) return null;
   const color = nodeColorFor(node, theme);
   const payload = node.payload && typeof node.payload === "object" ? (node.payload as Record<string, unknown>) : null;
@@ -65,6 +104,8 @@ export function NodeDetail({ node, onClose, theme = ARKIV_THEME }: NodeDetailPro
         {node.unresolved && <Badge text="unresolved" color={theme.unresolvedColor} />}
         {node.external?.chainName && <Badge text={node.external.chainName} color={color} />}
       </div>
+
+      <ConnectionsSection connections={connections} theme={theme} />
 
       {node.kind === "external" && node.external && (
         <>

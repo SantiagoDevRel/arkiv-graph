@@ -146,7 +146,9 @@ export function Showcase({ writesEnabled, owner }: { writesEnabled: boolean; pro
                 ? error
                 : mode === "wallet" && !activeAddress
                   ? "Paste a wallet address above to see its Arkiv entities as a graph."
-                  : "No entities found. Has the demo been seeded?"}
+                  : mode === "wallet"
+                    ? "This wallet currently owns 0 live entities on Braga. Arkiv entities expire by design — they may have lapsed, or live on a different network."
+                    : "No entities found. Has the demo been seeded? (run `pnpm seed`)"}
           </div>
         )}
       </div>
