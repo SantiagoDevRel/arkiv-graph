@@ -1,0 +1,82 @@
+{
+  "name": "arkiv-graph",
+  "version": "0.1.0",
+  "description": "Turn your Arkiv entities into a live, interactive graph. Nodes are entities, edges are the relationships you define, and references to other chains show up as external nodes.",
+  "keywords": [
+    "arkiv",
+    "graph",
+    "visualization",
+    "force-graph",
+    "ethereum",
+    "web3",
+    "database",
+    "react",
+    "golem"
+  ],
+  "license": "MIT",
+  "author": "Santiago Trujillo Zuluaga (Arkiv DevRel)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SantiagoDevRel/arkiv-graph.git",
+    "directory": "packages/arkiv-graph"
+  },
+  "homepage": "https://arkiv-graph-example.vercel.app",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "AGENTS.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js",
+      "require": "./dist/react/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup && node scripts/add-use-client.mjs",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react-force-graph-2d": "^1.27.1"
+  },
+  "peerDependencies": {
+    "@arkiv-network/sdk": ">=0.6.5 <0.7.0",
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "@arkiv-network/sdk": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

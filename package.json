@@ -1,0 +1,20 @@
+{
+  "name": "arkiv-graph-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "arkiv-graph — turn your Arkiv entities into a live, interactive graph. Library + showcase.",
+  "type": "module",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20 <=22"
+  },
+  "scripts": {
+    "build:lib": "pnpm --filter arkiv-graph build",
+    "build:example": "pnpm --filter @arkiv-graph/example build",
+    "build": "pnpm build:lib && pnpm build:example",
+    "dev": "pnpm --filter @arkiv-graph/example dev",
+    "test": "pnpm --filter arkiv-graph test",
+    "seed": "pnpm --filter @arkiv-graph/example seed"
+  },
+  "license": "MIT"
+}
