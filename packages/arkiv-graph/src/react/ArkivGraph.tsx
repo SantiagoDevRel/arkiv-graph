@@ -384,6 +384,23 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
     node.__pinned = true;
   }, []);
 
+  const zoomBy = useCallback((factor: number) => {
+    const fg = fgRef.current;
+    if (!fg?.zoom) return;
+    try {
+      fg.zoom(Math.max(0.05, Math.min(60, fg.zoom() * factor)), 250);
+    } catch {
+      /* noop */
+    }
+  }, []);
+  const fitView = useCallback(() => {
+    try {
+      fgRef.current?.zoomToFit(400, 50);
+    } catch {
+      /* noop */
+    }
+  }, []);
+
   const toggleCat = (key: string) =>
     setHidden((prev) => {
       const next = new Set(prev);
@@ -554,9 +571,65 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
         </div>
       )}
 
+      {/* zoom controls (bottom-right) */}
+      <div style={{ position: "absolute", bottom: 12, right: 12, zIndex: 4, display: "flex", flexDirection: "column", gap: 5 }}>
+        <ZoomButton theme={theme} title="Zoom in" onClick={() => zoomBy(1.4)}>
+          +
+        </ZoomButton>
+        <ZoomButton theme={theme} title="Zoom out" onClick={() => zoomBy(1 / 1.4)}>
+          −
+        </ZoomButton>
+        <ZoomButton theme={theme} title="Fit to view" onClick={fitView} small>
+          ⤢
+        </ZoomButton>
+      </div>
+
       {showDetail && selected && (
         <NodeDetail node={selected} connections={connections} theme={theme} onClose={() => setSelected(null)} />
       )}
     </div>
+  );
+}
+
+function ZoomButton({
+  children,
+  onClick,
+  title,
+  theme,
+  small,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  title: string;
+  theme: ArkivGraphTheme;
+  small?: boolean;
+}) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        width: 32,
+        height: 32,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: small ? 14 : 19,
+        lineHeight: 1,
+        color: hover ? "#160a00" : theme.text,
+        background: hover ? theme.accent : "rgba(16,19,26,0.9)",
+        border: `1px solid ${hover ? theme.accent : theme.muted + "44"}`,
+        borderRadius: 8,
+        cursor: "pointer",
+        fontFamily: SANS,
+        userSelect: "none",
+      }}
+    >
+      {children}
+    </button>
   );
 }

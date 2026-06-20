@@ -103,6 +103,7 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
       expiresAtBlock: e.expiresAtBlock,
       createdAtBlock: e.createdAtBlock,
       ttlSeconds: ttl.ttlSeconds,
+      expiresAt: ttl.expiresAt,
       ttlFraction: ttl.ttlFraction,
       explorerUrl: `${arkivExplorer}/entity/${e.key}`,
     });

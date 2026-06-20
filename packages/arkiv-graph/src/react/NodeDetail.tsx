@@ -1,6 +1,6 @@
 import * as React from "react";
 import type { GraphNode } from "../types.js";
-import { formatTtl } from "../ttl.js";
+import { formatExpiry } from "../ttl.js";
 import { ARKIV_THEME, type ArkivGraphTheme, nodeColorFor } from "./theme.js";
 import { ensureScrollbarStyle } from "./scrollbar.js";
 
@@ -158,7 +158,7 @@ export function NodeDetail({ node, connections = [], onClose, theme = ARKIV_THEM
             <>
               <Field label="key" value={node.id} theme={theme} mono />
               {node.owner && <Field label="owner" value={node.owner} theme={theme} mono />}
-              {typeof node.ttlSeconds === "number" && <Field label="expires in" value={formatTtl(node.ttlSeconds)} theme={theme} />}
+              {typeof node.expiresAt === "number" && <Field label="expires" value={formatExpiry(node.expiresAt)} theme={theme} />}
             </>
           )}
         </Section>

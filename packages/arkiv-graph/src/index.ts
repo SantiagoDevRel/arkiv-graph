@@ -9,7 +9,7 @@ export type {
   FetchArkivGraphResult,
 } from "./fetch.js";
 
-export { computeTtl, formatTtl } from "./ttl.js";
+export { computeTtl, formatTtl, formatExpiry } from "./ttl.js";
 export type { Ttl } from "./ttl.js";
 
 export {

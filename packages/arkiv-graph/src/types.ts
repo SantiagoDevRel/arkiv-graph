@@ -68,6 +68,8 @@ export interface GraphNode {
   createdAtBlock?: number;
   /** seconds until expiry (negative = already expired); undefined if unknown. */
   ttlSeconds?: number;
+  /** unix seconds at which the entity expires (absolute); undefined if unknown. */
+  expiresAt?: number;
   /** 0..1 share of lifetime remaining, for the fade effect; undefined if unknown. */
   ttlFraction?: number;
   /** filled for kind === "external". */

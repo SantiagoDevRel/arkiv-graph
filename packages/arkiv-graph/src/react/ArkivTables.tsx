@@ -4,6 +4,7 @@ import type { EntityTable, Graph, GraphEdge, GraphNode, RelRef, TableRow, Tables
 import { ARKIV_THEME, type ArkivGraphTheme, buildRelationshipColors } from "./theme.js";
 import { NodeDetail, type NodeConnection } from "./NodeDetail.js";
 import { ensureScrollbarStyle } from "./scrollbar.js";
+import { formatExpiry } from "../ttl.js";
 
 export interface ArkivTablesProps {
   model: TablesModel;
@@ -83,6 +84,7 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
     if (!sort) return rows;
     const { col, dir } = sort;
     rows.sort((a, b) => {
+      if (col === "_ttl") return ((a.expiresAt ?? Infinity) - (b.expiresAt ?? Infinity)) * dir;
       const av = a.cells[col];
       const bv = b.cells[col];
       const an = Array.isArray(av) ? av.length : (av ?? "");
@@ -205,10 +207,10 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
                   style={{ borderBottom: `1px solid ${theme.muted}14`, cursor: nodeById.has(row.id) ? "pointer" : "default", background: selected?.id === row.id ? `${theme.accent}14` : "transparent" }}
                 >
                   {active.columns.map((c) => {
-                    const v = row.cells[c.id];
+                    const v = c.id === "_ttl" ? formatExpiry(row.expiresAt) : row.cells[c.id];
                     const isMeta = c.id === "_key" || c.id === "_owner";
                     return (
-                      <td key={c.id} style={{ padding: "7px 12px", color: theme.text, verticalAlign: "top", maxWidth: 280, wordBreak: "break-word", fontFamily: isMeta ? MONO : SANS, fontSize: isMeta ? 11 : 12 }}>
+                      <td key={c.id} style={{ padding: "7px 12px", color: theme.text, verticalAlign: "top", maxWidth: 280, wordBreak: "break-word", fontFamily: isMeta ? MONO : SANS, fontSize: isMeta ? 11 : 12, whiteSpace: c.id === "_ttl" ? "nowrap" : undefined }}>
                         {Array.isArray(v) ? <Chips refs={v} /> : v || <span style={{ color: theme.muted, opacity: 0.4 }}>—</span>}
                       </td>
                     );

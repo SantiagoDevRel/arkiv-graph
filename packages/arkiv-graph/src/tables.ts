@@ -5,7 +5,7 @@
 // back from `entities`).
 import { labelForRule } from "./buildGraph.js";
 import { normalizeEntity, type NormEntity } from "./normalize.js";
-import { computeTtl, formatTtl } from "./ttl.js";
+import { computeTtl } from "./ttl.js";
 import type { ArkivEntityLike, BlockTiming, Graph, GraphNode, JoinRule, LinkRule } from "./types.js";
 
 export type TableColumnKind = "meta" | "attribute" | "relationship";
@@ -27,6 +27,8 @@ export interface TableRow {
   entityType?: string;
   owner?: string;
   ttlSeconds?: number;
+  /** unix seconds at which this row's entity expires; rendered as an absolute date. */
+  expiresAt?: number;
   /** colId → a string value (meta/attribute) or relationship refs. */
   cells: Record<string, string | RelRef[]>;
 }
@@ -112,7 +114,7 @@ export function buildTables(graph: Graph, entities: ArkivEntityLike[], options: 
       for (const a of n.attributes ?? []) if (!HIDDEN_ATTRS.has(a.key)) attrKeys.add(a.key);
       for (const label of incident.get(n.id)?.keys() ?? []) relLabels.add(label);
     }
-    const hasTtl = nodes.some((n) => typeof n.ttlSeconds === "number");
+    const hasTtl = nodes.some((n) => typeof n.expiresAt === "number");
     const columns: TableColumn[] = [
       { id: "_key", label: "key", kind: "meta" },
       ...[...attrKeys].sort().map((k) => ({ id: `attr:${k}`, label: k, kind: "attribute" as const })),
@@ -124,13 +126,12 @@ export function buildTables(graph: Graph, entities: ArkivEntityLike[], options: 
       const cells: Record<string, string | RelRef[]> = {
         _key: shortHex(n.id),
         _owner: n.owner ? shortHex(n.owner) : "",
-        ...(hasTtl ? { _ttl: formatTtl(n.ttlSeconds) } : {}),
       };
       const attrMap = new Map((n.attributes ?? []).map((a) => [a.key, String(a.value)]));
       for (const k of attrKeys) cells[`attr:${k}`] = attrMap.get(k) ?? "";
       const inc = incident.get(n.id);
       for (const l of relLabels) cells[`rel:${l}`] = inc?.get(l) ?? [];
-      return { id: n.id, label: n.label, entityType: n.entityType, owner: n.owner, ttlSeconds: n.ttlSeconds, cells };
+      return { id: n.id, label: n.label, entityType: n.entityType, owner: n.owner, ttlSeconds: n.ttlSeconds, expiresAt: n.expiresAt, cells };
     });
     tables.push({ type, kind: "collection", count: rows.length, columns, rows });
   }
@@ -161,10 +162,9 @@ export function buildTables(graph: Graph, entities: ArkivEntityLike[], options: 
       const attrMap = new Map((r.norm?.attributes ?? []).map((a) => [a.key, String(a.value)]));
       for (const k of attrKeys) cells[`attr:${k}`] = attrMap.get(k) ?? "";
       const ttl = r.norm ? computeTtl(r.norm.expiresAtBlock, r.norm.createdAtBlock, options.blockTiming) : {};
-      if (typeof ttl.ttlSeconds === "number") cells._ttl = formatTtl(ttl.ttlSeconds);
-      return { id: r.norm?.key ?? `${type}-${i}`, label: `${r.from.targetLabel} ${r.label} ${r.to.targetLabel}`, entityType: type, owner: r.norm?.owner, ttlSeconds: ttl.ttlSeconds, cells };
+      return { id: r.norm?.key ?? `${type}-${i}`, label: `${r.from.targetLabel} ${r.label} ${r.to.targetLabel}`, entityType: type, owner: r.norm?.owner, ttlSeconds: ttl.ttlSeconds, expiresAt: ttl.expiresAt, cells };
     });
-    const hasTtl = rows.some((r) => typeof r.ttlSeconds === "number");
+    const hasTtl = rows.some((r) => typeof r.expiresAt === "number");
     const columns: TableColumn[] = [
       { id: "_from", label: "from", kind: "relationship" },
       { id: "_to", label: "to", kind: "relationship" },

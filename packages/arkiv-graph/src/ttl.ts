@@ -41,6 +41,23 @@ export function computeTtl(
   return { ttlSeconds, ttlFraction, expiresAt };
 }
 
+/** Absolute expiry date+time in the viewer's locale/timezone, e.g. "Jul 18, 2026, 2:32 PM".
+ *  `expiresAt` is unix SECONDS (from computeTtl). Returns "—" when unknown. */
+export function formatExpiry(expiresAt: number | undefined): string {
+  if (expiresAt == null || !Number.isFinite(expiresAt)) return "—";
+  try {
+    return new Date(expiresAt * 1000).toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "—";
+  }
+}
+
 /** Human "2d 3h", "5m", "expired". */
 export function formatTtl(ttlSeconds: number | undefined): string {
   if (ttlSeconds == null) return "—";
