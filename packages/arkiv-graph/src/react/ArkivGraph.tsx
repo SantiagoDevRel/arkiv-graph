@@ -39,22 +39,23 @@ interface FilterCat {
 
 const SANS = "system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
 
-function useContainerWidth(): [React.RefObject<HTMLDivElement | null>, number] {
+function useContainerSize(): [React.RefObject<HTMLDivElement | null>, number, number] {
   const ref = useRef<HTMLDivElement | null>(null);
-  const [w, setW] = useState(800);
+  const [size, setSize] = useState({ w: 800, h: 0 });
   useEffect(() => {
     if (!ref.current) return;
     const el = ref.current;
     const ro = new ResizeObserver((entries) => {
-      const cw = entries[0]?.contentRect.width;
-      if (cw && Math.abs(cw - w) > 1) setW(cw);
+      const r = entries[0]?.contentRect;
+      if (!r) return;
+      setSize((s) => (Math.abs(r.width - s.w) > 1 || Math.abs(r.height - s.h) > 1 ? { w: r.width, h: r.height } : s));
     });
     ro.observe(el);
-    setW(el.clientWidth || 800);
+    setSize({ w: el.clientWidth || 800, h: el.clientHeight || 0 });
     return () => ro.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  return [ref, w];
+  return [ref, size.w, size.h];
 }
 
 export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
@@ -86,8 +87,9 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
     };
   }, []);
 
-  const [containerRef, width] = useContainerWidth();
+  const [containerRef, width, measuredHeight] = useContainerSize();
   const fgRef = useRef<any>(null);
+  const [fullscreen, setFullscreen] = useState(false);
 
   // Tune the d3 forces once the renderer is ready, for a readable spread.
   useEffect(() => {
@@ -400,6 +402,27 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
       /* noop */
     }
   }, []);
+  const toggleFullscreen = useCallback(() => {
+    const el = containerRef.current;
+    if (typeof document === "undefined" || !el) return;
+    try {
+      if (document.fullscreenElement) void document.exitFullscreen?.();
+      else void el.requestFullscreen?.();
+    } catch {
+      /* noop */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const onFs = () => {
+      setFullscreen(document.fullscreenElement === containerRef.current);
+      setTimeout(() => fitView(), 320); // re-fit after the canvas resizes
+    };
+    document.addEventListener("fullscreenchange", onFs);
+    return () => document.removeEventListener("fullscreenchange", onFs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitView]);
 
   const toggleCat = (key: string) =>
     setHidden((prev) => {
@@ -413,7 +436,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
     <div
       ref={containerRef}
       className={className}
-      style={{ position: "relative", width: "100%", height, background: theme.background, borderRadius: 12, overflow: "hidden", ...style }}
+      style={{ position: "relative", width: "100%", height: fullscreen ? "100vh" : height, background: theme.background, borderRadius: fullscreen ? 0 : 12, overflow: "hidden", ...style }}
     >
       {showSearch && (
         <input
@@ -485,7 +508,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
           ref={fgRef}
           graphData={graphData}
           width={width}
-          height={height}
+          height={measuredHeight > 0 ? measuredHeight : height}
           backgroundColor={theme.background}
           nodeId="id"
           nodeRelSize={1}
@@ -579,8 +602,11 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
         <ZoomButton theme={theme} title="Zoom out" onClick={() => zoomBy(1 / 1.4)}>
           −
         </ZoomButton>
-        <ZoomButton theme={theme} title="Fit to view" onClick={fitView} small>
+        <ZoomButton theme={theme} title="Reset zoom (fit)" onClick={fitView} small>
           ⤢
+        </ZoomButton>
+        <ZoomButton theme={theme} title={fullscreen ? "Exit fullscreen" : "Fullscreen"} onClick={toggleFullscreen} small>
+          {fullscreen ? "✕" : "⛶"}
         </ZoomButton>
       </div>
 
