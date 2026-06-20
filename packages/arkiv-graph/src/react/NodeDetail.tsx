@@ -104,7 +104,7 @@ export function NodeDetail({ node, connections = [], onClose, theme = ARKIV_THEM
         width: "min(304px, calc(100% - 24px))",
         maxHeight: "calc(100% - 24px)",
         overflowY: "auto",
-        background: "rgba(16,19,26,0.97)",
+        background: "rgba(26,26,26,0.97)",
         border: `1px solid ${color}55`,
         borderRadius: 12,
         padding: 14,

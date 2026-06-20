@@ -183,7 +183,7 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
                       top: 0,
                       textAlign: "left",
                       padding: "8px 12px",
-                      background: "#10131a",
+                      background: "#191919",
                       color: c.kind === "relationship" ? colorOf(c.label) : theme.muted,
                       fontWeight: 600,
                       fontSize: 11,

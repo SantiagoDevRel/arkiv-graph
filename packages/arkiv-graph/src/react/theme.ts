@@ -18,34 +18,36 @@ export interface ArkivGraphTheme {
   accent: string;
 }
 
+// Arkiv Design System (dark). Blue leads (#4b52c7), orange is the spark (#fe7446),
+// ink text (#f0ede8) on page #111111. Brand colours anchor the node/edge palettes.
 export const ARKIV_THEME: ArkivGraphTheme = {
-  background: "#0a0c10",
-  text: "#e9edf4",
-  muted: "#8b95a7",
-  accent: "#FF6A00",
+  background: "#111111",
+  text: "#f0ede8",
+  muted: "#a0a0a0",
+  accent: "#fe7446",
   entityColors: {
-    user: "#FF6A00",
-    profile: "#FF6A00",
-    post: "#43b0ff",
-    comment: "#9b8cff",
-    tip: "#33d6a6",
-    message: "#43b0ff",
-    note: "#43b0ff",
+    user: "#4b52c7", // blue — primary leads
+    profile: "#4b52c7",
+    post: "#14a6ef", // cyan
+    comment: "#9b8cff", // violet
+    tip: "#fe7446", // orange spark
+    message: "#14a6ef",
+    note: "#14a6ef",
     session: "#33d6a6",
   },
-  palette: ["#FF6A00", "#43b0ff", "#9b8cff", "#33d6a6", "#ffb020", "#ff5d8f", "#5ad1e6", "#c0e060"],
-  walletColor: "#f4c542",
-  tagColor: "#7d8aa3",
-  unresolvedColor: "#4a5363",
+  palette: ["#4b52c7", "#14a6ef", "#fe7446", "#9b8cff", "#33d6a6", "#ffb020", "#ff5d8f", "#54d6c2"],
+  walletColor: "#e0a93f",
+  tagColor: "#8a8f9c",
+  unresolvedColor: "#4a4a4a",
   edgeColors: {
-    reference: "#5b6577",
+    reference: "#5a5a5a",
     join: "#3a8f6e",
     shared: "#6a5fb0",
-    tag: "#4f5a70",
+    tag: "#555560",
     owner: "#7a6a30",
-    external: "#9aa3b2",
+    external: "#9aa0a8",
   },
-  relPalette: ["#ffb020", "#43d6a6", "#ff5d8f", "#7aa2ff", "#c0e060", "#ff924d", "#5ad1e6", "#b388ff", "#f25c54", "#54d6c2"],
+  relPalette: ["#fe7446", "#6f76e6", "#14a6ef", "#4ade80", "#ffb020", "#b388ff", "#ff5d8f", "#54d6c2", "#ff924d", "#5ad1e6"],
 };
 
 /** Stable colour per distinct relationship label. Labels are sorted first so the
