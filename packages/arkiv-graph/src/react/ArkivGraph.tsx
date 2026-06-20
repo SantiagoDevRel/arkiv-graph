@@ -571,8 +571,8 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
         </div>
       )}
 
-      {/* zoom controls (bottom-right) */}
-      <div style={{ position: "absolute", bottom: 12, right: 12, zIndex: 4, display: "flex", flexDirection: "column", gap: 5 }}>
+      {/* zoom controls (bottom-right, above the detail panel so they stay clickable) */}
+      <div style={{ position: "absolute", bottom: 12, right: 12, zIndex: 6, display: "flex", flexDirection: "column", gap: 5 }}>
         <ZoomButton theme={theme} title="Zoom in" onClick={() => zoomBy(1.4)}>
           +
         </ZoomButton>
