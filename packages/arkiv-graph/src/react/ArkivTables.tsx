@@ -113,8 +113,8 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
   function Chips({ refs }: { refs: RelRef[] }) {
     if (!refs.length) return <span style={{ color: theme.muted, opacity: 0.4 }}>—</span>;
     return (
-      <span style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-        {refs.slice(0, 8).map((r, i) => {
+      <span style={{ display: "flex", flexWrap: "nowrap", gap: 4, overflow: "hidden", alignItems: "center" }}>
+        {refs.slice(0, 3).map((r, i) => {
           const c = colorOf(r.relationship);
           const clickable = nodeById.has(r.targetId);
           return (
@@ -134,18 +134,19 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
                 borderRadius: 20,
                 padding: "1px 8px",
                 cursor: clickable ? "pointer" : "default",
-                maxWidth: 160,
+                maxWidth: 130,
+                flexShrink: 0,
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
               }}
             >
               <span style={{ color: c }}>{arrow(r.direction)}</span>
-              {r.targetLabel.length > 18 ? `${r.targetLabel.slice(0, 17)}…` : r.targetLabel}
+              {r.targetLabel.length > 16 ? `${r.targetLabel.slice(0, 15)}…` : r.targetLabel}
             </button>
           );
         })}
-        {refs.length > 8 && <span style={{ color: theme.muted, fontSize: 11 }}>+{refs.length - 8}</span>}
+        {refs.length > 3 && <span style={{ color: theme.muted, fontSize: 11, flexShrink: 0 }}>+{refs.length - 3}</span>}
       </span>
     );
   }
@@ -209,9 +210,24 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
                   {active.columns.map((c) => {
                     const v = c.id === "_ttl" ? formatExpiry(row.expiresAt) : row.cells[c.id];
                     const isMeta = c.id === "_key" || c.id === "_owner";
+                    const isChips = Array.isArray(v);
+                    // every cell stays on ONE line; full value shows on hover (title)
                     return (
-                      <td key={c.id} style={{ padding: "7px 12px", color: theme.text, verticalAlign: "top", maxWidth: 280, wordBreak: "break-word", fontFamily: isMeta ? MONO : SANS, fontSize: isMeta ? 11 : 12, whiteSpace: c.id === "_ttl" ? "nowrap" : undefined }}>
-                        {Array.isArray(v) ? <Chips refs={v} /> : v || <span style={{ color: theme.muted, opacity: 0.4 }}>—</span>}
+                      <td
+                        key={c.id}
+                        title={!isChips && typeof v === "string" && v ? v : undefined}
+                        style={{
+                          padding: "8px 12px",
+                          color: theme.text,
+                          maxWidth: 210,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          fontFamily: isMeta ? MONO : SANS,
+                          fontSize: isMeta ? 11 : 12,
+                        }}
+                      >
+                        {isChips ? <Chips refs={v} /> : v || <span style={{ color: theme.muted, opacity: 0.4 }}>—</span>}
                       </td>
                     );
                   })}
