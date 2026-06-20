@@ -9,7 +9,6 @@
     "dev": "next dev -p 3012",
     "build": "next build",
     "start": "next start -p 3012",
-    "lint": "next lint",
     "seed": "node scripts/seed.mjs",
     "seed:reseed": "node scripts/seed.mjs --reseed"
   },

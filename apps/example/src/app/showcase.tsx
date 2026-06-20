@@ -10,6 +10,8 @@ interface GraphResponse {
   blockTiming: { currentBlock: number; currentBlockTime: number; blockDuration: number } | null;
   graph: Graph;
   tables: TablesModel;
+  truncated?: boolean;
+  loaded?: number;
 }
 
 const HANDLES = ["alice", "bob", "carol", "dave", "erin", "frank"];
@@ -184,6 +186,13 @@ export function Showcase({ writesEnabled, owner, networkName }: { writesEnabled:
           </span>
         )}
       </div>
+
+      {data?.truncated && (
+        <div style={{ marginTop: 10, fontSize: 12.5, color: "#ffb020" }}>
+          ⚠ Large dataset — showing the first <b>{data.loaded}</b> entities. Narrow it with a type/wallet filter, raise
+          the read limit, or use the Tables view (lighter than the force graph at scale).
+        </div>
+      )}
 
       {mode === "demo" && writesEnabled && (
         <div className="compose">

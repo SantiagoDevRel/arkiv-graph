@@ -50,12 +50,6 @@ export async function POST(req: Request) {
   const len = Number(req.headers.get("content-length") ?? "0");
   if (len > MAX_BODY) return json({ error: "Body too large." }, { status: 413 });
 
-  // rate limit (cheap gate, before parse/write)
-  const rl = checkRateLimit(clientIp(req), Date.now());
-  if (!rl.ok) {
-    return json({ error: rl.reason }, { status: 429, headers: rl.retryAfterSec ? { "retry-after": String(rl.retryAfterSec) } : {} });
-  }
-
   const raw = await req.text();
   if (raw.length > MAX_BODY) return json({ error: "Body too large." }, { status: 413 });
 
@@ -73,6 +67,12 @@ export async function POST(req: Request) {
 
   const handle = typeof body.handle === "string" ? body.handle.trim().toLowerCase() : "alice";
   if (!DEMO_HANDLES.has(handle)) return json({ error: "Unknown author." }, { status: 400 });
+
+  // rate limit AFTER validation — invalid/garbage requests don't consume the quota
+  const rl = checkRateLimit(clientIp(req), Date.now());
+  if (!rl.ok) {
+    return json({ error: rl.reason }, { status: 429, headers: rl.retryAfterSec ? { "retry-after": String(rl.retryAfterSec) } : {} });
+  }
 
   try {
     const postId = `live-${randomUUID()}`;

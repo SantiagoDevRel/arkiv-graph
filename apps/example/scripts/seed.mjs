@@ -32,8 +32,16 @@ if (!anyCustom) {
     console.error(`✗ Custom Arkiv network is partially configured — missing ${missing.join(", ")}. Set ARKIV_CHAIN_ID, ARKIV_RPC_URL and ARKIV_EXPLORER_URL together, or unset all ARKIV_* network vars to use Braga.`);
     process.exit(1);
   }
+  const chainId = Number(e.ARKIV_CHAIN_ID);
+  if (!Number.isSafeInteger(chainId) || chainId <= 0) {
+    console.error(`✗ ARKIV_CHAIN_ID must be a positive integer, got "${e.ARKIV_CHAIN_ID}".`);
+    process.exit(1);
+  }
+  for (const [k, v] of [["ARKIV_RPC_URL", e.ARKIV_RPC_URL], ["ARKIV_EXPLORER_URL", e.ARKIV_EXPLORER_URL], ...(e.ARKIV_WS_URL ? [["ARKIV_WS_URL", e.ARKIV_WS_URL]] : []), ...(e.ARKIV_FAUCET_URL ? [["ARKIV_FAUCET_URL", e.ARKIV_FAUCET_URL]] : [])]) {
+    try { new URL(v); } catch { console.error(`✗ ${k} must be a valid URL, got "${v}".`); process.exit(1); }
+  }
   CHAIN = defineArkivNetwork(braga, {
-    chainId: Number(e.ARKIV_CHAIN_ID),
+    chainId,
     rpcUrl: e.ARKIV_RPC_URL,
     explorerUrl: e.ARKIV_EXPLORER_URL,
     name: e.ARKIV_NETWORK_NAME,

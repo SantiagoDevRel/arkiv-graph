@@ -46,6 +46,8 @@ export async function GET(req: Request) {
       address: address ?? trustedAddress(),
       project: address ? null : PROJECT,
       explorer: EXPLORER,
+      truncated: !!result.truncated, // true if we hit the read limit (giant DB)
+      loaded: result.entities.length,
       blockTiming: result.blockTiming
         ? {
             currentBlock: Number(result.blockTiming.currentBlock),

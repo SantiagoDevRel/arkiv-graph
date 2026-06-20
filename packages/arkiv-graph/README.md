@@ -189,6 +189,22 @@ Also exported: `computeTtl`, `formatTtl`, `CHAIN_REGISTRY`, `lookupChain`, `dete
 - **Node 20–22** for any server-side use of `@arkiv-network/sdk` (Node 24 hangs entity updates).
 - `arkiv-graph` **never reads external chains** — external nodes are built only from references your own entities store.
 
+## At scale & edge cases
+
+The library is built to degrade gracefully across dataset sizes and shapes:
+
+| Case | What happens | What to do |
+| --- | --- | --- |
+| **Giant DB** (thousands of entities) | `fetchArkivGraph` paginates up to `limit` (default 500; Arkiv page cap is 200) and returns `truncated: true` when it hits the cap. | Filter with `attributes` / `createdBy` / `ownedBy`, raise `limit`, and prefer the **Tables view** (`<ArkivTables>`) which is far cheaper than the force simulation. The force graph is comfortable to ~1–2k nodes. Surface `truncated` in your UI. |
+| **Tiny / empty DB** | Builds an empty graph; `<ArkivGraph>`/`<ArkivTables>` render an empty state — no crash. | Nothing. |
+| **Many external chains** | Each cross-chain reference becomes an external node. `CHAIN_REGISTRY` ships explorer URLs **and a free public RPC** for the common mainnets + testnets (Ethereum, Base, Optimism, Arbitrum, Polygon, Scroll, zkSync, Linea, Zora, Blast, Gnosis, + Sepolias). | Unknown chains fall back to `Chain <id>`. External chains are **not read by default**; to opt into reading one, grab its RPC via `lookupChain(id).rpc` and build your own client. |
+| **Untyped entities** (no `entityType`) | Grouped under `(untyped)` in tables; still rendered as nodes. | Add an `entityType` attribute for clean grouping. |
+| **Expired / missing references** | Rendered as faint **ghost** nodes (not dropped), so TTL/expiry never looks like a rendering bug. | Expected; `NoEntityFoundError` on a stale pointer is normal. |
+| **Huge text payloads** | Tables keep every cell on one line (ellipsis + full value on hover); the detail card shows the full payload. | Nothing. |
+| **Heterogeneous attributes per row** | Each table column is the union of that type's attributes; missing values render as `—`. | Nothing. |
+
+> Sorting/pagination honesty: the tables sort the **loaded** rows client-side (Arkiv has no server-side ORDER BY). For globally-sorted huge tables, page with `limit` + your own ordering.
+
 ## License
 
 MIT © Arkiv DevRel

@@ -16,5 +16,11 @@
     "test": "pnpm --filter arkiv-graph test",
     "seed": "pnpm --filter @arkiv-graph/example seed"
   },
+  "pnpm": {
+    "overrides": {
+      "ws@>=8.0.0 <8.21.0": "^8.21.0",
+      "postcss@<8.5.10": "^8.5.10"
+    }
+  },
   "license": "MIT"
 }

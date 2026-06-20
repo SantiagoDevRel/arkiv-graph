@@ -216,6 +216,7 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
                       <td
                         key={c.id}
                         title={!isChips && typeof v === "string" && v ? v : undefined}
+                        suppressHydrationWarning={c.id === "_ttl"}
                         style={{
                           padding: "8px 12px",
                           color: theme.text,

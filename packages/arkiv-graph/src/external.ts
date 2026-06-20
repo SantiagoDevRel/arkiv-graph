@@ -63,7 +63,8 @@ export function detectGroups(
     if (chainIdKeys.test(key)) {
       const prefix = stripSuffix(key, chainIdKeys);
       const num = typeof value === "number" ? value : Number(value);
-      get(prefix).chainId = Number.isFinite(num) ? num : value;
+      // keep huge/lossy ids as strings — Number() silently corrupts > 2^53
+      get(prefix).chainId = Number.isSafeInteger(num) ? num : String(value);
     } else if (contractKeys.test(key)) {
       if (isHexAddress(value) && !isInternal(value)) get(stripSuffix(key, contractKeys)).contract = value.toLowerCase();
     } else if (txKeys.test(key)) {

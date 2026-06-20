@@ -39,6 +39,13 @@ export function checkRateLimit(ip: string, nowMs: number): RateResult {
     return { ok: false, reason: "Daily demo write limit reached. Try again tomorrow.", retryAfterSec: 3600 };
   }
 
+  // occasional sweep so single-hit IPs don't accumulate forever (in-memory leak)
+  if (ipHits.size > 2000) {
+    for (const [k, ts] of ipHits) {
+      if (!ts.length || nowMs - ts[ts.length - 1]! >= WINDOW_MS) ipHits.delete(k);
+    }
+  }
+
   // per-IP sliding window
   const hits = (ipHits.get(ip) ?? []).filter((t) => nowMs - t < WINDOW_MS);
   if (hits.length >= PER_IP_MAX) {

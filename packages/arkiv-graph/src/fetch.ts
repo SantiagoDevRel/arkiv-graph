@@ -113,21 +113,26 @@ export async function fetchArkivGraph(
 
   const entities: ArkivEntityLike[] = [];
   let page = await q.fetch();
-  const collect = () => {
-    for (const e of page.entities ?? []) {
+  // collect from the CURRENT page object — works whether the SDK mutates the page
+  // in place on next() or returns a fresh one (we reassign below).
+  const collect = (p: any) => {
+    for (const e of p?.entities ?? []) {
       if (entities.length < limit) entities.push(e);
     }
   };
-  collect();
+  collect(page);
   let pages = 0;
   const maxPages = Math.ceil(limit / PAGE) + 2;
-  while (entities.length < limit && typeof page.hasNextPage === "function" && page.hasNextPage() && pages < maxPages) {
+  while (entities.length < limit && pages < maxPages) {
+    if (typeof page.hasNextPage !== "function" || !page.hasNextPage()) break;
     const before = entities.length;
-    await page.next();
-    collect();
+    const next = await page.next();
+    if (next && Array.isArray(next.entities)) page = next; // immutable SDK → new page; mutating SDK → page already updated
+    collect(page);
     pages++;
     if (entities.length === before) break; // page added nothing new — avoid spinning
   }
+  const moreAvailable = typeof page.hasNextPage === "function" && page.hasNextPage();
 
   let blockTiming: BlockTiming | undefined;
   try {
@@ -142,7 +147,8 @@ export async function fetchArkivGraph(
     arkivExplorer: options.arkivExplorer ?? explorerUrl,
     nativeChainId,
   });
-  // true when we hit the limit — the caller may be seeing a partial view
-  const truncated = entities.length >= limit;
+  // true only when we hit the limit AND the server still has more (not a false
+  // positive when the dataset happens to be exactly `limit` rows).
+  const truncated = entities.length >= limit && moreAvailable;
   return { entities, graph, blockTiming, truncated };
 }

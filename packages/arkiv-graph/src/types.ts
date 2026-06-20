@@ -195,6 +195,8 @@ export interface ChainInfo {
   color: string;
   /** explorer base, no trailing slash. */
   explorer?: string;
+  /** a free public RPC for this chain — for OPTIONAL external enrichment (off by default). */
+  rpc?: string;
   /** true for Arkiv's own chain — never treated as "external". */
   native?: boolean;
 }

@@ -38,8 +38,25 @@ function resolveNetwork() {
         `Set ARKIV_CHAIN_ID, ARKIV_RPC_URL and ARKIV_EXPLORER_URL together, or unset all ARKIV_* network vars to use the default Braga network.`,
     );
   }
+  // validate VALUES, not just presence — a NaN chain id or a malformed URL must fail loudly
+  const chainId = Number(ARKIV_CHAIN_ID);
+  if (!Number.isSafeInteger(chainId) || chainId <= 0) {
+    throw new Error(`ARKIV_CHAIN_ID must be a positive integer, got "${ARKIV_CHAIN_ID}".`);
+  }
+  for (const [k, v] of [
+    ["ARKIV_RPC_URL", ARKIV_RPC_URL],
+    ["ARKIV_EXPLORER_URL", ARKIV_EXPLORER_URL],
+    ...(ARKIV_WS_URL ? ([["ARKIV_WS_URL", ARKIV_WS_URL]] as [string, string][]) : []),
+    ...(ARKIV_FAUCET_URL ? ([["ARKIV_FAUCET_URL", ARKIV_FAUCET_URL]] as [string, string][]) : []),
+  ]) {
+    try {
+      new URL(v as string);
+    } catch {
+      throw new Error(`${k} must be a valid URL, got "${v}".`);
+    }
+  }
   const chain = defineArkivNetwork(braga, {
-    chainId: Number(ARKIV_CHAIN_ID),
+    chainId,
     rpcUrl: ARKIV_RPC_URL as string,
     explorerUrl: ARKIV_EXPLORER_URL as string,
     name: ARKIV_NETWORK_NAME,
