@@ -35,6 +35,36 @@ Inspect the user's entities first (what `entityType`s exist, which attributes po
 - group by a shared value → `{ type:"shared", attribute }` (hub by default).
 - show owners → `{ type:"owner" }`. Tags → `{ type:"tag", attribute }`.
 
+## Interactive actions — extend / delete (optional)
+`<ArkivTables>` can render a per-row **Extend** (date picker → push the expiry out) and **Delete** action — both **opt-in** and **signing-agnostic**. The library renders the UI and computes the target date; YOU perform the actual on-chain write in the callback (sign it however you like — the visitor's own wallet via `viem`/MetaMask, or a server key). Omit the callbacks and no buttons render (read-only views stay read-only).
+
+```tsx
+<ArkivTables
+  model={tables}
+  graph={graph}
+  signerAddress={connectedAddress}          // optional: rows owned by another address show an "only the owner can change this" hint
+  onExtendEntity={async ({ entityKey, targetExpiresAt }) => {
+    // sign with the user's wallet — Arkiv's extendEntity is ADDITIVE
+    // (new expiry = old expiry + duration), so derive the duration from the
+    // entity's REAL on-chain expiry, not a client value:
+    const wallet = createWalletClient({ account, chain, transport: custom(window.ethereum) });
+    const { expiresAtBlock } = await publicClient.getEntity(entityKey);
+    const { currentBlock, currentBlockTime, blockDuration } = await publicClient.getBlockTiming();
+    const currentExpiry = currentBlockTime + (Number(expiresAtBlock) - Number(currentBlock)) * blockDuration;
+    const { txHash } = await wallet.extendEntity({ entityKey, expiresIn: Math.ceil(targetExpiresAt - currentExpiry) });
+    return { expiresAt: targetExpiresAt, txUrl: `${explorer}/tx/${txHash}` }; // shown in the panel
+  }}
+  onDeleteEntity={async ({ entityKey }) => {
+    const { txHash } = await wallet.deleteEntity({ entityKey });
+    return { txUrl: `${explorer}/tx/${txHash}` };
+  }}
+  onMutated={() => refetch()}               // called after a successful write — refetch your data
+/>
+```
+- **Ownership is the chain's job.** Only an entity's owner can extend/delete it; a non-owner write reverts. Pre-check with `getEntity(key).owner` and **throw** from the callback (`throw new Error("You're not the owner…")`) — the panel shows whatever you throw, so a non-owner sees a clear message instead of a doomed transaction.
+- **Cost, accurately.** Don't show a pre-tx estimate (Arkiv's storage fee isn't reliably estimable up front). Read the real cost from the receipt (`gasUsed × effectiveGasPrice` + the `ArkivEntityBTLExtended` event's `cost`) and return it as `cost` for the panel — or omit it.
+- The Extend date picker clamps strictly forward (you can only extend past the current expiry).
+
 ## Hard gotchas — do NOT fight these
 1. **Scope reads.** Always set `createdBy` or `ownedBy`. Arkiv is one shared public DB; without scoping you'll render strangers' entities that share the `project` value.
 2. **SSR.** `<ArkivGraph>` already loads its renderer client-side and guards `window`. Put it in a Client Component (`"use client"`). You do NOT need `dynamic(..., { ssr:false })`, but it's harmless.

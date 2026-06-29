@@ -2,7 +2,7 @@
 
 The live showcase for [`arkiv-graph`](../../packages/arkiv-graph): **https://arkiv-graph-example.vercel.app**
 
-A tiny social app — **Arkiv Social** — whose users, posts, comments, follows and likes live entirely as entities on an **Arkiv testnet** (Braga today). The page reads them back and renders them two ways — a **Graph** view (`<ArkivGraph>`, drag a node to pin it) and a **Tables** view (`<ArkivTables>`, a Supabase-like browser) — toggle between them. A few entities reference other chains (an NFT pfp on Base, a mint on Ethereum, a tip on Optimism) so you can see external-chain nodes.
+A tiny social app — **Arkiv Social** — whose users, posts, comments, follows and likes live entirely as entities on an **Arkiv testnet** (Braga today). The page reads them back and renders them two ways — a **Graph** view (`<ArkivGraph>`, drag a node to pin it) and a **Tables** view (`<ArkivTables>`, a Supabase-like browser) — toggle between them. From the Tables view you can **extend** an entity's expiry or **delete** it, and **post** new ones — all signed by your **own wallet** (connect MetaMask), and only by the entity's owner. A few entities reference other chains (an NFT pfp on Base, a mint on Ethereum, a tip on Optimism) so you can see external-chain nodes.
 
 **Network is plug-and-play:** Braga is the default; set `ARKIV_CHAIN_ID` + `ARKIV_RPC_URL` + `ARKIV_EXPLORER_URL` together (see [`.env.local.example`](./.env.local.example)) to point at the next testnet — no code change. Partial config fails loudly rather than silently mixing networks.
 
@@ -29,13 +29,13 @@ pnpm dev           # → http://localhost:3012
 
 References resolve by **stable business id** (`handle`, `postId`) so the whole dataset seeds in a single `mutateEntities` batch — no need to know on-chain keys first.
 
-## Endpoints
+## Reads (server) + writes (your wallet)
 
-- `GET /api/graph` — reads the demo (`project` + `createdBy`) and returns the built graph. `?address=0x…` graphs any wallet's entities instead.
-- `POST /api/post` — creates one `post` entity on Braga, signed by the server burner. **Hardened:** gated by `ENABLE_WRITES`, per-IP + global rate limits, a write mutex (nonce safety), 240-char cap, and a server-set schema (the client controls only `text` + an allowlisted `handle`).
+- `GET /api/graph` — the only API route. Reads the demo (`project` + `createdBy`) server-side and returns the built graph. `?address=0x…` graphs any wallet's entities instead. No signing key needed.
+- **Writes are client-side.** From the Tables view you can **extend** or **delete** an entity, and you can **post** a new one — each is signed by the visitor's **own wallet** (viem + injected `window.ethereum`) in `src/lib/wallet-client.ts`. No server key, no write endpoint. Ownership is enforced by the chain (a non-owner is told so before any wallet prompt), and the client writes to the **same network the server reads from** (the resolved chain is passed to the browser via `page.tsx`).
 
 ## Deploy notes
 
-- Vercel project `arkiv-graph-example` (team `santiago-hobby`). Env: `PRIVATE_KEY`, `TRUSTED_ADDRESS`, `ARKIV_PROJECT`, `ENABLE_WRITES=1`.
+- Vercel project `arkiv-graph-example` (team `santiago-hobby`). The deployed app needs only **`TRUSTED_ADDRESS`** (the demo read scope) + optionally `ARKIV_PROJECT` and the `ARKIV_*` network vars. It does **not** need `PRIVATE_KEY` or `ENABLE_WRITES` — those are gone; writes are wallet-signed and seeding is local.
 - The data already lives on-chain, so prod reads the same Braga entities as local — no separate prod seed needed.
-- Throwaway testnet burner only. Never a mainnet key.
+- `PRIVATE_KEY` (local only) is a throwaway testnet burner for `pnpm seed`. Never a mainnet key.

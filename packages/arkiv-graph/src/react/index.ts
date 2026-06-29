@@ -5,6 +5,20 @@ export { ArkivTables } from "./ArkivTables.js";
 export type { ArkivTablesProps } from "./ArkivTables.js";
 export { NodeDetail } from "./NodeDetail.js";
 export type { NodeDetailProps, NodeConnection } from "./NodeDetail.js";
+export {
+  defaultExtendTarget,
+  minExtendTarget,
+  secondsToLocalInput,
+  localInputToSeconds,
+} from "./EntityActions.js";
+export type {
+  ExtendEntityParams,
+  ExtendEntityResult,
+  DeleteEntityParams,
+  DeleteEntityResult,
+  ExtendHandler,
+  DeleteHandler,
+} from "./EntityActions.js";
 export { ARKIV_THEME, buildRelationshipColors, nodeColorFor, nodeRadiusFor } from "./theme.js";
 export type { ArkivGraphTheme } from "./theme.js";
 

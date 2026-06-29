@@ -7,8 +7,8 @@ This repo has two things:
 If you're working ON this repo (not just consuming the library), here's what you need.
 
 ## Architecture
-- The library core (`packages/arkiv-graph/src/*.ts`, no UI deps) builds `{ nodes, edges }` from Arkiv entities via **link rules**. The React layer (`src/react/*`) renders it with `react-force-graph-2d` (loaded client-side).
-- The showcase reads/writes Arkiv **server-side only** (`apps/example/src/lib/arkiv.ts` is `server-only`). The browser never sees the private key. `/api/graph` reads; `/api/post` writes (gated by `ENABLE_WRITES`, rate-limited, schema-locked).
+- The library core (`packages/arkiv-graph/src/*.ts`, no UI deps) builds `{ nodes, edges }` from Arkiv entities via **link rules**. The React layer (`src/react/*`) renders it with `react-force-graph-2d` (loaded client-side). `<ArkivTables>` also renders optional, signing-agnostic **Extend/Delete** actions (see `packages/arkiv-graph/AGENTS.md`).
+- The showcase **reads** Arkiv server-side (`apps/example/src/lib/arkiv.ts` is `server-only`; `/api/graph` only) and **writes client-side**: `apps/example/src/lib/wallet-client.ts` signs `extendEntity`/`deleteEntity`/`createEntity` with the **visitor's own wallet** (viem + injected `window.ethereum`). No private key is in the app or the client bundle. The burner `PRIVATE_KEY` is used only by `scripts/seed.mjs` to seed the demo.
 
 ## Commands
 ```bash
@@ -22,12 +22,13 @@ pnpm build          # build lib + showcase
 
 ## Hard invariants — don't break these
 - **Build the lib before the app.** `apps/example` consumes `arkiv-graph`'s `dist`. `pnpm build` / the app's `prebuild` handle this; if you edit the lib, rebuild it.
-- **`server-only`** must stay on `src/lib/arkiv.ts` and the API routes' imports — the `PRIVATE_KEY` must never reach the client bundle. The client (`showcase.tsx`) talks only to `/api/*`.
-- **Writes are guarded.** `/api/post` sets all attributes server-side; the client controls only `text` + an allowlisted `handle`. Keep the rate-limit + mutex + `ENABLE_WRITES` gate (`src/lib/guards.ts`). The signing key is a valueless testnet burner.
+- **`server-only`** must stay on `src/lib/arkiv.ts` — the `PRIVATE_KEY` (seed/read scope) must never reach the client bundle. `wallet-client.ts` is client-side and holds **no** key (it signs via the user's injected wallet). Never import `arkiv.ts` into a client component.
+- **Writes are client-signed.** Extend/delete/post go through the visitor's own wallet (`wallet-client.ts`). Ownership is the chain's job — pre-check `getEntity(key).owner` and surface a friendly "not the owner" error before prompting the wallet. Don't reintroduce a server signing endpoint.
+- **Cost shown must be accurate** — read it from the receipt (`gasUsed × effectiveGasPrice` + the `ArkivEntityBTLExtended` `cost`), never a pre-tx guess.
 - **Scope reads** with `createdBy`/`ownedBy` — shared public DB.
-- **Node 20–22** (SDK hangs writes on Node 24).
+- **Node 20–22** for the seed script (SDK hangs writes on Node 24).
 - **Messaging:** Arkiv is a *queryable database on Ethereum*. Never "decentralized/trustless/permanent"; frame expiry as cost-efficiency.
 
 ## What to ask the maintainer
-- The deploy target (Vercel project `arkiv-graph-example`, team `santiago-hobby`) and whether `PRIVATE_KEY` / `ENABLE_WRITES` / `TRUSTED_ADDRESS` env vars are set there.
+- The deploy target (Vercel project `arkiv-graph-example`, team `santiago-hobby`) and whether `TRUSTED_ADDRESS` is set there (the demo's read scope). The deployed app no longer needs `PRIVATE_KEY` or `ENABLE_WRITES` — writes are signed by the visitor's wallet; the burner key is only for local seeding.
 - Whether to publish a new library version to npm (and the npm auth for it).

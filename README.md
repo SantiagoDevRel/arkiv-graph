@@ -3,7 +3,7 @@
 **See your [Arkiv](https://docs.arkiv.network) database as a live graph.** A drop-in library + a real, on-chain showcase.
 
 - 📦 **Library** ([`packages/arkiv-graph`](./packages/arkiv-graph)) — `npm i arkiv-graph`. Turns Arkiv entities into an interactive **force-directed graph** (drag a node to pin it) **or a Supabase-like tables view**. Nodes/rows are entities; edges/foreign-keys are the relationships you define; references to other chains appear as external nodes (drawn without reading those chains).
-- 🌐 **Showcase** ([`apps/example`](./apps/example)) — **https://arkiv-graph-example.vercel.app**. A tiny social app (users, posts, comments, follows, likes) stored **entirely on an Arkiv testnet** (Braga today), visualized with the library — Graph **and** Tables views, plus a live "write a post on-chain" button.
+- 🌐 **Showcase** ([`apps/example`](./apps/example)) — **https://arkiv-graph-example.vercel.app**. A tiny social app (users, posts, comments, follows, likes) stored **entirely on an Arkiv testnet** (Braga today), visualized with the library — Graph **and** Tables views. From the Tables view you can **extend** or **delete** any entity, and **post** new ones — every write is signed by **your own wallet** (viem + MetaMask), never a server key. Only an entity's owner can change it; a non-owner gets a clear "you're not the owner" message.
 
 ![arkiv-graph graph view](./docs/screenshot.png)
 ![arkiv-graph tables view](./docs/tables.png)
@@ -22,9 +22,9 @@ arkiv-graph/
 │  ├─ src/                 # buildGraph, link rules, external detection, fetch, <ArkivGraph>
 │  └─ README.md            # ← library docs (install, API, link-rule cookbook)
 ├─ apps/example/           # the Next.js showcase (arkiv-graph-example.vercel.app)
-│  ├─ src/app/             # page, showcase client, /api/graph (read), /api/post (live write)
-│  ├─ src/lib/             # Arkiv clients + link config + write guards
-│  └─ scripts/seed.mjs     # seeds the social demo into Braga (one batch tx)
+│  ├─ src/app/             # page, showcase client, /api/graph (read-only)
+│  ├─ src/lib/             # arkiv.ts (server reads) + wallet-client.ts (client-side writes via the user's wallet)
+│  └─ scripts/seed.mjs     # seeds the social demo into Braga (one batch tx, burner-signed)
 └─ docs/
 ```
 
@@ -41,7 +41,7 @@ pnpm seed                      # seed the demo into Braga (skips if already seed
 pnpm dev                       # → http://localhost:3012
 ```
 
-The signing wallet is a **throwaway Braga testnet burner** holding only valueless test GLM. Never use a mainnet key. Get test GLM at the [Braga faucet](https://braga.hoodi.arkiv.network/faucet/).
+The `PRIVATE_KEY` is a **throwaway Braga testnet burner** used only to **seed** the demo and as the read scope — the running app never signs with it. **Live writes (extend / delete / post) are signed by the visitor's own wallet** (viem + MetaMask), so no private key is ever in the app or the browser bundle. Never use a mainnet key. Get test GLM (for the burner to seed, and for your own wallet to write) at the [Braga faucet](https://braga.hoodi.arkiv.network/faucet/).
 
 ## Library in 10 lines
 

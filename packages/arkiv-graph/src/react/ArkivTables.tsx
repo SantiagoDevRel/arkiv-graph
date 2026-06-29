@@ -5,6 +5,7 @@ import { ARKIV_THEME, type ArkivGraphTheme, buildRelationshipColors } from "./th
 import { NodeDetail, type NodeConnection } from "./NodeDetail.js";
 import { ensureScrollbarStyle } from "./scrollbar.js";
 import { formatExpiry } from "../ttl.js";
+import { EntityActionsCell, EntityActionPanel, type DeleteHandler, type ExtendHandler } from "./EntityActions.js";
 
 export interface ArkivTablesProps {
   model: TablesModel;
@@ -13,7 +14,32 @@ export interface ArkivTablesProps {
   theme?: ArkivGraphTheme;
   height?: number;
   onNodeClick?: (node: GraphNode) => void;
+  /**
+   * Enable a per-row "Extend" action (a date picker that extends an entity's
+   * expiry). Receives the entity key + the absolute target date the user picked;
+   * perform the actual `extendEntity` write yourself (server-side, signed). When
+   * omitted, no Extend button is shown — read-only views stay read-only.
+   */
+  onExtendEntity?: ExtendHandler;
+  /** Enable a per-row "Delete" action (with a confirm step). Perform the signed
+   *  `deleteEntity` write yourself. Omit it to hide the Delete button. */
+  onDeleteEntity?: DeleteHandler;
+  /** The address that will sign the mutations. When set, rows owned by a different
+   *  address show an up-front "only the owner can modify this" hint (the write is
+   *  still attempted, so an authoritative server error can surface too). */
+  signerAddress?: string;
+  /** Called once after a successful extend/delete, so you can refetch the data. */
+  onMutated?: () => void;
 }
+
+interface ActiveAction {
+  kind: "extend" | "delete";
+  row: TableRow;
+  /** unix seconds captured when the panel opened, for default-date math. */
+  now: number;
+}
+
+const ENTITY_KEY_RE = /^0x[0-9a-fA-F]{16,}$/;
 
 const SANS = "system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
 const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
@@ -31,11 +57,20 @@ function arrow(d: RelRef["direction"]): string {
   return d === "out" ? "→" : d === "in" ? "←" : "·";
 }
 
-export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, onNodeClick }: ArkivTablesProps): React.ReactElement {
+export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, onNodeClick, onExtendEntity, onDeleteEntity, signerAddress, onMutated }: ArkivTablesProps): React.ReactElement {
   const tableCount = model.tables.length;
   const [tab, setTab] = useState(0); // 0..tableCount-1 = tables, tableCount = schema
   const [sort, setSort] = useState<{ col: string; dir: 1 | -1 } | null>(null);
   const [selected, setSelected] = useState<GraphNode | null>(null);
+  const [action, setAction] = useState<ActiveAction | null>(null);
+
+  const canExtend = !!onExtendEntity;
+  const canDelete = !!onDeleteEntity;
+  const hasActions = canExtend || canDelete;
+  const openAction = useCallback((kind: "extend" | "delete", row: TableRow) => {
+    setSelected(null);
+    setAction({ kind, row, now: Math.floor(Date.now() / 1000) });
+  }, []);
 
   const scrollClass = ensureScrollbarStyle(theme);
   const relColors = useMemo(() => buildRelationshipColors(collectLabels(model), theme), [model, theme]);
@@ -198,6 +233,26 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
                     {sort?.col === c.id ? (sort.dir === 1 ? " ▲" : " ▼") : ""}
                   </th>
                 ))}
+                {hasActions && (
+                  <th
+                    style={{
+                      position: "sticky",
+                      top: 0,
+                      textAlign: "right",
+                      padding: "8px 12px",
+                      background: "#191919",
+                      color: theme.muted,
+                      fontWeight: 600,
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      letterSpacing: 0.4,
+                      borderBottom: `1px solid ${theme.muted}33`,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    actions
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -232,6 +287,24 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
                       </td>
                     );
                   })}
+                  {hasActions && (
+                    <td
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ padding: "8px 12px", textAlign: "right", whiteSpace: "nowrap", cursor: "default" }}
+                    >
+                      {ENTITY_KEY_RE.test(row.id) ? (
+                        <EntityActionsCell
+                          canExtend={canExtend}
+                          canDelete={canDelete}
+                          onExtend={() => openAction("extend", row)}
+                          onDelete={() => openAction("delete", row)}
+                          theme={theme}
+                        />
+                      ) : (
+                        <span style={{ color: theme.muted, opacity: 0.4 }}>—</span>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -240,6 +313,20 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
       </div>
 
       {selected && <NodeDetail node={selected} connections={connectionsFor(selected)} theme={theme} onClose={() => setSelected(null)} />}
+
+      {action && (
+        <EntityActionPanel
+          kind={action.kind}
+          row={action.row}
+          nowSeconds={action.now}
+          signerAddress={signerAddress}
+          onExtend={onExtendEntity}
+          onDelete={onDeleteEntity}
+          onMutated={onMutated}
+          onClose={() => setAction(null)}
+          theme={theme}
+        />
+      )}
     </div>
   );
 }

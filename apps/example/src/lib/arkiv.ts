@@ -1,5 +1,5 @@
 import "server-only";
-import { createPublicClient, createWalletClient, http } from "@arkiv-network/sdk";
+import { createPublicClient, http } from "@arkiv-network/sdk";
 import { privateKeyToAccount } from "@arkiv-network/sdk/accounts";
 import { braga } from "@arkiv-network/sdk/chains";
 import { defineArkivNetwork, explorerOf, rpcOf, type ExternalConfig, type LinkRule } from "arkiv-graph";
@@ -74,7 +74,17 @@ export const EXPLORER = NET.explorer;
 export const NETWORK_NAME = ARKIV_CHAIN.name;
 export const GAS_TOKEN = ARKIV_CHAIN.nativeCurrency?.symbol ?? "GLM";
 export const FAUCET_URL = NET.faucet;
-const RPC_URL = NET.rpc;
+const RPC_URL: string = NET.rpc ?? "https://braga.hoodi.arkiv.network/rpc";
+
+/** Public, client-safe chain config — passed to the browser so client-side wallet
+ *  writes target the SAME network the server reads from (no secret here). */
+export const PUBLIC_CHAIN = {
+  id: NATIVE_CHAIN_ID,
+  name: NETWORK_NAME,
+  rpcUrl: RPC_URL,
+  explorerUrl: EXPLORER,
+  gasToken: GAS_TOKEN,
+} as const;
 
 /** Project namespace stamped on every entity (Arkiv is one shared public DB). */
 export const PROJECT = process.env.ARKIV_PROJECT ?? "arkiv-graph-demo-v1";
@@ -88,17 +98,6 @@ export const TRUSTED_ADDRESS = (
 
 export function publicClient() {
   return createPublicClient({ chain: ARKIV_CHAIN, transport: http(RPC_URL) });
-}
-
-/** Server-only: signs writes. Throws if no key is configured. */
-export function walletClient() {
-  const pk = process.env.PRIVATE_KEY;
-  if (!pk) throw new Error("PRIVATE_KEY is not set (writes are disabled on this deployment).");
-  return createWalletClient({
-    chain: ARKIV_CHAIN,
-    transport: http(RPC_URL),
-    account: privateKeyToAccount(pk as `0x${string}`),
-  });
 }
 
 export function trustedAddress(): string {

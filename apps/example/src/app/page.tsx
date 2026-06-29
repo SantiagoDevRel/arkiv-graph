@@ -1,6 +1,5 @@
 import { Showcase } from "./showcase";
-import { writesEnabled } from "@/lib/guards";
-import { NETWORK_NAME, PROJECT, TRUSTED_ADDRESS } from "@/lib/arkiv";
+import { NETWORK_NAME, PROJECT, PUBLIC_CHAIN, TRUSTED_ADDRESS } from "@/lib/arkiv";
 
 export default function Page() {
   return (
@@ -38,7 +37,7 @@ export default function Page() {
         </p>
       </section>
 
-      <Showcase writesEnabled={writesEnabled()} project={PROJECT} owner={TRUSTED_ADDRESS} networkName={NETWORK_NAME} />
+      <Showcase project={PROJECT} owner={TRUSTED_ADDRESS} networkName={NETWORK_NAME} chain={{ ...PUBLIC_CHAIN }} />
 
       <section className="legend-cols">
         <div className="card">

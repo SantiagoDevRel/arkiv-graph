@@ -1,6 +1,6 @@
 {
   "name": "arkiv-graph",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Turn your Arkiv entities into a live, interactive graph. Nodes are entities, edges are the relationships you define, and references to other chains show up as external nodes.",
   "keywords": [
     "arkiv",
