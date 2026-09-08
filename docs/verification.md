@@ -301,3 +301,14 @@ Public/own/empty wallet switching passed at seven widths with real read requests
 a mocked EIP1193 account, and zero signing requests. A clean tracked-source
 snapshot installed from the lockfile and ran with no env file or library dist;
 its real API and 390px DOM both showed35 with no overflow or page errors.
+
+## Documentation patch prepared (not yet published)
+
+The corrected0.3.1 tarball contains no runtime changes. It fixes the React theme
+type import location, documents the normalized-entity input to `detectGroups`,
+and conditionally passes optional block timing in both README snippets.
+TypeScript5.9.3 with strict and exactOptionalPropertyTypes passes these patterns.
+Claude rechecked the documentation, identified the second snippet, and that
+matching correction was applied. All dist files match published0.3.0 byte for
+byte. Publication still requires npm security-key confirmation; the sample and
+Hub continue to use the actually published0.3.0 until the registry confirms it.

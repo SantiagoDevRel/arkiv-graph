@@ -4,11 +4,11 @@
 
 **These packages are intended for testnet use.**
 
-Version **0.3.0** targets **@arkiv-network/sdk 0.8.0**, **viem 2.56.3**, **Node.js 22.22.3**, and **Tiramisu testnet (7738577)**. SDK 0.6/0.7 clients are not supported by `fetchArkivGraph` in this release. Legacy plain entity arrays remain accepted by `buildGraph`.
+Version **0.3.1** targets **@arkiv-network/sdk 0.8.0**, **viem 2.56.3**, **Node.js 22.22.3**, and **Tiramisu testnet (7738577)**. SDK 0.6/0.7 clients are not supported by `fetchArkivGraph` in this release. Legacy plain entity arrays remain accepted by `buildGraph`.
 
 Nodes are your entities. Edges are the relationships *you* define (Arkiv has no joins — you declare how entities relate). References to other chains show up as **external nodes**, drawn purely from what your entities already store — `arkiv-graph` never reads those chains.
 
-> Hosted sample: https://arkiv-graph-example.vercel.app. The deployed release and verification status are recorded in [verification.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0/docs/verification.md).
+> Hosted sample: https://arkiv-graph-example.vercel.app. The deployed release and verification status are recorded in [verification.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1/docs/verification.md).
 
 
 
@@ -19,8 +19,8 @@ Nodes are your entities. Edges are the relationships *you* define (Arkiv has no 
 Check the exact release, then install it from the npm registry:
 
 ```bash
-npm view arkiv-graph@0.3.0 version
-npm i arkiv-graph@0.3.0
+npm view arkiv-graph@0.3.1 version
+npm i arkiv-graph@0.3.1
 # peer deps for the React component:
 npm i react@19.2.7 react-dom@19.2.7
 # required SDK/type peers (network access only occurs in fetchArkivGraph):
@@ -82,7 +82,9 @@ import { fetchArkivGraph, buildTables } from "arkiv-graph";
 import { ArkivGraph, ArkivTables } from "arkiv-graph/react";
 
 const { graph, entities, blockTiming } = await fetchArkivGraph({ project, createdBy, links });
-const tables = buildTables(graph, entities, { links, blockTiming });
+const tables = buildTables(graph, entities, {
+  links, ...(blockTiming ? { blockTiming } : {}),
+});
 
 // pick one:
 <ArkivGraph data={graph} />                       // force-directed graph
@@ -186,14 +188,25 @@ All of `buildGraph`'s options, plus query filters: `project`, `attributes` (eq m
 | --- | --- | --- |
 | `data` | — | the `Graph` from build/fetch |
 | `height` | `560` | px; width fills the container |
-| `theme` | `ARKIV_THEME` | colors (see `ArkivGraphTheme`) |
+| `theme` | `ARKIV_THEME` | colors (`ArkivGraphTheme` from `arkiv-graph/react`) |
 | `onNodeClick` | — | callback |
 | `showLegend` / `showFilters` / `showSearch` / `showDetail` | `true` | toggles |
 | `fadeExpiring` | `true` | dim nodes as Entity Expiration runs down |
 | `animate` | `true` | particle flow on join/external edges |
 | `nodeColor` | — | `(node) => string` override |
 
-Also exported: `computeTtl`, `formatTtl`, `CHAIN_REGISTRY`, `lookupChain`, `detectGroups`, and all types.
+The core entry also exports `computeTtl`, `formatTtl`, `CHAIN_REGISTRY`,
+`lookupChain`, `detectGroups`, and core model/configuration types. React component,
+theme and mutation callback types come from `arkiv-graph/react`:
+
+```ts
+import type { ArkivGraphTheme } from "arkiv-graph/react";
+```
+
+`detectGroups(entity, config?, internalKeys?)` accepts one normalized `NormEntity`,
+not a graph. `config` is `ExternalConfig`; `internalKeys` is `Set<string>`.
+These control external-reference grouping; prefer `buildGraph`'s automatic
+grouping for normal integration.
 
 `computeTtl(expiresAtBlock, createdAtBlock, timing)` takes two block numbers
 (`number | undefined`) and `BlockTiming | undefined`, returning
@@ -245,7 +258,7 @@ Use Node.js 22. From an empty directory:
 
 ```bash
 npm init -y
-npm install arkiv-graph@0.3.0 @arkiv-network/sdk@0.8.0 viem@2.56.3
+npm install arkiv-graph@0.3.1 @arkiv-network/sdk@0.8.0 viem@2.56.3
 ```
 
 Save as `read.mjs`:
@@ -259,7 +272,10 @@ const result = await fetchArkivGraph({
   project: "arkiv-graph-social-v2",
   links, typeAttribute,
 });
-const tables = buildTables(result.graph, result.entities, { links, typeAttribute, blockTiming: result.blockTiming });
+const tables = buildTables(result.graph, result.entities, {
+  links, typeAttribute,
+  ...(result.blockTiming ? { blockTiming: result.blockTiming } : {}),
+});
 console.log({ entities: result.entities.length, nodes: result.graph.nodes.length,
   tables: tables.tables.map(table => table.type), truncated: result.truncated });
 ```
@@ -303,7 +319,7 @@ preserves its `"use client"` directive. The core import is safe on the server.
 The library does not hold keys or submit transactions. Pass `onExtendEntity` to
 `ArkivTables` to enable the action; omit it for a read-only view. The callback
 receives `{ entityKey, targetExpiresAt, row }`, where the target is Unix seconds.
-Use the [sample wallet implementation](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0/apps/example/src/lib/wallet-client.ts)
+Use the [sample wallet implementation](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1/apps/example/src/lib/wallet-client.ts)
 as the complete integration reference, including account/chain checks.
 
 With SDK 0.8, an extension **sets a new expiry**, using
@@ -355,10 +371,10 @@ explicitly implement deletion and confirmation themselves.
 ## Source, sample, and agent guides
 
 - [Source repository](https://github.com/SantiagoDevRel/arkiv-graph)
-- [Runnable sample and setup](https://github.com/SantiagoDevRel/arkiv-graph/tree/v0.3.0/apps/example)
+- [Runnable sample and setup](https://github.com/SantiagoDevRel/arkiv-graph/tree/v0.3.1/apps/example)
 - [Hosted sample](https://arkiv-graph-example.vercel.app)
-- [Consumer AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0/packages/arkiv-graph/AGENTS.md)
-- [Sample AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0/apps/example/AGENTS.md)
+- [Consumer AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1/packages/arkiv-graph/AGENTS.md)
+- [Sample AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1/apps/example/AGENTS.md)
 
 Give your agent the applicable guide explicitly. Installing a package does not
 mean an agent will discover instructions inside `node_modules`.

@@ -1,6 +1,6 @@
 {
   "name": "arkiv-graph",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Interactive graphs and tables for Arkiv entities, with scoped queries and optional wallet-signed Lifetime Extension.",
   "keywords": [
     "arkiv",
