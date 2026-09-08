@@ -6,7 +6,7 @@ Extension. **These packages are intended for testnet use.**
 
 This branch contains the **0.3.0 release candidate**, not a published release.
 npm and the hosted sample still serve the older release. See the verification
-report below for the remaining publication and wallet-signature gates.
+report below for the remaining publication gates.
 
 - [npm package](https://www.npmjs.com/package/arkiv-graph)
 - [Package README: install, API, compatibility, examples](./packages/arkiv-graph/README.md)
@@ -31,7 +31,7 @@ pnpm dev
 Open http://localhost:3012. This candidate currently links the workspace package;
 switching to the exact published npm version is a required release gate.
 No env file or signing key is required to run/read it.
-Connect MetaMask and use test GLM to create your own social sample on Tiramisu.
+Connect an injected wallet and use test GLM to create your own social sample on Tiramisu.
 
 ## Develop the library
 

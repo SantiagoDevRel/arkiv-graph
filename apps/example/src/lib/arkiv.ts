@@ -13,13 +13,13 @@ export function publicClient() {
 }
 export function trustedAddress() { return DEMO_OWNER; }
 export const SOCIAL_LINKS: LinkRule[] = [
-  { type: "reference", attribute: "authorHandle", targetAttribute: "handle", targetType: "user", label: "by" },
-  { type: "reference", attribute: "postId", targetAttribute: "postId", sourceType: "comment", targetType: "post", label: "on" },
+  { type: "reference", attribute: "author_handle", targetAttribute: "handle", targetType: "user", label: "by" },
+  { type: "reference", attribute: "post_id", targetAttribute: "post_id", sourceType: "comment", targetType: "post", label: "on" },
   {
     type: "join",
     entityType: "follow",
-    sourceAttr: "followerHandle",
-    targetAttr: "followeeHandle",
+    sourceAttr: "follower_handle",
+    targetAttr: "followee_handle",
     sourceMatchAttr: "handle",
     targetMatchAttr: "handle",
     sourceType: "user",
@@ -29,10 +29,10 @@ export const SOCIAL_LINKS: LinkRule[] = [
   {
     type: "join",
     entityType: "like",
-    sourceAttr: "byHandle",
-    targetAttr: "postId",
+    sourceAttr: "by_handle",
+    targetAttr: "post_id",
     sourceMatchAttr: "handle",
-    targetMatchAttr: "postId",
+    targetMatchAttr: "post_id",
     sourceType: "user",
     targetType: "post",
     label: "likes",

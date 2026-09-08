@@ -1,5 +1,6 @@
 import { buildGraph, buildTables, fetchArkivGraph, type LinkRule } from "arkiv-graph";
 import { EXPLORER, NATIVE_CHAIN_ID, PROJECT, publicClient, SOCIAL_LINKS, trustedAddress } from "@/lib/arkiv";
+import { TYPE_ATTRIBUTE } from "@/lib/config";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -15,7 +16,7 @@ export async function GET(req: Request) {
   const address = params.get("address") ?? trustedAddress();
   const project = params.get("project") ?? PROJECT;
   const projectKey = params.get("projectKey") ?? "project";
-  const typeKey = params.get("typeKey") ?? "entityType";
+  const typeKey = params.get("typeKey") ?? TYPE_ATTRIBUTE;
   if (!ADDR_RE.test(address) || !ATTR_RE.test(projectKey) || !ATTR_RE.test(typeKey) || new TextEncoder().encode(project).length > 128 || /[\u0000-\u001f\u007f]/.test(project)) return json({ error: "Revisa la dirección y los atributos de tu app." }, 400);
   try {
     const result = await fetchArkivGraph({ client: publicClient(), ownedBy: address,

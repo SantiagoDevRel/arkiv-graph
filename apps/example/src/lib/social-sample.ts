@@ -1,5 +1,5 @@
 import { ExpirationTime, jsonToPayload, type CreateEntityParameters } from "@arkiv-network/sdk";
-import { PROJECT } from "./config";
+import { PROJECT, TYPE_ATTRIBUTE } from "./config";
 
 export const SAMPLE_DAYS = 30;
 const people = [
@@ -21,18 +21,19 @@ const follows = [["alice", "bob"], ["bob", "carol"], ["carol", "alice"], ["dave"
 
 export function socialSample(): CreateEntityParameters[] {
   const make = (entityType: string, attributes: Record<string, string>, payload: object): CreateEntityParameters => ({
-    attributes: { project: PROJECT, entityType, ...attributes },
+    attributes: { project: PROJECT, [TYPE_ATTRIBUTE]: entityType, ...attributes },
     payload: jsonToPayload(payload), contentType: "application/json",
     expires: ExpirationTime.fromDays(SAMPLE_DAYS),
     flags: { permissionlessExtension: false, readonly: false },
   });
   const creates = [
     ...people.map(([handle, name, team]) => make("user", { handle }, { name, team, fictional: true })),
-    ...posts.map(([postId, authorHandle, text]) => make("post", { postId, authorHandle }, { text, fictional: true })),
-    ...follows.map(([followerHandle, followeeHandle], i) => make("follow", { followerHandle, followeeHandle }, { followId: `f${i}` })),
-    ...posts.slice(0, 6).map(([postId], i) => make("comment", { postId, authorHandle: people[(i + 1) % people.length]![0] }, { text: "Thanks for sharing this example.", commentId: `c${i}` })),
-    ...posts.map(([postId], i) => make("like", { postId, byHandle: people[(i + 2) % people.length]![0] }, { likeId: `l${i}` })),
+    ...posts.map(([post_id, author_handle, text]) => make("post", { post_id, author_handle }, { text, fictional: true })),
+    ...follows.map(([follower_handle, followee_handle], i) => make("follow", { follower_handle, followee_handle }, { followId: `f${i}` })),
+    ...posts.slice(0, 6).map(([post_id], i) => make("comment", { post_id, author_handle: people[(i + 1) % people.length]![0] }, { text: "Thanks for sharing this example.", commentId: `c${i}` })),
+    ...posts.map(([post_id], i) => make("like", { post_id, by_handle: people[(i + 2) % people.length]![0] }, { likeId: `l${i}` })),
   ];
+  if (creates.some(item => Object.keys(item.attributes ?? {}).some(name => !/^[a-z][a-z0-9_]{0,31}$/.test(name)))) throw new Error("Sample attribute names must use lowercase identifiers on Tiramisu.");
   const copy = creates.map(item => JSON.stringify(item.attributes) + new TextDecoder().decode(item.payload)).join(" ");
   if (/\bTTL\b|\bBTL\b|time-to-live|on Ethereum/i.test(copy)) throw new Error("Sample contains unsupported brand terminology.");
   return creates;

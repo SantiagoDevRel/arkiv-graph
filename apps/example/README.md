@@ -16,7 +16,7 @@ Prerequisites: Node.js 22 and pnpm 9. No env file, access key or signing key is
 needed to run the app or read public entities.
 
 ```bash
-git clone --branch v0.3.0-rc.1 https://github.com/SantiagoDevRel/arkiv-graph.git
+git clone --branch v0.3.0-rc.2 https://github.com/SantiagoDevRel/arkiv-graph.git
 cd arkiv-graph
 pnpm install --frozen-lockfile
 pnpm build:lib
@@ -27,16 +27,18 @@ Open http://localhost:3012. The current dependency is `workspace:*`; the library
 build above is necessary in a clean checkout. The existing hosted sample still
 runs the older release and is not evidence of this candidate's Tiramisu flow.
 
-1. Select **Conectar MetaMask** and authorize your wallet on Tiramisu.
+1. Select **Conectar wallet** and authorize your wallet on Tiramisu.
 2. Select **Crear sample social**. Inspect the count, public-data description,
-   app identifier and 30-day lifetime, then sign the batch in MetaMask.
+   app identifier and 30-day lifetime, then sign the batch in your wallet.
 3. Wait for confirmation. The app queries the connected owner and
    `project = arkiv-graph-social-v2`; table and graph show the same entities.
 4. In the table, select Lifetime Extension/Extend, choose a later date and sign.
    After confirmation the app refetches the entity and its new expiration.
 
 Writes require test GLM from https://hub.arkiv.network/faucet. No mainnet funds or
-private key entry are part of this flow. If MetaMask is absent, reads still work.
+private key entry are part of this flow. If a wallet is absent, reads still work.
+Real creation and extension were tested with Rabby's injected EIP-1193 provider.
+MetaMask uses the same interface, but its actual extension UI was not tested.
 The default read-only showcase owner is configured publicly in `src/lib/config.ts`.
 Connecting your wallet loads your own sample. Advanced settings let you inspect
 another app by owner, namespace attribute/value and entity type attribute.
@@ -50,6 +52,8 @@ another app by owner, namespace attribute/value and entity type attribute.
   bounded result size, no-store responses. No signing API or arbitrary RPC proxy.
 - `src/lib/wallet-client.ts`: wallet-signed creation and extension. SDK 0.8 uses
   `executeBatch`, typed attributes and `expires`. It waits for confirmations.
+  Before signing, it simulates the exact calldata, supplies a gas buffer and
+  rechecks the active account/network. A simulation failure does not open signing.
 - `arkiv-graph`: all graph/table construction and rendering comes from the package.
 
 The UI does not make data private or add SQL joins. Social relationships resolve
@@ -68,6 +72,9 @@ Do not expose the candidate publicly until that operational control is verified.
 
 - No entities: create the sample first, check exact owner/app attributes, or check
   for expiration. An empty wallet is a valid initial state.
+- Custom attribute names in the sample are lowercase snake_case. Tiramisu rejected
+  uppercase names in a real pre-sign simulation; use the shared `TYPE_ATTRIBUTE`
+  config (`entity_type`) and the matching social link rules.
 - RPC unavailable/rate-limited: use Retry after a delay; the app never fabricates data.
 - Wallet rejects: no mutation is reported successful. Read the prompt and retry
   only if no transaction was already submitted.

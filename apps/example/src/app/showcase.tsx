@@ -3,12 +3,12 @@ import { useCallback, useEffect, useState } from "react";
 import { ArkivGraph, ArkivTables, type ExtendEntityParams } from "arkiv-graph/react";
 import type { Graph, TablesModel } from "arkiv-graph";
 import { connectWallet, createSocialSampleWithWallet, extendEntityWithWallet, getConnectedAccount, hasWallet, onAccountsChanged, walletErrorMessage } from "@/lib/wallet-client";
-import { DEMO_OWNER, PROJECT, PUBLIC_CHAIN } from "@/lib/config";
+import { DEMO_OWNER, PROJECT, PUBLIC_CHAIN, TYPE_ATTRIBUTE } from "@/lib/config";
 import { SAMPLE_COUNT, SAMPLE_DAYS } from "@/lib/social-sample";
 
 interface GraphResponse { address: string; project: string; graph: Graph; tables: TablesModel; loaded: number; truncated: boolean; blockTiming: { currentBlock: number } | null }
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
-const INITIAL = { address: DEMO_OWNER, project: PROJECT, projectKey: "project", typeKey: "entityType" };
+const INITIAL = { address: DEMO_OWNER, project: PROJECT, projectKey: "project", typeKey: TYPE_ATTRIBUTE };
 export function Showcase() {
   const [scope, setScope] = useState(INITIAL);
   const [form, setForm] = useState(INITIAL);
@@ -84,7 +84,7 @@ export function Showcase() {
       <span className="network-badge">Tiramisu testnet</span>
       <div className="wallet-control">
         {account ? <button className="btn" onClick={() => showWallet(account)}>Mi sample · {short(account)}</button> :
-          <button className="btn primary" onClick={connect} disabled={busy || !walletPresent}>{busy ? "Conectando…" : "Conectar MetaMask"}</button>}
+          <button className="btn primary" onClick={connect} disabled={busy || !walletPresent}>{busy ? "Conectando…" : "Conectar wallet"}</button>}
       </div>
     </header>
     <section className="intro"><h1>Tu app, en tabla y grafo.</h1><p>Consulta tus entidades y sus relaciones. Extiende su vida firmando con tu wallet.</p></section>
@@ -109,9 +109,9 @@ export function Showcase() {
     </div>
     {showCreate && <section className="sample-confirm" aria-label="Confirmar creación de sample">
       <h3>Una app social en tu wallet</h3>
-      <p>Crearás {SAMPLE_COUNT} entidades públicas de ejemplo: perfiles ficticios, publicaciones, comentarios, follows y likes. Su vida inicial es de {SAMPLE_DAYS} días. MetaMask te mostrará la transacción y su costo en test GLM.</p>
+      <p>Crearás {SAMPLE_COUNT} entidades públicas de ejemplo: perfiles ficticios, publicaciones, comentarios, follows y likes. Su vida inicial es de {SAMPLE_DAYS} días. Tu wallet te mostrará la transacción y su costo en test GLM.</p>
       <p className="help">App: <code>{PROJECT}</code> · Propietario: <code>{account ?? "tu wallet conectada"}</code></p>
-      <button className="btn primary" onClick={create} disabled={creating || !walletPresent}>{creating ? "Esperando firma y confirmación…" : "Crear y firmar en MetaMask"}</button>
+      <button className="btn primary" onClick={create} disabled={creating || !walletPresent}>{creating ? "Esperando firma y confirmación…" : "Crear y firmar con tu wallet"}</button>
       <button className="btn" onClick={() => setShowCreate(false)} disabled={creating}>Cancelar</button>
     </section>}
     {notice && <div className="notice" role={noticeError ? "alert" : "status"}>{notice} {txUrl && <a href={txUrl} target="_blank" rel="noreferrer">Ver transacción ↗</a>}</div>}
@@ -122,7 +122,7 @@ export function Showcase() {
         <div className="empty-state"><h3>{isOwnSample ? "Crea tu primera sample" : "Esta app no tiene entidades activas"}</h3><p>La consulta no encontró entidades para esta wallet y estos atributos. Si todavía no has creado la sample, conéctate y firma su creación.</p><button className="btn primary" onClick={() => setShowCreate(true)}>Preparar sample social</button></div>}
     </section>
     {data?.truncated && <p className="notice">Vista parcial: se cargaron {data.loaded} entidades. Filtra por app para reducir la consulta.</p>}
-    {!walletPresent && <p className="help">Para crear o extender entidades, abre esta app con MetaMask. Puedes consultar sin conectar una wallet.</p>}
+    {!walletPresent && <p className="help">Para crear o extender entidades, abre esta app con una wallet compatible. Puedes consultar sin conectar una wallet.</p>}
     <p className="help">Las consultas muestran datos públicos. Conectar la wallet permite firmar Lifetime Extension en las entidades que te pertenecen. La fecha de expiración es una estimación según el tiempo de bloque.</p>
     <a className="text-button" href={`${PUBLIC_CHAIN.explorerUrl}/data?q=${encodeURIComponent(scope.address)}`} target="_blank" rel="noreferrer">Ver en Block Explorer ↗</a>
   </>;

@@ -23,7 +23,8 @@ or infer a relational database that Arkiv does not provide.
 ## Invariants
 - Scope queries with `ownedBy` or `createdBy`. Attribute filters identify data,
   not private access; Arkiv entities are publicly readable.
-- Pass the same link rules to both builders, and carry `blockTiming` into tables.
+- Pass the same link rules and `typeAttribute` to both builders, and carry
+  `blockTiming` into tables. Follow the README's tested Tiramisu attribute schema.
 - SDK compatibility is 0.8.x (tested 0.8.0). Typed attributes and new metadata are
   adapted by the library; do not convert 256-bit values to JavaScript numbers.
 - Custom client/RPC requires chain identity; pass explorerUrl for custom entity

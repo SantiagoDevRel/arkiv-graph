@@ -12,3 +12,5 @@ export const PUBLIC_CHAIN = {
 };
 export const PROJECT = "arkiv-graph-social-v2";
 export const DEMO_OWNER = "0xa618A2736431f24C26F1C8Dac9CA00ECc845a1C6";
+
+export const TYPE_ATTRIBUTE = "entity_type";

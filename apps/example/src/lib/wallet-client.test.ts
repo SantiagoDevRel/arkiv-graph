@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ getEntity: vi.fn(), getBlockTiming: vi.fn(), extendEntity: vi.fn(), executeBatch: vi.fn(), createEntity: vi.fn(), getChainId: vi.fn(), getTransactionReceipt: vi.fn(), selected: vi.fn(), request: vi.fn(), walletConfig: null as any }));
+const mocks = vi.hoisted(() => ({ estimateGas: vi.fn(), getEntity: vi.fn(), getBlockTiming: vi.fn(), extendEntity: vi.fn(), executeBatch: vi.fn(), createEntity: vi.fn(), getChainId: vi.fn(), getTransactionReceipt: vi.fn(), selected: vi.fn(), request: vi.fn(), walletConfig: null as any }));
 vi.mock("@arkiv-network/sdk", async () => {
   const actual = await vi.importActual<typeof import("@arkiv-network/sdk")>("@arkiv-network/sdk");
   return { ...actual, createPublicClient: () => ({ ...mocks, select: () => ({ ownedBy() { return this; }, where() { return this; }, limit() { return this; }, fetch: mocks.selected }) }), createWalletClient: (config: any) => { mocks.walletConfig = config; return mocks; } };
 });
+vi.mock("viem/actions", async () => ({ ...await vi.importActual("viem/actions"), estimateGas: mocks.estimateGas }));
 import { extendEntityWithWallet, createSocialSampleWithWallet, ensureChain } from "./wallet-client";
 import { socialSample } from "./social-sample";
 const account = `0x${"a".repeat(40)}`;
@@ -16,6 +17,7 @@ beforeEach(() => {
   vi.stubGlobal("localStorage", { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => store.set(k, v), removeItem: (k: string) => store.delete(k) });
   mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [account] : method === "eth_chainId" ? "0x7614d1" : null);
   mocks.getChainId.mockResolvedValue(7738577);
+  mocks.estimateGas.mockResolvedValue(3533541n);
   mocks.getEntity.mockResolvedValue({ owner: account, expiresAt: 200n });
   mocks.getBlockTiming.mockResolvedValue({ currentBlock: 100n, currentBlockTime: 1000, blockDuration: 2 });
   mocks.extendEntity.mockResolvedValue({ txHash: entityKey, expiresAt: 251n });
@@ -51,6 +53,31 @@ describe("wallet writes", () => {
     mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [account] : "0x1");
     const transport = mocks.walletConfig.transport({});
     await expect(transport.request({ method: "eth_sendTransaction", params: [] })).rejects.toThrow("red cambió");
+    expect(mocks.request.mock.calls.some(([arg]) => arg.method === "eth_sendTransaction")).toBe(false);
+  });
+  it("simulates exact calldata and supplies a sufficient gas limit before asking the wallet", async () => {
+    await extendEntityWithWallet(account, entityKey, 1300);
+    const transport = mocks.walletConfig.transport({});
+    const tx = { from: account, to: "0x4400000000000000000000000000000000000044", data: "0x1234", value: "0x0", gas: "0x1e8480" };
+    await transport.request({ method: "eth_sendTransaction", params: [tx] });
+    expect(mocks.estimateGas).toHaveBeenCalledWith(expect.anything(), { account, to: tx.to, data: tx.data, value: 0n });
+    const sent = mocks.request.mock.calls.find(([arg]) => arg.method === "eth_sendTransaction")![0];
+    expect(BigInt(sent.params[0].gas)).toBe(4240250n);
+    mocks.request.mockClear();
+    mocks.estimateGas.mockRejectedValue(new Error("Execution reverted"));
+    await expect(transport.request({ method: "eth_sendTransaction", params: [tx] })).rejects.toThrow("reverted");
+    expect(mocks.request.mock.calls.some(([arg]) => arg.method === "eth_sendTransaction")).toBe(false);
+  });
+  it("checks the account again after simulation and rejects non-entity transfers", async () => {
+    await extendEntityWithWallet(account, entityKey, 1300);
+    const transport = mocks.walletConfig.transport({});
+    const allowed = { from: account, to: "0x4400000000000000000000000000000000000044", data: "0x1234", value: "0x0" };
+    for (const tx of [{ ...allowed, to: account }, { ...allowed, value: "0x1" }, { ...allowed, data: undefined }]) {
+      await expect(transport.request({ method: "eth_sendTransaction", params: [tx] })).rejects.toThrow("no coincide");
+    }
+    expect(mocks.estimateGas).not.toHaveBeenCalled();
+    mocks.estimateGas.mockImplementation(async () => { mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [] : "0x7614d1"); return 100000n; });
+    await expect(transport.request({ method: "eth_sendTransaction", params: [{ from: account, to: "0x4400000000000000000000000000000000000044", data: "0x1234" }] })).rejects.toThrow("cuenta cambió");
     expect(mocks.request.mock.calls.some(([arg]) => arg.method === "eth_sendTransaction")).toBe(false);
   });
   it("never reseeds an existing sample and creates only the intended batch", async () => {

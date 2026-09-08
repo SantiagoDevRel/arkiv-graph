@@ -15,8 +15,9 @@ Release candidate, checked on 2026-09-08. **These packages are intended for test
   so publishing its source does not publish an unverified app. This is scoped
   only to the new `feat/tiramisu-dashboard` branch; other branches retain their
   existing behavior ([Vercel configuration](https://vercel.com/docs/project-configuration/git-configuration)).
-- The requested sample owner has no active sample entities yet. Its creation and
-  a real Lifetime Extension require the owner's signature. No success is claimed.
+- The requested owner now has 35 active sample entities. Creation and one
+  Lifetime Extension were confirmed through the real connected Rabby wallet.
+  No private key was configured. See the transaction evidence below.
 
 ## Versions actually exercised locally
 
@@ -40,15 +41,17 @@ Other SDK generations, runtime majors and networks are not verified by this cand
 - `pnpm test`: 26 passing core tests, including SDK 0.8 typed attributes,
   preservation of large integers, expiry conversion, scoped queries, SDK cursor
   pagination and exact-limit versus truncated results.
-- `pnpm test:wallet`: 8 passing tests with mocked signing/RPC. They cover absolute
+- `pnpm test:wallet`: 10 passing tests with mocked signing/RPC. They cover absolute
   expiry blocks, ownership, expired/stale targets, changed account/network,
-  rejected signing, duplicate seed protection and pending recovery. These are
+  rejected signing, duplicate seed protection, pending recovery, exact-calldata
+  simulation, gas estimation and account changes during simulation. These are
   not evidence of a real MetaMask transaction.
 - `pnpm typecheck`: package and sample pass.
 - `pnpm build:lib`: ESM, CommonJS and TypeScript declarations build successfully;
   React entry points retain `"use client"`.
 - Public Tiramisu RPC returns the configured chain ID. The requested public owner
-  query returns an empty result; the API and empty UI agree.
+  query initially returned an empty result; after creation the RPC, API and UI
+  agree on 35 entities. The changed expiry also matches all three layers.
 - Browser checks use isolated Playwright contexts: tables at 390/600/601/768/900/901/1440px, graph at 390/768/1440px; no document overflow or page errors. Loaded data is a controlled fixture built from the sample dataset: 35 entities, 20 graph nodes (join entities collapse to edges), 35 relationships, 5 tables. This is not proof of chain creation.
 - Empty/disconnected, loading, RPC error, retry, invalid owner input, connected-wallet extension dialog, focus containment, failed entity read without a send, detail view, 200% zoom and rejected connection were checked. The rendered errors do not claim a confirmed write.
 - Sample production build succeeds (Next.js 15.5.25). Development output is isolated in `.next-dev` so builds do not corrupt the preview.
@@ -67,8 +70,7 @@ Other SDK generations, runtime majors and networks are not verified by this cand
 
 ## Remaining release checks
 
-Clean consumer installation/imports from npm, real creation and extension,
-hosting request limits and a matching hosted demo must be verified before marking
+Clean consumer installation/imports from npm, hosting request limits and a matching hosted demo must be verified before marking
 this candidate complete or publishing its hub card. Brand alignment for a public
 frontend release also remains required by the project rules.
 
@@ -101,7 +103,9 @@ instead of allowing a second batch. A regression test covers delayed reads.
 The hub candidate is excluded from production builds. Locally it links to the
 local sample, labels the unpublished install without a copy action, and omits the
 nonexistent npm version link. The agent prompt remains copyable and first checks
-publication. Source/documentation links use the immutable `v0.3.0-rc.1` source tag.
+publication. Source/documentation links use the immutable `v0.3.0-rc.2` source tag.
+The earlier `rc.1` tag is preserved as historical evidence; use `rc.2` for the
+working Tiramisu sample schema and pre-sign simulation.
 
 Accepted scope limits: the reused library's English labels remain unchanged; the
 sample workflow is Spanish. No translation API was added. Legacy exported helper
@@ -129,7 +133,7 @@ Tiramisu read pass. The coverage-only Codex wrapper returned a summary but its
 requested per-item retry timed out; the main agent completed the literal checklist
 manually. This does not replace the completed Claude reviews or executable checks.
 
-## Source handoff and clean checkout
+## Earlier rc.1 source handoff and clean checkout
 
 - Graph/sample source: commit `7487fc1`, immutable tag `v0.3.0-rc.1`, pushed to
   `SantiagoDevRel/arkiv-graph`. Hub candidate: `e73e8f5` on
@@ -144,7 +148,65 @@ manually. This does not replace the completed Claude reviews or executable check
 - Claude's final UI closure opened the updated 390/768 screenshots and confirmed
   the mobile prompt, tag URLs and prior fixes. The review is closed; the release
   remains blocked by the explicit gates above.
-- npm was checked again after the source push: latest is still `0.2.0` and
-  `npm whoami` returns `ENEEDAUTH`. No private signing key was configured and no
-  transaction was submitted. Main review servers remain on localhost:3012 and
-  localhost:3014/tools.
+- At the rc.1 checkpoint, npm latest was `0.2.0` and `npm whoami` returned
+  `ENEEDAUTH`; no transactions had been submitted at that point. Subsequent real
+  wallet verification is recorded below. Main review servers remain on
+  localhost:3012 and localhost:3014/tools.
+
+
+## Real wallet and Tiramisu verification (rc.2)
+
+Verified on 2026-09-08 using the connected Rabby EIP-1193 wallet, owner
+`0xa618a2736431f24c26f1c8dac9ca00ecc845a1c6`, chain `7738577`, app
+`project = arkiv-graph-social-v2`. No private signing key or signing API was used.
+MetaMask's actual extension UI was not exercised; mocked EIP-1193 tests cover
+its shared interface, network switching and rejection paths.
+
+| Operation | Confirmed transaction | Block | Gas used |
+| --- | --- | --- | --- |
+| Create social sample | [0x9cb826…2eeaa](https://indexer.tiramisu.db-chain.testnet.arkiv.network/tx/0x9cb8265153434717a45f09accba557bff27dbf714c59bcc8df5b0933b1a2eeaa) | 192148 | 3504560 |
+| Lifetime Extension | [0xe8b3e1…d17e0](https://indexer.tiramisu.db-chain.testnet.arkiv.network/tx/0xe8b3e1b99b0e83f194e883db0ad3c930b0fa8171c33c98cde34ac301a0cd17e0) | 192198 | 25240 |
+
+Both receipts have status `success`. The source query returns 6 users, 8 posts,
+6 comments, 7 follows and 8 likes. The API and rendered dashboard show 35 entities,
+20 graph nodes, 35 relationships and 5 tables, without relationship warnings.
+The graph collapses join entities into edges; node count is not entity count.
+
+Entity `0xd4fc7c76c9c48badf8ff70cbacf5c362fa9c3dacff3b6d840ac879a371bc7b3d`
+changed from expiration block `1488148` to `2784148` (+1296000 blocks).
+The SDK read, API and table agree: October 8 to November 7, 2026, approximately
+13:37 Colombia time. These dates remain block-time estimates.
+
+The real pre-sign check found two issues that mocks had not exposed:
+
+- Tiramisu rejects uppercase custom attribute names (`Ident32InvalidByte`), even
+  though SDK 0.8 accepts them while encoding. The first unsigned request was
+  canceled; it spent no gas. The sample now uses lowercase snake_case attributes
+  and explicitly passes `typeAttribute: "entity_type"` to the library.
+- The wallet's guessed 2000000 gas limit was below the raw RPC estimate of
+  3533541 for the batch. The app now simulates exact calldata before opening
+  signing, supplies a buffer and rechecks the wallet session. Both actual
+  requests were decoded and checked for account, chain, entity-engine target,
+  zero transfer value, operation scope and sufficient gas before signing.
+
+The legacy library default `entityType` remains for API compatibility with
+in-memory/older entity data. It is not the new sample's creation schema.
+The optional local seed script was not used or tested with a private key.
+
+Real API-backed tables were rendered at 390/600/601/768/900/901/1440px and graphs
+at 390/768/1440px, with no document overflow or page errors in isolated contexts.
+The wallet profile injects a body attribute and triggers a React hydration warning;
+isolated contexts do not reproduce it. No warning suppression was added.
+Mocked error/loading/rejection/modal tests remain separate from real-chain evidence.
+
+
+Claude's focused rc.2 security/logic re-audit completed with `STATUS: OK`: no
+blocking regression in the lowercase schema or exact-calldata gas preflight.
+Two minor observations were resolved: generic wallet error/help copy, and
+independent tests for the target, nonzero value and missing calldata guards.
+The reviewer checked source/tests; the main agent independently verified the
+actual receipts, entity query and before/after expiry. The final 10 wallet tests
+and production build passed after these corrections. Browser checks were rerun
+after the build completed: rebuilding a workspace-linked library while testing
+the dev server can briefly remove its dist files, so that interrupted first run
+was discarded. The rerun passed without an overlay or page errors.

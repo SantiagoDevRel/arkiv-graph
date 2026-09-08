@@ -1,4 +1,4 @@
-// Optional local-only automation. The dapp itself always signs with MetaMask.
+// Optional local-only automation. The dapp itself always signs with an injected wallet.
 // Pass the absolute path of a private env file OUTSIDE the repository.
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { resolve, relative, isAbsolute, sep } from "node:path";

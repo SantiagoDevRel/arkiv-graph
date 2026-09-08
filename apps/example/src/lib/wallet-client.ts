@@ -2,6 +2,7 @@
 import { createPublicClient, createWalletClient, ExpirationTime } from "@arkiv-network/sdk";
 import { eq } from "@arkiv-network/sdk/query";
 import { custom, http, type Hex } from "viem";
+import { estimateGas } from "viem/actions";
 import { CHAIN, PUBLIC_CHAIN, PROJECT } from "./config";
 import { socialSample } from "./social-sample";
 
@@ -34,7 +35,7 @@ export function onAccountsChanged(cb: (account: string | null) => void) {
 }
 export async function ensureChain() {
   const provider = injected();
-  if (!provider) throw new Error("Abre esta app con MetaMask o instala una wallet compatible.");
+  if (!provider) throw new Error("Abre esta app con una wallet compatible con EIP-1193.");
   const active = async () => Number(await provider.request({ method: "eth_chainId" })) === CHAIN.id;
   if (await active()) return;
   try { await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] }); }
@@ -48,7 +49,7 @@ export async function ensureChain() {
 }
 export async function connectWallet(): Promise<string> {
   const provider = injected();
-  if (!provider) throw new Error("No se encontró MetaMask. Instala una wallet compatible para firmar.");
+  if (!provider) throw new Error("No se encontró una wallet compatible. Instala una para firmar.");
   await provider.request({ method: "eth_requestAccounts" });
   await ensureChain();
   const account = await getConnectedAccount();
@@ -66,8 +67,19 @@ async function writer(account: string, onSent?: (hash: Hex) => void) {
   if (await pub.getChainId() !== CHAIN.id) throw new Error("El RPC no corresponde a Tiramisu.");
   const provider = injected()!;
   const transport = custom({ request: async (request) => {
-    if (request.method === "eth_sendTransaction") await assertSession(account);
-    const result = await provider.request(request);
+    let forwarded = request as { method: string; params?: unknown[] | object };
+    if (request.method === "eth_sendTransaction") {
+      await assertSession(account);
+      const tx = (request.params as [{ from?: string; to?: Hex; data?: Hex; value?: Hex; gas?: Hex }])[0];
+      if (tx?.from?.toLowerCase() !== account.toLowerCase() || tx.to?.toLowerCase() !== "0x4400000000000000000000000000000000000044" || !tx.data || BigInt(tx.value ?? 0) !== 0n) throw new Error("La transacción no coincide con una operación de entidades de esta app.");
+      // Simulate the exact calldata on the configured public RPC before opening
+      // the wallet. Some injected wallets guess an insufficient custom-chain gas limit.
+      const estimated = await estimateGas(pub, { account: account as Hex, to: tx.to, data: tx.data, value: 0n });
+      if (estimated <= 0n) throw new Error("No se pudo estimar el gas de la operación.");
+      await assertSession(account);
+      forwarded = { ...request, params: [{ ...tx, gas: `0x${((estimated * 120n + 99n) / 100n).toString(16)}` }] };
+    }
+    const result = await provider.request(forwarded);
     if (request.method === "eth_sendTransaction" && typeof result === "string" && KEY.test(result)) onSent?.(result as Hex);
     return result;
   } });

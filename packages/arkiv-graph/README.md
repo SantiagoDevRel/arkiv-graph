@@ -8,7 +8,7 @@ Version **0.3.0** targets **@arkiv-network/sdk 0.8.0**, **viem 2.56.3**, **Node.
 
 Nodes are your entities. Edges are the relationships *you* define (Arkiv has no joins — you declare how entities relate). References to other chains show up as **external nodes**, drawn purely from what your entities already store — `arkiv-graph` never reads those chains.
 
-> Hosted sample: https://arkiv-graph-example.vercel.app. The deployed release and verification status are recorded in [verification.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0-rc.1/docs/verification.md).
+> Hosted sample: https://arkiv-graph-example.vercel.app. The deployed release and verification status are recorded in [verification.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0-rc.2/docs/verification.md).
 
 
 
@@ -225,7 +225,7 @@ The library is built to degrade gracefully across dataset sizes and shapes:
 | **Giant DB** (thousands of entities) | `fetchArkivGraph` paginates up to `limit` (default 500; Arkiv page cap is 200) and returns `truncated: true` when it hits the cap. | Filter with `attributes` / `createdBy` / `ownedBy`, raise `limit`, and prefer the **Tables view** (`<ArkivTables>`) which is far cheaper than the force simulation. Large force graphs require browser-specific performance testing. Surface `truncated` in your UI. |
 | **Tiny / empty DB** | Builds an empty graph; `<ArkivGraph>`/`<ArkivTables>` render an empty state — no crash. | Nothing. |
 | **Many external chains** | Each cross-chain reference becomes an external node. `CHAIN_REGISTRY` ships explorer URLs **and a free public RPC** for the common mainnets + testnets (Ethereum, Base, Optimism, Arbitrum, Polygon, Scroll, zkSync, Linea, Zora, Blast, Gnosis, + Sepolias). | Unknown chains fall back to `Chain <id>`. External chains are **not read by default**; to opt into reading one, grab its RPC via `lookupChain(id).rpc` and build your own client. |
-| **Untyped entities** (no `entityType`) | Grouped under `(untyped)` in tables; still rendered as nodes. | Add an `entityType` attribute for clean grouping. |
+| **Untyped entities** (missing the configured type attribute) | Grouped under `(untyped)` in tables; still rendered as nodes. | Set `typeAttribute` to your app's field; the Tiramisu sample uses `entity_type`. |
 | **Expired / missing references** | Rendered as faint **ghost** nodes (not dropped), so Entity Expiration/expiry never looks like a rendering bug. | Expected; `NoEntityFoundError` on a stale pointer is normal. |
 | **Huge text payloads** | Tables keep every cell on one line (ellipsis + full value on hover); the detail card shows the full payload. | Nothing. |
 | **Heterogeneous attributes per row** | Each table column is the union of that type's attributes; missing values render as `—`. | Nothing. |
@@ -254,13 +254,14 @@ Save as `read.mjs`:
 
 ```js
 import { fetchArkivGraph, buildTables } from "arkiv-graph";
-const links = [{ type: "reference", attribute: "authorHandle", targetAttribute: "handle", targetType: "user" }];
+const links = [{ type: "reference", attribute: "author_handle", targetAttribute: "handle", targetType: "user" }];
+const typeAttribute = "entity_type";
 const result = await fetchArkivGraph({
   ownedBy: "0xa618A2736431f24C26F1C8Dac9CA00ECc845a1C6",
   project: "arkiv-graph-social-v2",
-  links,
+  links, typeAttribute,
 });
-const tables = buildTables(result.graph, result.entities, { links, blockTiming: result.blockTiming });
+const tables = buildTables(result.graph, result.entities, { links, typeAttribute, blockTiming: result.blockTiming });
 console.log({ entities: result.entities.length, nodes: result.graph.nodes.length,
   tables: tables.tables.map(table => table.type), truncated: result.truncated });
 ```
@@ -304,7 +305,7 @@ preserves its `"use client"` directive. The core import is safe on the server.
 The library does not hold keys or submit transactions. Pass `onExtendEntity` to
 `ArkivTables` to enable the action; omit it for a read-only view. The callback
 receives `{ entityKey, targetExpiresAt, row }`, where the target is Unix seconds.
-Use the [sample wallet implementation](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0-rc.1/apps/example/src/lib/wallet-client.ts)
+Use the [sample wallet implementation](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0-rc.2/apps/example/src/lib/wallet-client.ts)
 as the complete integration reference, including account/chain checks.
 
 With SDK 0.8, an extension **sets a new expiry**, using
@@ -336,6 +337,14 @@ explicitly implement deletion and confirmation themselves.
   and types, and whether the entities expired. A filter is not access control.
 - SDK 0.8 uses typed attribute maps and `createdAt`/`expiresAt` block metadata.
   Do not use removed `buildQuery`, `withMetadata`, or `expiresIn` APIs.
+- Tiramisu creation rejects uppercase custom attribute names even though SDK 0.8
+  accepts them during encoding. The sample uses `entity_type`, `author_handle`
+  and `post_id`; pass `typeAttribute: "entity_type"` to both builders/fetch.
+  The legacy `entityType` default and camelCase offline examples remain for
+  compatibility with existing in-memory data; they are not creation examples.
+- Simulate the exact mutation against the configured RPC before wallet signing.
+  Some wallets guess insufficient gas for a custom chain. The sample supplies
+  the RPC estimate with a buffer, then rechecks the account and chain.
 - `truncated: true`: narrow the scope. The default limit is 500, maximum 5000;
   graph layout can become expensive before that ceiling. Pages use a fixed cursor.
 - Rejected signature, wrong owner, changed account or chain: no success should be
@@ -348,10 +357,10 @@ explicitly implement deletion and confirmation themselves.
 ## Source, sample, and agent guides
 
 - [Source repository](https://github.com/SantiagoDevRel/arkiv-graph)
-- [Runnable sample and setup](https://github.com/SantiagoDevRel/arkiv-graph/tree/v0.3.0-rc.1/apps/example)
+- [Runnable sample and setup](https://github.com/SantiagoDevRel/arkiv-graph/tree/v0.3.0-rc.2/apps/example)
 - [Hosted sample](https://arkiv-graph-example.vercel.app)
-- [Consumer AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0-rc.1/packages/arkiv-graph/AGENTS.md)
-- [Sample AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0-rc.1/apps/example/AGENTS.md)
+- [Consumer AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0-rc.2/packages/arkiv-graph/AGENTS.md)
+- [Sample AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0-rc.2/apps/example/AGENTS.md)
 
 Give your agent the applicable guide explicitly. Installing a package does not
 mean an agent will discover instructions inside `node_modules`.
