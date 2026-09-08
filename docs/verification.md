@@ -210,3 +210,25 @@ and production build passed after these corrections. Browser checks were rerun
 after the build completed: rebuilding a workspace-linked library while testing
 the dev server can briefly remove its dist files, so that interrupted first run
 was discarded. The rerun passed without an overlay or page errors.
+
+A second Claude consumer, given only the updated README/AGENTS and rc.2 tarball,
+installed into another empty directory. After a timed-out initial run, its resumed
+check executed the documented examples: offline `2 1 2`, real read of 35 entities
+and five types, and independent scoped SDK count `35`. That read example uses
+reference rules only, so it has 35 nodes; the full social sample additionally
+uses join rules and has 20. Claude reported the README sufficient and `STATUS: OK`.
+Its two minor notes are now explicit: the combined package installs renderer
+dependencies even for core consumers, and the pack destination must exist.
+Strict TypeScript and React SSR were covered by the earlier clean consumer;
+they were not rerun by this second agent. No registry-publication claim is made.
+
+The final sample runtime (`763d9da`) was cloned afresh from the public branch:
+`pnpm install --frozen-lockfile` and `pnpm build:lib` passed, with no `.env.local`.
+Its dev server on the temporary port 3016 returned the real 35-entity query;
+an isolated 390px browser matched the loaded DOM, with no overflow/page errors.
+The source plus documentation closure is tagged `v0.3.0-rc.2`; the earlier tag
+is unchanged. Hub source is `e162165` on `feat/tools-arkiv-graph`, with the
+updated candidate copy, tag links, 4 catalog tests, lint/typecheck and clipboard
+checks passing. No PR, npm publication or public frontend deployment was made.
+
+Machine-readable public transaction evidence: [tiramisu-verification.json](./tiramisu-verification.json).

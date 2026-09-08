@@ -32,6 +32,10 @@ npm i react@19.2.7 react-dom@19.2.7
 npm i @arkiv-network/sdk@0.8.0 viem@2.56.3
 ```
 
+The core entry does not import React at runtime, but this combined package also
+installs the graph renderer's dependencies. A core-only install is not React-free.
+Create the pack destination directory before running `npm pack` above.
+
 ## Minimal example (no network or credentials)
 
 Save as `example.mjs`, then run `node example.mjs`:
