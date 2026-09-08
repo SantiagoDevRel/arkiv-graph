@@ -35,7 +35,7 @@ export function onAccountsChanged(cb: (account: string | null) => void) {
 }
 export async function ensureChain() {
   const provider = injected();
-  if (!provider) throw new Error("Abre esta app con una wallet compatible con EIP-1193.");
+  if (!provider) throw new Error("Open this app with an EIP-1193 compatible wallet.");
   const active = async () => Number(await provider.request({ method: "eth_chainId" })) === CHAIN.id;
   if (await active()) return;
   try { await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] }); }
@@ -45,37 +45,37 @@ export async function ensureChain() {
       rpcUrls: [PUBLIC_CHAIN.rpcUrl], nativeCurrency: CHAIN.nativeCurrency, blockExplorerUrls: [PUBLIC_CHAIN.transactionExplorerUrl] }] });
     await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] });
   }
-  if (!await active()) throw new Error("Selecciona Tiramisu en tu wallet y vuelve a intentar.");
+  if (!await active()) throw new Error("Select Tiramisu in your wallet and try again.");
 }
 export async function connectWallet(): Promise<string> {
   const provider = injected();
-  if (!provider) throw new Error("No se encontró una wallet compatible. Instala una para firmar.");
+  if (!provider) throw new Error("No compatible wallet found. Install one to sign transactions.");
   await provider.request({ method: "eth_requestAccounts" });
   await ensureChain();
   const account = await getConnectedAccount();
-  if (!account) throw new Error("La wallet no autorizó una cuenta.");
+  if (!account) throw new Error("The wallet did not authorize an account.");
   return account;
 }
 async function assertSession(account: string) {
   const provider = injected();
-  if (!ADDRESS.test(account) || !provider || await getConnectedAccount() !== account.toLowerCase()) throw new Error("La cuenta cambió. Conecta de nuevo antes de firmar.");
-  if (Number(await provider.request({ method: "eth_chainId" })) !== CHAIN.id) throw new Error("La red cambió. Selecciona Tiramisu antes de firmar.");
+  if (!ADDRESS.test(account) || !provider || await getConnectedAccount() !== account.toLowerCase()) throw new Error("The account changed. Connect again before signing.");
+  if (Number(await provider.request({ method: "eth_chainId" })) !== CHAIN.id) throw new Error("The network changed. Select Tiramisu before signing.");
 }
 async function writer(account: string, onSent?: (hash: Hex) => void) {
   await ensureChain();
   await assertSession(account);
-  if (await pub.getChainId() !== CHAIN.id) throw new Error("El RPC no corresponde a Tiramisu.");
+  if (await pub.getChainId() !== CHAIN.id) throw new Error("The RPC does not match Tiramisu.");
   const provider = injected()!;
   const transport = custom({ request: async (request) => {
     let forwarded = request as { method: string; params?: unknown[] | object };
     if (request.method === "eth_sendTransaction") {
       await assertSession(account);
       const tx = (request.params as [{ from?: string; to?: Hex; data?: Hex; value?: Hex; gas?: Hex }])[0];
-      if (tx?.from?.toLowerCase() !== account.toLowerCase() || tx.to?.toLowerCase() !== "0x4400000000000000000000000000000000000044" || !tx.data || BigInt(tx.value ?? 0) !== 0n) throw new Error("La transacción no coincide con una operación de entidades de esta app.");
+      if (tx?.from?.toLowerCase() !== account.toLowerCase() || tx.to?.toLowerCase() !== "0x4400000000000000000000000000000000000044" || !tx.data || BigInt(tx.value ?? 0) !== 0n) throw new Error("The transaction does not match an entity operation from this app.");
       // Simulate the exact calldata on the configured public RPC before opening
       // the wallet. Some injected wallets guess an insufficient custom-chain gas limit.
       const estimated = await estimateGas(pub, { account: account as Hex, to: tx.to, data: tx.data, value: 0n });
-      if (estimated <= 0n) throw new Error("No se pudo estimar el gas de la operación.");
+      if (estimated <= 0n) throw new Error("Could not estimate gas for this operation.");
       await assertSession(account);
       forwarded = { ...request, params: [{ ...tx, gas: `0x${((estimated * 120n + 99n) / 100n).toString(16)}` }] };
     }
@@ -89,29 +89,29 @@ export interface WriteResult { expiresAt?: number; txUrl?: string; cost?: string
 export function walletErrorMessage(error: unknown): string {
   let cause = error as { code?: number; name?: string; cause?: unknown } | undefined;
   for (let i = 0; cause && i < 8; i++, cause = cause.cause as typeof cause) {
-    if (cause.code === 4001 || cause.name === "UserRejectedRequestError") return "Cancelaste la solicitud en la wallet. No se confirmó ningún cambio.";
-    if (cause.code === -32000) return "No se pudo verificar la operación en Tiramisu. Actualiza los datos y revisa tu wallet antes de volver a firmar.";
+    if (cause.code === 4001 || cause.name === "UserRejectedRequestError") return "You rejected the wallet request. No change was confirmed.";
+    if (cause.code === -32000) return "Could not verify the operation on Tiramisu. Refresh the data and check your wallet before signing again.";
   }
-  const message = error instanceof Error ? error.message : "No se pudo completar la solicitud. Revisa tu wallet antes de volver a firmar.";
+  const message = error instanceof Error ? error.message : "Could not complete the request. Check your wallet before signing again.";
   return message.split("\n")[0]!.slice(0,400);
 }
 export async function extendEntityWithWallet(account: string, entityKey: string, targetExpiresAt: number): Promise<WriteResult> {
-  if (!KEY.test(entityKey) || !Number.isSafeInteger(targetExpiresAt)) throw new Error("Entidad o fecha inválida.");
+  if (!KEY.test(entityKey) || !Number.isSafeInteger(targetExpiresAt)) throw new Error("Invalid entity or date.");
   let submittedHash: Hex | undefined;
   const client = await writer(account, hash => { submittedHash = hash; });
   const entity = await pub.getEntity(entityKey as Hex);
-  if (entity.owner.toLowerCase() !== account.toLowerCase()) throw new Error("Solo puedes extender las entidades que pertenecen a tu wallet.");
+  if (entity.owner.toLowerCase() !== account.toLowerCase()) throw new Error("You can only extend entities owned by your wallet.");
   const timing = await pub.getBlockTiming();
-  if (!Number.isFinite(timing.blockDuration) || timing.blockDuration <= 0) throw new Error("No se pudo verificar el tiempo de bloque.");
+  if (!Number.isFinite(timing.blockDuration) || timing.blockDuration <= 0) throw new Error("Could not verify block timing.");
   const currentExpiry = timing.currentBlockTime + Number(entity.expiresAt - timing.currentBlock) * timing.blockDuration;
-  if (entity.expiresAt <= timing.currentBlock || targetExpiresAt <= currentExpiry) throw new Error("Selecciona una fecha posterior a la expiración actual.");
-  if (targetExpiresAt - currentExpiry > 365 * 86400) throw new Error("Puedes agregar hasta 365 días por operación.");
+  if (entity.expiresAt <= timing.currentBlock || targetExpiresAt <= currentExpiry) throw new Error("Select a date later than the current expiration.");
+  if (targetExpiresAt - currentExpiry > 365 * 86400) throw new Error("You can add up to 365 days per operation.");
   const targetBlock = timing.currentBlock + BigInt(Math.ceil((targetExpiresAt - timing.currentBlockTime) / timing.blockDuration));
   await assertSession(account);
   let result;
   try { result = await client.extendEntity({ entityKey: entityKey as Hex, expires: ExpirationTime.atBlock(targetBlock) }); }
   catch (error) {
-    if (submittedHash) throw Object.assign(new Error("La transacción fue enviada, pero no se pudo verificar su confirmación. Revisa el enlace y actualiza antes de volver a firmar."), { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${submittedHash}` });
+    if (submittedHash) throw Object.assign(new Error("The transaction was submitted, but its confirmation could not be verified. Check the link and refresh before signing again."), { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${submittedHash}` });
     throw error;
   }
   const { txHash, expiresAt } = result;
@@ -133,14 +133,14 @@ export async function createSocialSampleWithWallet(account: string) {
     if (pendingHash && KEY.test(pendingHash)) {
       let receipt;
       try { receipt = await pub.getTransactionReceipt({ hash: pendingHash as Hex }); }
-      catch { throw new Error(`Hay una creación pendiente. Revisa ${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash} antes de volver a firmar.`); }
+      catch { throw new Error(`A sample creation is pending. Check ${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash} before signing again.`); }
       if (receipt.status === "success") {
         // Confirm absence at a head that includes the receipt before allowing a new seed.
         const timing = await pub.getBlockTiming();
-        if (timing.currentBlock <= receipt.blockNumber) throw new Error("La creación se confirmó. Espera un bloque y pulsa Actualizar antes de volver a intentar.");
+        if (timing.currentBlock <= receipt.blockNumber) throw new Error("Creation was confirmed. Wait one block, then select Refresh before trying again.");
         const confirmed = await pub.select({ key: true }).ownedBy(account as Hex).where(eq("project", PROJECT)).limit(1).fetch();
         if (confirmed.entities.length) return { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash}`, alreadyCreated: true };
-        throw new Error(`La creación está confirmada pero sus entidades no aparecen. Pueden estar pendientes de consulta o haber expirado. Revisa ${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash}; no vuelvas a firmar sin verificarlo.`);
+        throw new Error(`Creation was confirmed, but its entities are not visible. Query results may be delayed or the entities may have expired. Check ${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash}; do not sign again without verifying it.`);
       }
       localStorage.removeItem(pendingKey);
     }
@@ -150,7 +150,7 @@ export async function createSocialSampleWithWallet(account: string) {
     return { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${result.txHash}`, alreadyCreated: false };
   };
   if (navigator.locks) return navigator.locks.request(`arkiv-graph-seed-${account.toLowerCase()}`, { ifAvailable: true }, lock => {
-    if (!lock) throw new Error("Ya hay una creación en curso en otra pestaña.");
+    if (!lock) throw new Error("Sample creation is already in progress in another tab.");
     return run();
   });
   return run();

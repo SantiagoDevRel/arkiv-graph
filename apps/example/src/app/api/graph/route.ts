@@ -17,7 +17,7 @@ export async function GET(req: Request) {
   const project = params.get("project") ?? PROJECT;
   const projectKey = params.get("projectKey") ?? "project";
   const typeKey = params.get("typeKey") ?? TYPE_ATTRIBUTE;
-  if (!ADDR_RE.test(address) || !ATTR_RE.test(projectKey) || !ATTR_RE.test(typeKey) || new TextEncoder().encode(project).length > 128 || /[\u0000-\u001f\u007f]/.test(project)) return json({ error: "Revisa la dirección y los atributos de tu app." }, 400);
+  if (!ADDR_RE.test(address) || !ATTR_RE.test(projectKey) || !ATTR_RE.test(typeKey) || new TextEncoder().encode(project).length > 128 || /[\u0000-\u001f\u007f]/.test(project)) return json({ error: "Check the wallet address and your app's attributes." }, 400);
   try {
     const result = await fetchArkivGraph({ client: publicClient(), ownedBy: address,
       attributes: project ? { [projectKey]: project } : {}, explorerUrl: EXPLORER,
@@ -41,6 +41,6 @@ export async function GET(req: Request) {
     return json({ address, project, projectKey, typeKey, graph, tables, loaded: result.entities.length,
       truncated: result.truncated, blockTiming: result.blockTiming ? { ...result.blockTiming, currentBlock: Number(result.blockTiming.currentBlock) } : null });
   } catch {
-    return json({ error: "No se pudo consultar Tiramisu. Espera unos segundos y vuelve a actualizar." }, 503);
+    return json({ error: "Could not query Tiramisu. Wait a few seconds, then refresh." }, 503);
   }
 }

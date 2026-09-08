@@ -1,13 +1,16 @@
 # Social sample: consumer agent guide
 
 Start with [README.md](./README.md) for setup, the end-to-end workflow and errors.
+Keep this sample's user-facing copy, errors, metadata and documentation in English.
+Public reads default to the shared example, including after wallet connection.
+Switch to the connected wallet only through View my app or confirmed creation.
+Keep View public example available for empty wallets; never add a default signer.
 Also read the [package consumer guide](../../packages/arkiv-graph/AGENTS.md)
 before changing integration logic. These packages are intended for testnet use.
 
-The release must consume the published arkiv-graph npm package. This candidate
-temporarily uses a workspace dependency because publication is pending; do not
-report that as a completed npm integration. Never duplicate the library to make
-a demo pass. The README documents the current checkout and release status.
+Consume the exact arkiv-graph version pinned in package.json from npm.
+Do not replace it with a workspace link or duplicate the library to make a demo
+pass. The README documents setup and the verification report records release status.
 Ask the developer which public owner, app namespace, entity type attribute and
 link rules identify their app. Connecting a wallet and funding Tiramisu are only
 required for creation/extension; public reads need neither signing nor secrets.

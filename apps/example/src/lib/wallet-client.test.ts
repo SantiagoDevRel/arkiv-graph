@@ -32,16 +32,16 @@ describe("wallet writes", () => {
   });
   it("does not sign for another owner, an expired entity or a stale target", async () => {
     mocks.getEntity.mockResolvedValueOnce({ owner: `0x${"c".repeat(40)}`, expiresAt: 200n });
-    await expect(extendEntityWithWallet(account, entityKey, 1300)).rejects.toThrow("pertenecen");
+    await expect(extendEntityWithWallet(account, entityKey, 1300)).rejects.toThrow("owned by");
     mocks.getEntity.mockResolvedValueOnce({ owner: account, expiresAt: 90n });
-    await expect(extendEntityWithWallet(account, entityKey, 1300)).rejects.toThrow("posterior");
-    await expect(extendEntityWithWallet(account, entityKey, 1199)).rejects.toThrow("posterior");
+    await expect(extendEntityWithWallet(account, entityKey, 1300)).rejects.toThrow("later than");
+    await expect(extendEntityWithWallet(account, entityKey, 1199)).rejects.toThrow("later than");
     expect(mocks.extendEntity).not.toHaveBeenCalled();
   });
   it("rejects invalid dates and account changes", async () => {
-    await expect(extendEntityWithWallet(account, entityKey, NaN)).rejects.toThrow("inválida");
+    await expect(extendEntityWithWallet(account, entityKey, NaN)).rejects.toThrow("Invalid");
     mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [`0x${"d".repeat(40)}`] : "0x7614d1");
-    await expect(extendEntityWithWallet(account, entityKey, 1300)).rejects.toThrow("cuenta cambió");
+    await expect(extendEntityWithWallet(account, entityKey, 1300)).rejects.toThrow("account changed");
     expect(mocks.extendEntity).not.toHaveBeenCalled();
   });
   it("propagates wallet rejection and never reports success", async () => {
@@ -52,7 +52,7 @@ describe("wallet writes", () => {
     await extendEntityWithWallet(account, entityKey, 1300);
     mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [account] : "0x1");
     const transport = mocks.walletConfig.transport({});
-    await expect(transport.request({ method: "eth_sendTransaction", params: [] })).rejects.toThrow("red cambió");
+    await expect(transport.request({ method: "eth_sendTransaction", params: [] })).rejects.toThrow("network changed");
     expect(mocks.request.mock.calls.some(([arg]) => arg.method === "eth_sendTransaction")).toBe(false);
   });
   it("simulates exact calldata and supplies a sufficient gas limit before asking the wallet", async () => {
@@ -73,11 +73,11 @@ describe("wallet writes", () => {
     const transport = mocks.walletConfig.transport({});
     const allowed = { from: account, to: "0x4400000000000000000000000000000000000044", data: "0x1234", value: "0x0" };
     for (const tx of [{ ...allowed, to: account }, { ...allowed, value: "0x1" }, { ...allowed, data: undefined }]) {
-      await expect(transport.request({ method: "eth_sendTransaction", params: [tx] })).rejects.toThrow("no coincide");
+      await expect(transport.request({ method: "eth_sendTransaction", params: [tx] })).rejects.toThrow("does not match an entity operation");
     }
     expect(mocks.estimateGas).not.toHaveBeenCalled();
     mocks.estimateGas.mockImplementation(async () => { mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [] : "0x7614d1"); return 100000n; });
-    await expect(transport.request({ method: "eth_sendTransaction", params: [{ from: account, to: "0x4400000000000000000000000000000000000044", data: "0x1234" }] })).rejects.toThrow("cuenta cambió");
+    await expect(transport.request({ method: "eth_sendTransaction", params: [{ from: account, to: "0x4400000000000000000000000000000000000044", data: "0x1234" }] })).rejects.toThrow("account changed");
     expect(mocks.request.mock.calls.some(([arg]) => arg.method === "eth_sendTransaction")).toBe(false);
   });
   it("never reseeds an existing sample and creates only the intended batch", async () => {
@@ -97,7 +97,7 @@ describe("wallet writes", () => {
     mocks.selected.mockResolvedValueOnce({ entities: [{ key: entityKey }] });
     expect((await createSocialSampleWithWallet(account)).alreadyCreated).toBe(true);
     expect(mocks.getTransactionReceipt).not.toHaveBeenCalled();
-    await expect(createSocialSampleWithWallet(account)).rejects.toThrow("pendiente");
+    await expect(createSocialSampleWithWallet(account)).rejects.toThrow("pending");
     expect(mocks.executeBatch).not.toHaveBeenCalled();
     expect(localStorage.getItem(pendingKey)).toBe(entityKey);
   });
@@ -105,7 +105,7 @@ describe("wallet writes", () => {
     const pendingKey = `arkiv-graph:seed:7738577:${account}:arkiv-graph-social-v2`;
     localStorage.setItem(pendingKey, entityKey);
     mocks.getTransactionReceipt.mockResolvedValue({ status: "success", blockNumber: 90n });
-    await expect(createSocialSampleWithWallet(account)).rejects.toThrow("no vuelvas a firmar");
+    await expect(createSocialSampleWithWallet(account)).rejects.toThrow("do not sign again");
     expect(mocks.executeBatch).not.toHaveBeenCalled();
     expect(localStorage.getItem(pendingKey)).toBe(entityKey);
   });

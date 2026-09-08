@@ -29,13 +29,13 @@ export function Showcase() {
 
   const showWallet = useCallback((address: string) => {
     const next = { ...INITIAL, address };
-    setScope(next); setForm(next); setData(null);
+    setScope(next); setForm(next); setData(null); setShowCreate(false);
   }, []);
   useEffect(() => {
     setWalletPresent(hasWallet());
-    void getConnectedAccount().then(a => { setAccount(a); if (a) showWallet(a); });
-    return onAccountsChanged(a => { setAccount(a); setShowCreate(false); if (a) showWallet(a); });
-  }, [showWallet]);
+    void getConnectedAccount().then(setAccount);
+    return onAccountsChanged(a => { setAccount(a); setShowCreate(false); });
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError(""); setData(null);
@@ -48,7 +48,7 @@ export function Showcase() {
   }, [scope, revision]);
   const connect = async () => {
     setBusy(true); setNotice(""); setNoticeError(false);
-    try { const a = await connectWallet(); setAccount(a); showWallet(a); }
+    try { const a = await connectWallet(); setAccount(a); }
     catch (e) { setNotice(walletErrorMessage(e)); setNoticeError(true); }
     finally { setBusy(false); }
   };
@@ -59,17 +59,17 @@ export function Showcase() {
       const a = account ?? await connectWallet();
       setAccount(a);
       const result = await createSocialSampleWithWallet(a);
-      setNotice(result.alreadyCreated ? "La sample ya existe. Cargamos sus entidades." : "Sample creada y confirmada en Tiramisu.");
+      setNotice(result.alreadyCreated ? "The sample already exists. Its entities have been loaded." : "Sample created and confirmed on Tiramisu.");
       setTxUrl(result.txUrl ?? ""); setShowCreate(false); showWallet(a); setRevision(v => v + 1);
     } catch (e) { setNotice(walletErrorMessage(e)); setNoticeError(true); }
     finally { setCreating(false); }
   };
   const extend = async ({ entityKey, targetExpiresAt }: ExtendEntityParams) => {
-    if (!account) throw new Error("Conecta la wallet propietaria antes de extender esta entidad.");
+    if (!account) throw new Error("Connect the owner's wallet before extending this entity.");
     setNotice(""); setNoticeError(false); setTxUrl("");
     try {
       const result = await extendEntityWithWallet(account, entityKey, Math.floor(targetExpiresAt));
-      setNotice("Lifetime Extension confirmada. La tabla consulta la nueva expiración.");
+      setNotice("Lifetime Extension confirmed. The table is fetching the updated expiration.");
       setTxUrl(result.txUrl ?? "");
       return result;
     } catch (error) {
@@ -77,53 +77,59 @@ export function Showcase() {
       throw Object.assign(new Error(message), { txUrl: (error as { txUrl?: string })?.txUrl });
     }
   };
-  const isOwnSample = account && scope.address.toLowerCase() === account && scope.project === PROJECT && scope.projectKey === "project";
+  const canManageScope = !!account && scope.address.toLowerCase() === account.toLowerCase();
+  const isOwnSample = canManageScope && scope.project === PROJECT && scope.projectKey === "project";
+  const isPublicExample = scope.address.toLowerCase() === DEMO_OWNER.toLowerCase() && scope.project === PROJECT && scope.projectKey === "project" && scope.typeKey === TYPE_ATTRIBUTE;
   return <>
     <header className="site-header">
       <a className="brand" href="/">[ ARKIV ] <span>GRAPH</span></a>
       <span className="network-badge">Tiramisu testnet</span>
       <div className="wallet-control">
-        {account ? <button className="btn" onClick={() => showWallet(account)}>Mi sample · {short(account)}</button> :
-          <button className="btn primary" onClick={connect} disabled={busy || !walletPresent}>{busy ? "Conectando…" : "Conectar wallet"}</button>}
+        {account ? <button className="btn" onClick={() => showWallet(account)} disabled={creating}>View my app · {short(account)}</button> :
+          <button className="btn primary" onClick={connect} disabled={busy || !walletPresent}>{busy ? "Connecting…" : "Connect wallet"}</button>}
       </div>
     </header>
-    <section className="intro"><h1>Tu app, en tabla y grafo.</h1><p>Consulta tus entidades y sus relaciones. Extiende su vida firmando con tu wallet.</p></section>
-    <form className="dashboard-controls" aria-label="Seleccionar app" onSubmit={e => { e.preventDefault(); setScope({ ...form, address: form.address.trim(), project: form.project.trim() }); }}>
+    <section className="intro"><h1>Your app, in tables and a graph.</h1><p>Query your entities and their relationships. Extend their lifetime with your wallet.</p></section>
+    {isPublicExample && <p className="help">Public social example. Explore without a wallet; connect yours to view or create your own app.</p>}
+    <form className="dashboard-controls" aria-label="Select app" onSubmit={e => { e.preventDefault(); setScope({ ...form, address: form.address.trim(), project: form.project.trim() }); }}>
       <div className="toolbar">
-        <label className="app-field">APP<input aria-label="App" maxLength={128} value={form.project} onChange={e => setForm({ ...form, project: e.target.value })} placeholder="Todas tus apps" /></label>
-        <button className="btn" type="submit" disabled={creating}>Cargar</button>
-        <div className="seg" aria-label="Vista"><button type="button" aria-pressed={view === "tables"} className={view === "tables" ? "active" : ""} onClick={() => setView("tables")}>Tabla</button><button type="button" aria-pressed={view === "graph"} className={view === "graph" ? "active" : ""} onClick={() => setView("graph")}>Grafo</button></div>
-        <button type="button" className="text-button advanced-toggle" aria-expanded={advanced} onClick={() => setAdvanced(v => !v)}>Avanzado {advanced ? "−" : "+"}</button>
-        <button type="button" className="btn" disabled={loading || creating} onClick={() => setRevision(v => v + 1)}>Actualizar</button>
+        <label className="app-field">APP<input aria-label="App" maxLength={128} value={form.project} onChange={e => setForm({ ...form, project: e.target.value })} placeholder="All your apps" /></label>
+        <button className="btn" type="submit" disabled={creating}>Load</button>
+        <div className="seg" aria-label="View"><button type="button" aria-pressed={view === "tables"} className={view === "tables" ? "active" : ""} onClick={() => setView("tables")}>Table</button><button type="button" aria-pressed={view === "graph"} className={view === "graph" ? "active" : ""} onClick={() => setView("graph")}>Graph</button></div>
+        <button type="button" className="text-button advanced-toggle" aria-expanded={advanced} onClick={() => setAdvanced(v => !v)}>Advanced {advanced ? "−" : "+"}</button>
+        <button type="button" className="btn" disabled={loading || creating} onClick={() => setRevision(v => v + 1)}>Refresh</button>
       </div>
       {advanced && <div className="advanced-fields">
-        <label className="owner-field">Wallet propietaria<input required pattern="0x[a-fA-F0-9]{40}" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} spellCheck={false} /></label>
-        <label>Atributo de app<input required pattern="[A-Za-z][A-Za-z0-9_]{0,31}" value={form.projectKey} onChange={e => setForm({ ...form, projectKey: e.target.value })} /></label>
-        <label>Atributo de tipo<input required pattern="[A-Za-z][A-Za-z0-9_]{0,31}" value={form.typeKey} onChange={e => setForm({ ...form, typeKey: e.target.value })} /></label>
-        <p className="help">Cambia el propietario o los atributos y pulsa Cargar. Un valor de app vacío muestra todas las entidades de esa wallet. Las referencias por entity key se detectan; otras relaciones requieren link rules al integrar la librería.</p>
+        <label className="owner-field">Owner wallet<input required pattern="0x[a-fA-F0-9]{40}" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} spellCheck={false} /></label>
+        <label>App attribute<input required pattern="[A-Za-z][A-Za-z0-9_]{0,31}" value={form.projectKey} onChange={e => setForm({ ...form, projectKey: e.target.value })} /></label>
+        <label>Type attribute<input required pattern="[A-Za-z][A-Za-z0-9_]{0,31}" value={form.typeKey} onChange={e => setForm({ ...form, typeKey: e.target.value })} /></label>
+        <p className="help">Change the owner or attributes, then select Load. Leave the app value empty to show all entities owned by that wallet. Entity-key references are detected; other relationships need link rules in your integration.</p>
       </div>}
     </form>
     <div className="viewbar">
-      <div><p className="entity-count">{data ? `${data.loaded} entidades · ${data.graph.edges.length} relaciones` : loading ? "Consultando Tiramisu…" : "Consulta no disponible"}</p><p className="help scope-summary" title={scope.address}>Propietario {short(scope.address)} · {scope.projectKey} = {scope.project || "cualquier valor"}</p></div>
-      <button className="btn" onClick={() => setShowCreate(v => !v)} disabled={creating}>Crear sample social</button>
+      <div><p className="entity-count">{data ? `${data.loaded} entities · ${data.graph.edges.length} relationships` : loading ? "Querying Tiramisu…" : "Query unavailable"}</p><p className="help scope-summary" title={scope.address}>Owner {short(scope.address)} · {scope.projectKey} = {scope.project || "any value"}</p></div>
+      <div className="toolbar">
+        {!isPublicExample && <button className="btn" onClick={() => showWallet(DEMO_OWNER)} disabled={creating}>View public example</button>}
+        <button className="btn" onClick={() => setShowCreate(v => !v)} disabled={creating}>Create social sample</button>
+      </div>
     </div>
-    {showCreate && <section className="sample-confirm" aria-label="Confirmar creación de sample">
-      <h3>Una app social en tu wallet</h3>
-      <p>Crearás {SAMPLE_COUNT} entidades públicas de ejemplo: perfiles ficticios, publicaciones, comentarios, follows y likes. Su vida inicial es de {SAMPLE_DAYS} días. Tu wallet te mostrará la transacción y su costo en test GLM.</p>
-      <p className="help">App: <code>{PROJECT}</code> · Propietario: <code>{account ?? "tu wallet conectada"}</code></p>
-      <button className="btn primary" onClick={create} disabled={creating || !walletPresent}>{creating ? "Esperando firma y confirmación…" : "Crear y firmar con tu wallet"}</button>
-      <button className="btn" onClick={() => setShowCreate(false)} disabled={creating}>Cancelar</button>
+    {showCreate && <section className="sample-confirm" aria-label="Confirm sample creation">
+      <h3>A social app owned by your wallet</h3>
+      <p>You will create {SAMPLE_COUNT} public sample entities: fictional profiles, posts, comments, follows and likes. Their initial lifetime is {SAMPLE_DAYS} days. Your wallet will show the transaction and its cost in test GLM.</p>
+      <p className="help">App: <code>{PROJECT}</code> · Owner: <code>{account ?? "your connected wallet"}</code></p>
+      <button className="btn primary" onClick={create} disabled={creating || !walletPresent}>{creating ? "Waiting for signature and confirmation…" : "Create and sign with your wallet"}</button>
+      <button className="btn" onClick={() => setShowCreate(false)} disabled={creating}>Cancel</button>
     </section>}
-    {notice && <div className="notice" role={noticeError ? "alert" : "status"}>{notice} {txUrl && <a href={txUrl} target="_blank" rel="noreferrer">Ver transacción ↗</a>}</div>}
-    <section className="graph-shell" aria-label="Entidades de la app" aria-busy={loading}>
-      {loading ? <div className="empty-state" role="status">Consultando las entidades de tu app…</div> : error ?
-        <div className="empty-state" role="alert"><p>{error}</p><button className="btn" onClick={() => setRevision(v => v + 1)}>Reintentar</button></div> : data?.loaded ?
-        view === "tables" ? <ArkivTables model={data.tables} graph={data.graph} height={600} signerAddress={account ?? undefined} onExtendEntity={account ? extend : undefined} onMutated={() => setRevision(v => v + 1)} /> : <ArkivGraph data={data.graph} height={600} /> :
-        <div className="empty-state"><h3>{isOwnSample ? "Crea tu primera sample" : "Esta app no tiene entidades activas"}</h3><p>La consulta no encontró entidades para esta wallet y estos atributos. Si todavía no has creado la sample, conéctate y firma su creación.</p><button className="btn primary" onClick={() => setShowCreate(true)}>Preparar sample social</button></div>}
+    {notice && <div className="notice" role={noticeError ? "alert" : "status"}>{notice} {txUrl && <a href={txUrl} target="_blank" rel="noreferrer">View transaction ↗</a>}</div>}
+    <section className="graph-shell" aria-label="App entities" aria-busy={loading}>
+      {loading ? <div className="empty-state" role="status">Querying your app's entities…</div> : error ?
+        <div className="empty-state" role="alert"><p>{error}</p><button className="btn" onClick={() => setRevision(v => v + 1)}>Retry</button></div> : data?.loaded ?
+        view === "tables" ? <ArkivTables model={data.tables} graph={data.graph} height={600} signerAddress={account ?? undefined} onExtendEntity={canManageScope ? extend : undefined} onMutated={() => setRevision(v => v + 1)} /> : <ArkivGraph data={data.graph} height={600} /> :
+        <div className="empty-state"><h3>{isOwnSample ? "Create your first sample" : "This app has no active entities"}</h3><p>{isPublicExample ? "The public example has no active entities. Its entities may have expired. You can create your own sample with your wallet." : "No entities match this wallet and these attributes. View the public example, or create your own sample with your wallet."}</p><button className="btn primary" onClick={() => setShowCreate(true)}>Prepare social sample</button></div>}
     </section>
-    {data?.truncated && <p className="notice">Vista parcial: se cargaron {data.loaded} entidades. Filtra por app para reducir la consulta.</p>}
-    {!walletPresent && <p className="help">Para crear o extender entidades, abre esta app con una wallet compatible. Puedes consultar sin conectar una wallet.</p>}
-    <p className="help">Las consultas muestran datos públicos. Conectar la wallet permite firmar Lifetime Extension en las entidades que te pertenecen. La fecha de expiración es una estimación según el tiempo de bloque.</p>
-    <a className="text-button" href={`${PUBLIC_CHAIN.explorerUrl}/data?q=${encodeURIComponent(scope.address)}`} target="_blank" rel="noreferrer">Ver en Block Explorer ↗</a>
+    {data?.truncated && <p className="notice">Partial results: {data.loaded} entities loaded. Filter by app to narrow the query.</p>}
+    {!walletPresent && <p className="help">To create or extend entities, open this app with a compatible wallet. You can query without connecting a wallet.</p>}
+    <p className="help">Queries return public data. Connect your wallet to sign Lifetime Extension for entities you own. Expiration dates are estimated from block timing.</p>
+    <a className="text-button" href={`${PUBLIC_CHAIN.explorerUrl}/data?q=${encodeURIComponent(scope.address)}`} target="_blank" rel="noreferrer">View in Block Explorer ↗</a>
   </>;
 }

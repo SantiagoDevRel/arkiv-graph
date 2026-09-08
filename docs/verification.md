@@ -1,14 +1,15 @@
 # Verification — arkiv-graph 0.3.0
 
-Release candidate, checked on 2026-09-08. **These packages are intended for testnet use.**
+Published npm release, checked on 2026-09-08. **These packages are intended for testnet use.**
 
 ## Release status
 
-- Local candidate: `arkiv-graph@0.3.0`, branch `feat/tiramisu-dashboard`.
-- npm currently publishes `0.2.0`; `0.3.0` is not published yet. npm login is required.
-- The sample currently uses the local candidate during development. Before release,
-  replace its workspace dependency with the published, exact `0.3.0` version and
-  regenerate the lockfile. A local tarball test is not evidence of npm publication.
+- Published: `arkiv-graph@0.3.0`, source branch `feat/tiramisu-dashboard`.
+- npm registry version and artifact integrity were verified after publication.
+  SHA1: `e5f5e8929cdbebfc296f264500342214a5e6210c`.
+- The sample pins the published `0.3.0` package. Its lockfile contains the registry
+  integrity, workspace auto-linking is disabled, and the actual import resolves
+  inside `node_modules/arkiv-graph`, not the local library source.
 - The existing hosted sample still uses the earlier release/network. It has not
   been updated to the candidate. Use localhost:3012 for the current work.
 - The candidate branch opts out of automatic Vercel deployment in `vercel.json`,
@@ -70,8 +71,8 @@ Other SDK generations, runtime majors and networks are not verified by this cand
 
 ## Remaining release checks
 
-Clean consumer installation/imports from npm, hosting request limits and a matching hosted demo must be verified before marking
-this candidate complete or publishing its hub card. Brand alignment for a public
+Hosting request limits and a matching hosted demo must be verified before
+publishing the Hub card. Brand alignment for a public
 frontend release also remains required by the project rules.
 
 The hub worktree inherits Next.js 16.2.6 from its base branch; current security
@@ -100,15 +101,13 @@ there; 44px row actions, pinned action column, wrapped entity-type tabs and a
 viewport-wide modal backdrop. Confirmed-but-absent sample queries now fail closed
 instead of allowing a second batch. A regression test covers delayed reads.
 
-The hub candidate is excluded from production builds. Locally it links to the
-local sample, labels the unpublished install without a copy action, and omits the
-nonexistent npm version link. The agent prompt remains copyable and first checks
-publication. Source/documentation links use the immutable `v0.3.0-rc.2` source tag.
-The earlier `rc.1` tag is preserved as historical evidence; use `rc.2` for the
-working Tiramisu sample schema and pre-sign simulation.
+The Hub card remains excluded from production builds. Locally it links to the
+local sample and offers the published npm install command and agent prompt as
+copy actions. Source/documentation links use `v0.3.0`. Earlier `rc.1` and `rc.2`
+tags are preserved as historical evidence.
 
 Accepted scope limits: the reused library's English labels remain unchanged; the
-sample workflow is Spanish. No translation API was added. Legacy exported helper
+sample workflow now also uses English, as requested. No translation API was added. Legacy exported helper
 identifiers are retained for compatibility; prose uses Entity Expiration. There is
 no cross-device transaction uniqueness guarantee. The public hosting rate-limit
 control remains a release requirement; no new auth/infra feature was introduced.
@@ -229,6 +228,76 @@ an isolated 390px browser matched the loaded DOM, with no overflow/page errors.
 The source plus documentation closure is tagged `v0.3.0-rc.2`; the earlier tag
 is unchanged. Hub source is `e162165` on `feat/tools-arkiv-graph`, with the
 updated candidate copy, tag links, 4 catalog tests, lint/typecheck and clipboard
-checks passing. No PR, npm publication or public frontend deployment was made.
+checks passing. At that earlier rc.2 checkpoint no PR, npm publication or public frontend deployment had been made.
 
 Machine-readable public transaction evidence: [tiramisu-verification.json](./tiramisu-verification.json).
+
+## Published npm and English sample verification
+
+The registry artifact contains 16 files, including `AGENTS.md`, its `CLAUDE.md`
+pointer, README, ESM/CJS exports and TypeScript declarations. Every built runtime
+file is byte-identical to the audited rc.2 artifact; the release README changed
+to published installation instructions. The npm integrity is:
+
+```text
+sha512-0fLHkfyZ8OgUQ0BKOBx5SdoLZ9yhT1ksSuuxq6oGIfUdQJUayp+jop3/YAt35c9MQWoXgPEgtDQYSGwWpV8YIw==
+```
+
+A new consumer installed `arkiv-graph@0.3.0` from registry.npmjs.org. Verbatim
+README examples returned offline `2 1 2`, real Tiramisu read `35` entities across
+five types, and scoped SDK count `35`. ESM/CommonJS imports, React SSR (7889
+characters), the client directive and strict TypeScript passed. Its production
+audit and the sample production dependency audit report zero known advisories.
+
+The sample uses the exact registry package and no prebuild of the workspace
+library. A stale development junction from the earlier workspace install was
+removed before checking actual resolution. Fresh installations do not contain
+that junction. Package and sample typechecks, 26 core tests, 10 wallet tests and
+the sample production build passed after the switch.
+
+All sample UI, wallet/API errors, metadata and HTML language are English.
+Real registry-backed tables were rechecked at 390/600/601/768/900/901/1440px and
+graphs at 390/768/1440px, with no overflow or page errors. English advanced fields,
+real empty query, creation confirmation and invalid API validation passed at
+390/768/1440px. Mocked loading/error/rejection checks remain separate from real
+wallet transaction evidence above. No new transaction was needed for the
+registry switch: its package runtime is byte-identical.
+
+Claude's final English review inspected five screenshots and found no blocker.
+Its minor observation about an overly broad error assertion was corrected and
+the wallet tests rerun. The Hub card's published-package/local-demo state passes
+five focused catalog tests; both clipboard actions copy exact text. Layouts at
+390/639/640/768/1279/1280/1440px have no document overflow.
+
+Public deployment remains pending. The existing Vercel project's firewall was
+inspected in its authenticated dashboard: Hobby plan, system mitigations active,
+zero custom rules and no enforced request-limit rule. No billing or firewall
+settings were changed. The required public brand alignment is also pending.
+
+The example remains the default public read scope after wallet connection.
+Visitors explicitly select **View my app**, and empty personal dashboards offer
+**View public example**. Only confirmed sample creation automatically switches
+to its creator. This uses the public owner address, never a shared/default signer.
+The sample only supplies an extension callback when the connected wallet matches
+the queried owner. Foreign-wallet examples therefore have no extension action;
+the callback still rechecks the actual chain owner before requesting a signature.
+
+Claude completed the independent registry consumer after two timed-out turns
+and a final resumed report. It installed npm0.3.0 into its own clean directory,
+ran the documented offline/read/count examples, checked CJS/ESM imports, and
+confirmed the shipped guides. Minimal integration passed. Its additional
+`exactOptionalPropertyTypes` check identified two documentation gaps: the theme
+type belongs to the React entry, and optional block timing must be conditionally
+passed with that compiler flag. These require a documentation patch release.
+The normal strict TypeScript5.9.3 consumer passed; the agent's additional check
+used TypeScript7.0.2. No extra runtime compatibility claim is made from that probe.
+
+Claude's final publication audit independently checked registry SHA1/integrity,
+actual npm resolution, and four screenshots; no blocker. Its real-catalog test
+coverage observation was fixed, and five catalog tests passed. The public-example
+follow-up also passed review after five more screenshots. Its expired-example
+copy observation was corrected and verified with a controlled empty demo response.
+Public/own/empty wallet switching passed at seven widths with real read requests,
+a mocked EIP1193 account, and zero signing requests. A clean tracked-source
+snapshot installed from the lockfile and ran with no env file or library dist;
+its real API and 390px DOM both showed35 with no overflow or page errors.

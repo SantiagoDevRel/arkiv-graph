@@ -3,8 +3,8 @@
 **These packages are intended for testnet use.**
 
 A small social app on Tiramisu, viewed through `arkiv-graph`.
-This checkout uses the local **0.3.0 candidate** while npm publication is pending.
-Consuming the exact published version is a required release gate, not yet met.
+This checkout consumes **arkiv-graph@0.3.0 from npm**, pinned in its manifest
+and lockfile. It does not require building the local library.
 One dataset powers the graph and tables. Connect your wallet, create
 the sample, inspect a user/post/comment or relation, and extend an entity's life.
 The fictional social content is public test data; chain ownership belongs to the
@@ -16,19 +16,19 @@ Prerequisites: Node.js 22 and pnpm 9. No env file, access key or signing key is
 needed to run the app or read public entities.
 
 ```bash
-git clone --branch v0.3.0-rc.2 https://github.com/SantiagoDevRel/arkiv-graph.git
+git clone --branch v0.3.0 https://github.com/SantiagoDevRel/arkiv-graph.git
 cd arkiv-graph
 pnpm install --frozen-lockfile
-pnpm build:lib
 pnpm dev
 ```
 
-Open http://localhost:3012. The current dependency is `workspace:*`; the library
-build above is necessary in a clean checkout. The existing hosted sample still
-runs the older release and is not evidence of this candidate's Tiramisu flow.
+Open http://localhost:3012. The existing hosted sample still runs the older
+release and is not evidence of this version's Tiramisu flow.
 
-1. Select **Conectar wallet** and authorize your wallet on Tiramisu.
-2. Select **Crear sample social**. Inspect the count, public-data description,
+1. Explore the public social example without connecting. Select **Connect wallet**
+   and authorize your wallet on Tiramisu when you want to write. Connecting keeps
+   the example visible; select **View my app** to query your own wallet's sample.
+2. Select **Create social sample**. Inspect the count, public-data description,
    app identifier and 30-day lifetime, then sign the batch in your wallet.
 3. Wait for confirmation. The app queries the connected owner and
    `project = arkiv-graph-social-v2`; table and graph show the same entities.
@@ -40,7 +40,9 @@ private key entry are part of this flow. If a wallet is absent, reads still work
 Real creation and extension were tested with Rabby's injected EIP-1193 provider.
 MetaMask uses the same interface, but its actual extension UI was not tested.
 The default read-only showcase owner is configured publicly in `src/lib/config.ts`.
-Connecting your wallet loads your own sample. Advanced settings let you inspect
+An empty wallet can always select **View public example** to return to the demo.
+Only the connected owner can extend their entities; viewing the demo never uses
+its owner's signer or requires their private key. Advanced settings let you inspect
 another app by owner, namespace attribute/value and entity type attribute.
 
 ## Architecture and limitations

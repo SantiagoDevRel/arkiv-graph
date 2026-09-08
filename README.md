@@ -4,9 +4,9 @@ Interactive graphs and tables for Arkiv entities. Define relationships once,
 inspect your app data in either view, and optionally wire wallet-signed Lifetime
 Extension. **These packages are intended for testnet use.**
 
-This branch contains the **0.3.0 release candidate**, not a published release.
-npm and the hosted sample still serve the older release. See the verification
-report below for the remaining publication gates.
+**arkiv-graph@0.3.0 is published on npm.** The sample pins that registry release.
+The hosted sample still serves the older release; use the local sample below.
+See the verification report for evidence and the remaining public demo gates.
 
 - [npm package](https://www.npmjs.com/package/arkiv-graph)
 - [Package README: install, API, compatibility, examples](./packages/arkiv-graph/README.md)
@@ -24,12 +24,10 @@ Node.js 22, pnpm 9:
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm build:lib
 pnpm dev
 ```
 
-Open http://localhost:3012. This candidate currently links the workspace package;
-switching to the exact published npm version is a required release gate.
+Open http://localhost:3012. The sample consumes `arkiv-graph@0.3.0` from npm.
 No env file or signing key is required to run/read it.
 Connect an injected wallet and use test GLM to create your own social sample on Tiramisu.
 
@@ -44,8 +42,8 @@ pnpm build
 ```
 
 `packages/arkiv-graph` holds the core and React entry; `apps/example` holds the
-consumer dapp. For release, verify a tarball in a disposable consumer, publish,
-then replace the sample's workspace dependency with the exact npm version.
+consumer dapp. For a new release, verify a tarball in a disposable consumer,
+publish, then update the sample's exact npm version and lockfile.
 See the verification document for the actual published status and evidence.
 
 MIT · Arkiv DevRel

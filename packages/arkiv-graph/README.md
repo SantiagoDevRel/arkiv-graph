@@ -8,7 +8,7 @@ Version **0.3.0** targets **@arkiv-network/sdk 0.8.0**, **viem 2.56.3**, **Node.
 
 Nodes are your entities. Edges are the relationships *you* define (Arkiv has no joins — you declare how entities relate). References to other chains show up as **external nodes**, drawn purely from what your entities already store — `arkiv-graph` never reads those chains.
 
-> Hosted sample: https://arkiv-graph-example.vercel.app. The deployed release and verification status are recorded in [verification.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0-rc.2/docs/verification.md).
+> Hosted sample: https://arkiv-graph-example.vercel.app. The deployed release and verification status are recorded in [verification.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0/docs/verification.md).
 
 
 
@@ -16,15 +16,10 @@ Nodes are your entities. Edges are the relationships *you* define (Arkiv has no 
 
 ## Install
 
-**Candidate status:** `0.3.0` is not published yet; npm currently serves `0.2.0`.
-The registry commands below are the release target and will fail until publication.
-To reproduce candidate verification from this repository, run `pnpm install
---frozen-lockfile`, `pnpm build:lib`, then `npm pack ./packages/arkiv-graph
---pack-destination <absolute-existing-output-directory>`. In a fresh consumer,
-replace the first install command below with `npm i <absolute-path-to-arkiv-graph-0.3.0.tgz>`.
-This verifies the packed artifact, not an npm release.
+Check the exact release, then install it from the npm registry:
 
 ```bash
+npm view arkiv-graph@0.3.0 version
 npm i arkiv-graph@0.3.0
 # peer deps for the React component:
 npm i react@19.2.7 react-dom@19.2.7
@@ -34,7 +29,10 @@ npm i @arkiv-network/sdk@0.8.0 viem@2.56.3
 
 The core entry does not import React at runtime, but this combined package also
 installs the graph renderer's dependencies. A core-only install is not React-free.
-Create the pack destination directory before running `npm pack` above.
+For local package development, run `pnpm install --frozen-lockfile` and
+`pnpm build:lib` from the repository root. Create an output directory, then run
+`npm pack ./packages/arkiv-graph --pack-destination <absolute-existing-output-directory>`.
+Installing that tarball tests a local artifact; it does not verify the npm release.
 
 ## Minimal example (no network or credentials)
 
@@ -65,8 +63,8 @@ export function AppData({ graph, tables }: { graph: Graph; tables: TablesModel }
 }
 ```
 
-Pass the graph and tables built from the same data. The components use English
-labels; the sample's surrounding workflow is in Spanish.
+Pass the graph and tables built from the same data. The components and the
+sample's surrounding workflow use English labels.
 
 ---
 
@@ -243,10 +241,6 @@ MIT © Arkiv DevRel
 
 ## Reproducible read (no wallet connection or access key)
 
-For this unpublished candidate, first follow the tarball instructions in [Install](#install);
-replace `arkiv-graph@0.3.0` below with the absolute tarball path. The registry command
-is valid only after publication.
-
 Use Node.js 22. From an empty directory:
 
 ```bash
@@ -309,7 +303,7 @@ preserves its `"use client"` directive. The core import is safe on the server.
 The library does not hold keys or submit transactions. Pass `onExtendEntity` to
 `ArkivTables` to enable the action; omit it for a read-only view. The callback
 receives `{ entityKey, targetExpiresAt, row }`, where the target is Unix seconds.
-Use the [sample wallet implementation](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0-rc.2/apps/example/src/lib/wallet-client.ts)
+Use the [sample wallet implementation](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0/apps/example/src/lib/wallet-client.ts)
 as the complete integration reference, including account/chain checks.
 
 With SDK 0.8, an extension **sets a new expiry**, using
@@ -361,10 +355,10 @@ explicitly implement deletion and confirmation themselves.
 ## Source, sample, and agent guides
 
 - [Source repository](https://github.com/SantiagoDevRel/arkiv-graph)
-- [Runnable sample and setup](https://github.com/SantiagoDevRel/arkiv-graph/tree/v0.3.0-rc.2/apps/example)
+- [Runnable sample and setup](https://github.com/SantiagoDevRel/arkiv-graph/tree/v0.3.0/apps/example)
 - [Hosted sample](https://arkiv-graph-example.vercel.app)
-- [Consumer AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0-rc.2/packages/arkiv-graph/AGENTS.md)
-- [Sample AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0-rc.2/apps/example/AGENTS.md)
+- [Consumer AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0/packages/arkiv-graph/AGENTS.md)
+- [Sample AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0/apps/example/AGENTS.md)
 
 Give your agent the applicable guide explicitly. Installing a package does not
 mean an agent will discover instructions inside `node_modules`.
