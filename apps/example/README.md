@@ -1,41 +1,112 @@
-# @arkiv-graph/example
+# arkiv-graph social sample
 
-The live showcase for [`arkiv-graph`](../../packages/arkiv-graph): **https://arkiv-graph-example.vercel.app**
+**These packages are intended for testnet use.**
 
-A tiny social app — **Arkiv Social** — whose users, posts, comments, follows and likes live entirely as entities on an **Arkiv testnet** (Braga today). The page reads them back and renders them two ways — a **Graph** view (`<ArkivGraph>`, drag a node to pin it) and a **Tables** view (`<ArkivTables>`, a Supabase-like browser) — toggle between them. From the Tables view you can **extend** an entity's expiry or **delete** it, and **post** new ones — all signed by your **own wallet** (connect MetaMask), and only by the entity's owner. A few entities reference other chains (an NFT pfp on Base, a mint on Ethereum, a tip on Optimism) so you can see external-chain nodes.
+A small social app on Tiramisu, viewed through `arkiv-graph`.
+This checkout uses the local **0.3.0 candidate** while npm publication is pending.
+Consuming the exact published version is a required release gate, not yet met.
+One dataset powers the graph and tables. Connect your wallet, create
+the sample, inspect a user/post/comment or relation, and extend an entity's life.
+The fictional social content is public test data; chain ownership belongs to the
+wallet that creates it.
 
-**Network is plug-and-play:** Braga is the default; set `ARKIV_CHAIN_ID` + `ARKIV_RPC_URL` + `ARKIV_EXPLORER_URL` together (see [`.env.local.example`](./.env.local.example)) to point at the next testnet — no code change. Partial config fails loudly rather than silently mixing networks.
+## Clean checkout
 
-## Run locally
+Prerequisites: Node.js 22 and pnpm 9. No env file, access key or signing key is
+needed to run the app or read public entities.
 
 ```bash
-# from the repo root
-pnpm install
-cp apps/example/.env.local.example apps/example/.env.local   # add a Braga burner PRIVATE_KEY
-pnpm seed          # one batch tx → ~56 entities on Braga (skips if already seeded)
-pnpm dev           # → http://localhost:3012
+git clone --branch v0.3.0-rc.1 https://github.com/SantiagoDevRel/arkiv-graph.git
+cd arkiv-graph
+pnpm install --frozen-lockfile
+pnpm build:lib
+pnpm dev
 ```
 
-## Data model (the link rules live in `src/lib/arkiv.ts`)
+Open http://localhost:3012. The current dependency is `workspace:*`; the library
+build above is necessary in a clean checkout. The existing hosted sample still
+runs the older release and is not evidence of this candidate's Tiramisu flow.
 
-| entityType | key attributes | becomes |
-| --- | --- | --- |
-| `user` | `handle`, `community`, optional `pfpChainId/pfpContract/pfpTokenId` | a node (+ external Base nodes for pfps) |
-| `post` | `postId`, `authorHandle`, optional `topic`, optional `mintChainId/mintTx` | a node, edge → author (+ external Ethereum node for the mint) |
-| `comment` | `commentId`, `postId`, `authorHandle` | a node, edges → post + author |
-| `tip` | `postId`, `authorHandle`, `tipChainId`, `tipTx` | a node, edge → post (+ external Optimism node) |
-| `follow` | `followerHandle`, `followeeHandle` | **collapsed into** a user→user edge |
-| `like` | `byHandle`, `postId` | **collapsed into** a user→post edge |
+1. Select **Conectar MetaMask** and authorize your wallet on Tiramisu.
+2. Select **Crear sample social**. Inspect the count, public-data description,
+   app identifier and 30-day lifetime, then sign the batch in MetaMask.
+3. Wait for confirmation. The app queries the connected owner and
+   `project = arkiv-graph-social-v2`; table and graph show the same entities.
+4. In the table, select Lifetime Extension/Extend, choose a later date and sign.
+   After confirmation the app refetches the entity and its new expiration.
 
-References resolve by **stable business id** (`handle`, `postId`) so the whole dataset seeds in a single `mutateEntities` batch — no need to know on-chain keys first.
+Writes require test GLM from https://hub.arkiv.network/faucet. No mainnet funds or
+private key entry are part of this flow. If MetaMask is absent, reads still work.
+The default read-only showcase owner is configured publicly in `src/lib/config.ts`.
+Connecting your wallet loads your own sample. Advanced settings let you inspect
+another app by owner, namespace attribute/value and entity type attribute.
 
-## Reads (server) + writes (your wallet)
+## Architecture and limitations
 
-- `GET /api/graph` — the only API route. Reads the demo (`project` + `createdBy`) server-side and returns the built graph. `?address=0x…` graphs any wallet's entities instead. No signing key needed.
-- **Writes are client-side.** From the Tables view you can **extend** or **delete** an entity, and you can **post** a new one — each is signed by the visitor's **own wallet** (viem + injected `window.ethereum`) in `src/lib/wallet-client.ts`. No server key, no write endpoint. Ownership is enforced by the chain (a non-owner is told so before any wallet prompt), and the client writes to the **same network the server reads from** (the resolved chain is passed to the browser via `page.tsx`).
+- `src/lib/config.ts`: one public network definition shared by server and wallet.
+- `src/lib/social-sample.ts`: social dataset and its creation operations; no secrets.
+- `src/lib/arkiv.ts`: server-only read client and social link rules.
+- `GET /api/graph`: read-only, owner-scoped and app-filtered, explicit fields,
+  bounded result size, no-store responses. No signing API or arbitrary RPC proxy.
+- `src/lib/wallet-client.ts`: wallet-signed creation and extension. SDK 0.8 uses
+  `executeBatch`, typed attributes and `expires`. It waits for confirmations.
+- `arkiv-graph`: all graph/table construction and rendering comes from the package.
 
-## Deploy notes
+The UI does not make data private or add SQL joins. Social relationships resolve
+by handles/post ids; arbitrary app relationships need the link rules documented in
+the package. Queries are limited to 500 entities and mark partial results.
+Refresh is manual, with an automatic refetch after confirmed mutations. Dates are
+block-time estimates. The UI restricts extension to the connected owner and does
+not offer deletion. Testnet entities can expire and the network can reset.
 
-- Vercel project `arkiv-graph-example` (team `santiago-hobby`). The deployed app needs only **`TRUSTED_ADDRESS`** (the demo read scope) + optionally `ARKIV_PROJECT` and the `ARKIV_*` network vars. It does **not** need `PRIVATE_KEY` or `ENABLE_WRITES` — those are gone; writes are wallet-signed and seeding is local.
-- The data already lives on-chain, so prod reads the same Braga entities as local — no separate prod seed needed.
-- `PRIVATE_KEY` (local only) is a throwaway testnet burner for `pnpm seed`. Never a mainnet key.
+Before a public deployment, configure request limits at the hosting edge or RPC
+provider. The read-only API is unauthenticated and bounds each query, but does not
+provide a distributed rate limiter; abusive traffic can exhaust the RPC allowance.
+Do not expose the candidate publicly until that operational control is verified.
+
+## Troubleshooting
+
+- No entities: create the sample first, check exact owner/app attributes, or check
+  for expiration. An empty wallet is a valid initial state.
+- RPC unavailable/rate-limited: use Retry after a delay; the app never fabricates data.
+- Wallet rejects: no mutation is reported successful. Read the prompt and retry
+  only if no transaction was already submitted.
+- Wrong owner/account/network: use the wallet that owns the entity and Tiramisu.
+  The app checks again at the signing boundary.
+- Pending sample: inspect the transaction hash before retrying. Creation checks
+  for existing entities and retains submitted transaction state across reloads.
+  A confirmed batch whose entities are absent stays blocked; an empty query is not
+  proof that it is safe to submit again. Verify its receipt and expiration first.
+  Duplicate prevention is local to one browser profile; do not create the same
+  sample concurrently from multiple devices/profiles.
+  If every entity from a confirmed batch has verifiably expired and you want to
+  recreate it, remove only that sample's marker in the browser console on the app
+  origin: `localStorage.removeItem("arkiv-graph:seed:7738577:<lowercase-owner>:arkiv-graph-social-v2")`.
+  Replace the owner placeholder. Never clear this marker while a transaction is
+  pending or merely because a query is empty. There is no automatic reset.
+
+## Checks
+
+From the repo root:
+
+```bash
+pnpm test
+pnpm test:wallet
+pnpm typecheck
+pnpm build
+```
+
+See [verification.md](../../docs/verification.md) for exact tested versions,
+real-chain evidence, browser coverage and remaining limitations.
+
+## Guides and links
+
+- [Consumer guide for this sample](./AGENTS.md) — give it to your agent explicitly.
+- [Package README](../../packages/arkiv-graph/README.md)
+- [Package consumer guide](../../packages/arkiv-graph/AGENTS.md)
+- [npm](https://www.npmjs.com/package/arkiv-graph)
+- [Hosted sample](https://arkiv-graph-example.vercel.app)
+
+The optional `scripts/seed-local.mjs` is maintainer-only local automation with an
+explicitly authorized testnet wallet and an env file outside the repo. It is not
+needed by consumers and is excluded from deployment. The web app never reads it.

@@ -1,120 +1,20 @@
 import "server-only";
-import { createPublicClient, http } from "@arkiv-network/sdk";
-import { privateKeyToAccount } from "@arkiv-network/sdk/accounts";
-import { braga } from "@arkiv-network/sdk/chains";
-import { defineArkivNetwork, explorerOf, rpcOf, type ExternalConfig, type LinkRule } from "arkiv-graph";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// NETWORK — plug-and-play. Braga is the default, but everything below follows
-// ARKIV_CHAIN, so when Braga is sunset you point at the next testnet by setting
-// env vars only (no code change):
-//   ARKIV_CHAIN_ID, ARKIV_RPC_URL, ARKIV_EXPLORER_URL, ARKIV_WS_URL,
-//   ARKIV_GAS_TOKEN, ARKIV_NETWORK_NAME, ARKIV_FAUCET_URL
-// If the SDK ships the next network as its own chain export, swap `braga` for it
-// here (one line) instead.
-// ─────────────────────────────────────────────────────────────────────────────
-
-const BRAGA_FAUCET = "https://braga.hoodi.arkiv.network/faucet/";
-
-/**
- * Resolve the network FAIL-CLOSED: either no ARKIV_* network vars (→ default
- * Braga), or a complete custom set. A partial set throws instead of silently
- * mixing a new RPC with Braga's chain id / explorer / faucet.
- */
-function resolveNetwork() {
-  const { ARKIV_CHAIN_ID, ARKIV_RPC_URL, ARKIV_EXPLORER_URL, ARKIV_WS_URL, ARKIV_GAS_TOKEN, ARKIV_NETWORK_NAME, ARKIV_FAUCET_URL } = process.env;
-  const anyCustom = !!(ARKIV_CHAIN_ID || ARKIV_RPC_URL || ARKIV_EXPLORER_URL || ARKIV_WS_URL || ARKIV_GAS_TOKEN || ARKIV_NETWORK_NAME || ARKIV_FAUCET_URL);
-  if (!anyCustom) {
-    return { chain: braga, explorer: (explorerOf(braga) ?? "").replace(/\/$/, ""), faucet: BRAGA_FAUCET, rpc: rpcOf(braga) };
-  }
-  const missing = [
-    !ARKIV_CHAIN_ID && "ARKIV_CHAIN_ID",
-    !ARKIV_RPC_URL && "ARKIV_RPC_URL",
-    !ARKIV_EXPLORER_URL && "ARKIV_EXPLORER_URL",
-  ].filter(Boolean);
-  if (missing.length) {
-    throw new Error(
-      `Custom Arkiv network is partially configured — missing ${missing.join(", ")}. ` +
-        `Set ARKIV_CHAIN_ID, ARKIV_RPC_URL and ARKIV_EXPLORER_URL together, or unset all ARKIV_* network vars to use the default Braga network.`,
-    );
-  }
-  // validate VALUES, not just presence — a NaN chain id or a malformed URL must fail loudly
-  const chainId = Number(ARKIV_CHAIN_ID);
-  if (!Number.isSafeInteger(chainId) || chainId <= 0) {
-    throw new Error(`ARKIV_CHAIN_ID must be a positive integer, got "${ARKIV_CHAIN_ID}".`);
-  }
-  for (const [k, v] of [
-    ["ARKIV_RPC_URL", ARKIV_RPC_URL],
-    ["ARKIV_EXPLORER_URL", ARKIV_EXPLORER_URL],
-    ...(ARKIV_WS_URL ? ([["ARKIV_WS_URL", ARKIV_WS_URL]] as [string, string][]) : []),
-    ...(ARKIV_FAUCET_URL ? ([["ARKIV_FAUCET_URL", ARKIV_FAUCET_URL]] as [string, string][]) : []),
-  ]) {
-    try {
-      new URL(v as string);
-    } catch {
-      throw new Error(`${k} must be a valid URL, got "${v}".`);
-    }
-  }
-  const chain = defineArkivNetwork(braga, {
-    chainId,
-    rpcUrl: ARKIV_RPC_URL as string,
-    explorerUrl: ARKIV_EXPLORER_URL as string,
-    name: ARKIV_NETWORK_NAME,
-    wsUrl: ARKIV_WS_URL,
-    gasToken: ARKIV_GAS_TOKEN,
-  });
-  // No Braga fallback for explorer/faucet once a custom chain is selected.
-  return { chain, explorer: (ARKIV_EXPLORER_URL as string).replace(/\/$/, ""), faucet: ARKIV_FAUCET_URL ?? "", rpc: ARKIV_RPC_URL as string };
-}
-
-const NET = resolveNetwork();
-export const ARKIV_CHAIN = NET.chain;
-export const NATIVE_CHAIN_ID = ARKIV_CHAIN.id;
-export const EXPLORER = NET.explorer;
-export const NETWORK_NAME = ARKIV_CHAIN.name;
-export const GAS_TOKEN = ARKIV_CHAIN.nativeCurrency?.symbol ?? "GLM";
-export const FAUCET_URL = NET.faucet;
-const RPC_URL: string = NET.rpc ?? "https://braga.hoodi.arkiv.network/rpc";
-
-/** Public, client-safe chain config — passed to the browser so client-side wallet
- *  writes target the SAME network the server reads from (no secret here). */
-export const PUBLIC_CHAIN = {
-  id: NATIVE_CHAIN_ID,
-  name: NETWORK_NAME,
-  rpcUrl: RPC_URL,
-  explorerUrl: EXPLORER,
-  gasToken: GAS_TOKEN,
-} as const;
-
-/** Project namespace stamped on every entity (Arkiv is one shared public DB). */
-export const PROJECT = process.env.ARKIV_PROJECT ?? "arkiv-graph-demo-v1";
-
-/** The wallet that owns this demo's data. Public address — safe to expose. */
-export const TRUSTED_ADDRESS = (
-  process.env.TRUSTED_ADDRESS ??
-  (process.env.PRIVATE_KEY ? privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`).address : "") ??
-  ""
-).toLowerCase();
-
+import { createPublicClient } from "@arkiv-network/sdk";
+import { http } from "viem";
+import type { LinkRule } from "arkiv-graph";
+import { CHAIN, PUBLIC_CHAIN, PROJECT, DEMO_OWNER } from "./config";
+export { PUBLIC_CHAIN, PROJECT };
+export const TRUSTED_ADDRESS = DEMO_OWNER;
+export const NETWORK_NAME = CHAIN.name;
+export const NATIVE_CHAIN_ID = CHAIN.id;
+export const EXPLORER = PUBLIC_CHAIN.explorerUrl;
 export function publicClient() {
-  return createPublicClient({ chain: ARKIV_CHAIN, transport: http(RPC_URL) });
+  return createPublicClient({ chain: CHAIN, transport: http(PUBLIC_CHAIN.rpcUrl, { timeout: 15000, retryCount: 1 }) });
 }
-
-export function trustedAddress(): string {
-  const a = TRUSTED_ADDRESS;
-  if (!a) throw new Error("TRUSTED_ADDRESS / PRIVATE_KEY not configured");
-  return a;
-}
-
-/**
- * How the social entities relate. Arkiv has no joins — these rules ARE the
- * schema. References resolve by stable business ids (handle / postId), and
- * follow/like join entities collapse into edges.
- */
+export function trustedAddress() { return DEMO_OWNER; }
 export const SOCIAL_LINKS: LinkRule[] = [
   { type: "reference", attribute: "authorHandle", targetAttribute: "handle", targetType: "user", label: "by" },
   { type: "reference", attribute: "postId", targetAttribute: "postId", sourceType: "comment", targetType: "post", label: "on" },
-  { type: "reference", attribute: "postId", targetAttribute: "postId", sourceType: "tip", targetType: "post", label: "tips" },
   {
     type: "join",
     entityType: "follow",
@@ -139,7 +39,5 @@ export const SOCIAL_LINKS: LinkRule[] = [
   },
 ];
 
-export const EXTERNAL_CONFIG: ExternalConfig = { enabled: true };
 
-/** Fixed TTL for demo entities: 30 days, in seconds. */
-export const TTL_SECONDS = 30 * 24 * 60 * 60;
+export const EXTERNAL_CONFIG = { enabled: true };

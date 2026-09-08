@@ -1,4 +1,4 @@
-import { addressExplorerUrl, BRAGA_CHAIN_ID, lookupChain, txExplorerUrl } from "./chains.js";
+import { addressExplorerUrl, TIRAMISU_CHAIN_ID, lookupChain, txExplorerUrl } from "./chains.js";
 import type { NormEntity } from "./normalize.js";
 import type { ExternalConfig, GraphEdge, GraphNode } from "./types.js";
 
@@ -96,7 +96,7 @@ export function addExternalForEntity(
   // The active network is authoritative: if the caller supplied nativeChainIds,
   // use ONLY those (so a post-sunset reference to the OLD chain is no longer
   // wrongly treated as native). Braga is only the fallback when none are given.
-  const ids = cfg?.nativeChainIds?.length ? cfg.nativeChainIds : [BRAGA_CHAIN_ID];
+  const ids = cfg?.nativeChainIds?.length ? cfg.nativeChainIds : [TIRAMISU_CHAIN_ID];
   const native = new Set<number | string>();
   for (const id of ids) {
     native.add(id);

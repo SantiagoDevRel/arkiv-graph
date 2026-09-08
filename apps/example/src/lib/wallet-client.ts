@@ -1,258 +1,145 @@
 "use client";
-// Client-side Arkiv writes signed by the visitor's OWN wallet (MetaMask / any
-// injected EIP-1193 provider) via viem's `custom()` transport — NO private key
-// is ever held by this app. The SDK sends Arkiv mutations with
-// `walletClient.sendTransaction`, which an injected wallet signs in a popup.
-import {
-  type Chain,
-  createPublicClient,
-  createWalletClient,
-  custom,
-  decodeEventLog,
-  formatEther,
-  http,
-  parseAbi,
-} from "@arkiv-network/sdk";
-import { braga } from "@arkiv-network/sdk/chains";
-import { ExpirationTime, jsonToPayload } from "@arkiv-network/sdk/utils";
-import { type ArkivNetworkOverrides, defineArkivNetwork } from "arkiv-graph";
+import { createPublicClient, createWalletClient, ExpirationTime } from "@arkiv-network/sdk";
+import { eq } from "@arkiv-network/sdk/query";
+import { custom, http, type Hex } from "viem";
+import { CHAIN, PUBLIC_CHAIN, PROJECT } from "./config";
+import { socialSample } from "./social-sample";
 
-// The active chain. Defaults to Braga, but `configureWalletChain` points it at
-// whatever network the SERVER resolved (env-driven) so reads and writes never
-// split across chains when a testnet is rotated. Plug-and-play, never hardcoded.
-let CHAIN: Chain = braga;
-let GAS_TOKEN = CHAIN.nativeCurrency?.symbol ?? "GLM";
-let EXPLORER = (CHAIN.blockExplorers?.default?.url ?? "").replace(/\/$/, "");
-let CHAIN_HEX = `0x${CHAIN.id.toString(16)}`;
-
-const MAX_EXTEND_SECONDS = 365 * 24 * 60 * 60;
-const POST_TTL = ExpirationTime.fromDays(30);
-
-const BTL_ABI = parseAbi([
-  "event ArkivEntityBTLExtended(uint256 indexed entityKey, address indexed ownerAddress, uint256 oldExpirationBlock, uint256 newExpirationBlock, uint256 cost)",
-]);
-
-export interface PublicChainConfig {
-  id: number;
-  name?: string;
-  rpcUrl: string;
-  explorerUrl: string;
-  gasToken?: string;
-}
-
-/** Point client writes at the SAME network the server reads from. Call once with
- *  the server-resolved config (from `page.tsx`); a no-op when omitted (keeps Braga). */
-export function configureWalletChain(cfg?: PublicChainConfig | null): void {
-  if (!cfg || cfg.id === CHAIN.id) return;
-  // set only defined optional keys (the base tsconfig is strict about `| undefined`)
-  const overrides: ArkivNetworkOverrides = { chainId: cfg.id, rpcUrl: cfg.rpcUrl, explorerUrl: cfg.explorerUrl };
-  if (cfg.name) overrides.name = cfg.name;
-  if (cfg.gasToken) overrides.gasToken = cfg.gasToken;
-  CHAIN = defineArkivNetwork(braga, overrides) as unknown as Chain;
-  GAS_TOKEN = cfg.gasToken ?? CHAIN.nativeCurrency?.symbol ?? "GLM";
-  EXPLORER = cfg.explorerUrl.replace(/\/$/, "");
-  CHAIN_HEX = `0x${cfg.id.toString(16)}`;
-  _pub = null; // rebuild the read client against the new chain
-}
-
-interface Eip1193 {
+export type PublicChainConfig = typeof PUBLIC_CHAIN;
+export interface Eip1193 {
   request(args: { method: string; params?: unknown[] | object }): Promise<unknown>;
   on?(event: string, handler: (...args: unknown[]) => void): void;
   removeListener?(event: string, handler: (...args: unknown[]) => void): void;
 }
-
+const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
+const KEY = /^0x[0-9a-fA-F]{64}$/;
+const CHAIN_HEX = `0x${CHAIN.id.toString(16)}`;
+const pub = createPublicClient({ chain: CHAIN, transport: http(PUBLIC_CHAIN.rpcUrl, { timeout: 15000, retryCount: 1 }) });
 function injected(): Eip1193 | null {
-  if (typeof window === "undefined") return null;
-  return ((window as unknown as { ethereum?: Eip1193 }).ethereum) ?? null;
+  return typeof window === "undefined" ? null : (window as unknown as { ethereum?: Eip1193 }).ethereum ?? null;
 }
-export function hasWallet(): boolean {
-  return !!injected();
-}
-function short(a: string): string {
-  return /^0x[0-9a-fA-F]{8,}$/.test(a) ? `${a.slice(0, 6)}…${a.slice(-4)}` : a;
-}
-
-let _pub: ReturnType<typeof createPublicClient> | null = null;
-function pub() {
-  return (_pub ??= createPublicClient({ chain: CHAIN, transport: http() }));
-}
-function wallet(account: string) {
-  const eth = injected();
-  if (!eth) throw new Error("No wallet found.");
-  return createWalletClient({ account: account as `0x${string}`, chain: CHAIN, transport: custom(eth) });
-}
-
-export function onAccountsChanged(cb: (account: string | null) => void): () => void {
-  const eth = injected();
-  if (!eth?.on || !eth.removeListener) return () => {};
-  const handler = (...args: unknown[]) => {
-    const accounts = args[0] as string[] | undefined;
-    cb(accounts?.[0]?.toLowerCase() ?? null);
-  };
-  eth.on("accountsChanged", handler);
-  return () => eth.removeListener?.("accountsChanged", handler);
-}
-
+export function hasWallet() { return !!injected(); }
 export async function getConnectedAccount(): Promise<string | null> {
-  const eth = injected();
-  if (!eth) return null;
-  try {
-    const accounts = (await eth.request({ method: "eth_accounts" })) as string[];
-    return accounts?.[0]?.toLowerCase() ?? null;
-  } catch {
-    return null;
-  }
+  const accounts = await injected()?.request({ method: "eth_accounts" }).catch(() => []) as string[] | undefined;
+  return accounts?.[0] && ADDRESS.test(accounts[0]) ? accounts[0].toLowerCase() : null;
 }
-
-/** Ensure the wallet is on the active Arkiv chain. Switches (adds first if the
- *  wallet doesn't know it), then VERIFIES `eth_chainId` actually changed — adding
- *  a chain is not a guaranteed switch. */
-async function ensureChain(): Promise<void> {
-  const eth = injected();
-  if (!eth) throw new Error("No wallet found. Install MetaMask (or another injected wallet) to extend or delete entities.");
-  const isActive = async () => ((await eth.request({ method: "eth_chainId" })) as string)?.toLowerCase() === CHAIN_HEX.toLowerCase();
-  if (await isActive()) return;
-  try {
-    await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] });
-  } catch (e) {
-    const err = e as { code?: number; message?: string };
-    if (err?.code === 4902 || /unrecognized chain|not been added|add this network/i.test(err?.message ?? "")) {
-      await eth.request({
-        method: "wallet_addEthereumChain",
-        params: [
-          {
-            chainId: CHAIN_HEX,
-            chainName: CHAIN.name,
-            nativeCurrency: CHAIN.nativeCurrency,
-            rpcUrls: [CHAIN.rpcUrls.default.http[0]],
-            blockExplorerUrls: EXPLORER ? [EXPLORER] : [],
-          },
-        ],
-      });
-      // adding doesn't guarantee an active switch — switch explicitly afterwards
-      await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] }).catch(() => {});
-    } else {
-      throw e;
-    }
-  }
-  if (!(await isActive())) {
-    throw new Error(`Please switch your wallet to ${CHAIN.name} (chain ${CHAIN.id}) and try again.`);
-  }
+export function onAccountsChanged(cb: (account: string | null) => void) {
+  const provider = injected();
+  const handler = () => { void getConnectedAccount().then(cb); };
+  provider?.on?.("accountsChanged", handler);
+  provider?.on?.("chainChanged", handler);
+  const disconnected = () => cb(null);
+  provider?.on?.("disconnect", disconnected);
+  return () => { provider?.removeListener?.("accountsChanged", handler); provider?.removeListener?.("chainChanged", handler); provider?.removeListener?.("disconnect", disconnected); };
 }
-
+export async function ensureChain() {
+  const provider = injected();
+  if (!provider) throw new Error("Abre esta app con MetaMask o instala una wallet compatible.");
+  const active = async () => Number(await provider.request({ method: "eth_chainId" })) === CHAIN.id;
+  if (await active()) return;
+  try { await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] }); }
+  catch (error) {
+    if ((error as { code?: number }).code !== 4902) throw error;
+    await provider.request({ method: "wallet_addEthereumChain", params: [{ chainId: CHAIN_HEX, chainName: CHAIN.name,
+      rpcUrls: [PUBLIC_CHAIN.rpcUrl], nativeCurrency: CHAIN.nativeCurrency, blockExplorerUrls: [PUBLIC_CHAIN.transactionExplorerUrl] }] });
+    await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] });
+  }
+  if (!await active()) throw new Error("Selecciona Tiramisu en tu wallet y vuelve a intentar.");
+}
 export async function connectWallet(): Promise<string> {
-  const eth = injected();
-  if (!eth) throw new Error("No wallet found. Install MetaMask (or another injected wallet) to extend or delete entities.");
-  const accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
-  const account = accounts?.[0];
-  if (!account) throw new Error("No account returned from the wallet.");
+  const provider = injected();
+  if (!provider) throw new Error("No se encontró MetaMask. Instala una wallet compatible para firmar.");
+  await provider.request({ method: "eth_requestAccounts" });
   await ensureChain();
-  return account.toLowerCase();
+  const account = await getConnectedAccount();
+  if (!account) throw new Error("La wallet no autorizó una cuenta.");
+  return account;
 }
-
-interface ReadEntity {
-  owner?: string;
-  expiresAtBlock?: bigint | number | null;
+async function assertSession(account: string) {
+  const provider = injected();
+  if (!ADDRESS.test(account) || !provider || await getConnectedAccount() !== account.toLowerCase()) throw new Error("La cuenta cambió. Conecta de nuevo antes de firmar.");
+  if (Number(await provider.request({ method: "eth_chainId" })) !== CHAIN.id) throw new Error("La red cambió. Selecciona Tiramisu antes de firmar.");
 }
-
-/** Read the entity and assert the connected wallet owns it — BEFORE prompting the
- *  wallet, so a non-owner (or an unverifiable entity) gets a clear message instead
- *  of signing a transaction that would just revert and cost gas. Returns the entity
- *  so callers don't read it twice. */
-async function assertOwner(entityKey: string, account: string, verb: "extend" | "delete"): Promise<ReadEntity> {
-  let entity: ReadEntity | null;
-  try {
-    entity = (await pub().getEntity(entityKey as `0x${string}`)) as ReadEntity;
-  } catch {
-    throw new Error("Couldn't reach Arkiv to verify this entity. Check your connection and try again.");
+async function writer(account: string, onSent?: (hash: Hex) => void) {
+  await ensureChain();
+  await assertSession(account);
+  if (await pub.getChainId() !== CHAIN.id) throw new Error("El RPC no corresponde a Tiramisu.");
+  const provider = injected()!;
+  const transport = custom({ request: async (request) => {
+    if (request.method === "eth_sendTransaction") await assertSession(account);
+    const result = await provider.request(request);
+    if (request.method === "eth_sendTransaction" && typeof result === "string" && KEY.test(result)) onSent?.(result as Hex);
+    return result;
+  } });
+  return createWalletClient({ account: account as Hex, chain: CHAIN, transport });
+}
+export interface WriteResult { expiresAt?: number; txUrl?: string; cost?: string }
+export function walletErrorMessage(error: unknown): string {
+  let cause = error as { code?: number; name?: string; cause?: unknown } | undefined;
+  for (let i = 0; cause && i < 8; i++, cause = cause.cause as typeof cause) {
+    if (cause.code === 4001 || cause.name === "UserRejectedRequestError") return "Cancelaste la solicitud en la wallet. No se confirmó ningún cambio.";
+    if (cause.code === -32000) return "No se pudo verificar la operación en Tiramisu. Actualiza los datos y revisa tu wallet antes de volver a firmar.";
   }
-  if (!entity || !entity.owner) {
-    throw new Error("This entity couldn't be found on Arkiv — it may have already expired.");
-  }
-  if (entity.owner.toLowerCase() !== account.toLowerCase()) {
-    throw new Error(`You're not the owner of this entity — only ${short(entity.owner)} can ${verb} it.`);
-  }
-  return entity;
+  const message = error instanceof Error ? error.message : "No se pudo completar la solicitud. Revisa tu wallet antes de volver a firmar.";
+  return message.split("\n")[0]!.slice(0,400);
 }
-
-async function costFromReceipt(txHash: `0x${string}`): Promise<{ cost?: string; newExpirationBlock?: number }> {
-  try {
-    const r = await pub().getTransactionReceipt({ hash: txHash });
-    const gasFeeWei = (r.gasUsed ?? 0n) * (r.effectiveGasPrice ?? 0n);
-    let storageWei: bigint | undefined;
-    let newExpirationBlock: number | undefined;
-    for (const log of r.logs) {
-      try {
-        const ev = decodeEventLog({ abi: BTL_ABI, data: log.data, topics: log.topics });
-        if (ev.eventName === "ArkivEntityBTLExtended") {
-          storageWei = ev.args.cost;
-          newExpirationBlock = Number(ev.args.newExpirationBlock);
-          break;
-        }
-      } catch {
-        /* not our event */
-      }
-    }
-    const total = (storageWei ?? 0n) + gasFeeWei;
-    return { cost: total > 0n ? `${formatEther(total)} ${GAS_TOKEN}` : undefined, newExpirationBlock };
-  } catch {
-    return {};
-  }
-}
-
-export interface WriteResult {
-  expiresAt?: number;
-  cost?: string;
-  txUrl?: string;
-}
-
 export async function extendEntityWithWallet(account: string, entityKey: string, targetExpiresAt: number): Promise<WriteResult> {
-  await ensureChain();
-  const entity = await assertOwner(entityKey, account, "extend"); // single on-chain read, ownership-checked
-  // additive: extendEntity ADDS expiresIn on top of the current expiry. Derive it
-  // from the entity's real on-chain expiry, not a (possibly stale) client value.
-  const timing = await pub().getBlockTiming();
-  const dur = timing.blockDuration || 2;
-  const curBlock = Number(timing.currentBlock);
-  const curExpBlock = entity.expiresAtBlock != null ? Number(entity.expiresAtBlock) : curBlock;
-  const currentExpiry = timing.currentBlockTime + (curExpBlock - curBlock) * dur;
-  let expiresIn = Math.ceil(targetExpiresAt - currentExpiry);
-  if (expiresIn > MAX_EXTEND_SECONDS) throw new Error("You can extend by at most 365 days at a time.");
-  if (expiresIn < dur) expiresIn = dur;
-
-  const { txHash } = await wallet(account).extendEntity({ entityKey: entityKey as `0x${string}`, expiresIn });
-  const { cost, newExpirationBlock } = await costFromReceipt(txHash);
-  const expiresAt = newExpirationBlock != null ? timing.currentBlockTime + (newExpirationBlock - curBlock) * dur : currentExpiry + expiresIn;
-  return { expiresAt, cost, txUrl: txHash ? `${EXPLORER}/tx/${txHash}` : undefined };
+  if (!KEY.test(entityKey) || !Number.isSafeInteger(targetExpiresAt)) throw new Error("Entidad o fecha inválida.");
+  let submittedHash: Hex | undefined;
+  const client = await writer(account, hash => { submittedHash = hash; });
+  const entity = await pub.getEntity(entityKey as Hex);
+  if (entity.owner.toLowerCase() !== account.toLowerCase()) throw new Error("Solo puedes extender las entidades que pertenecen a tu wallet.");
+  const timing = await pub.getBlockTiming();
+  if (!Number.isFinite(timing.blockDuration) || timing.blockDuration <= 0) throw new Error("No se pudo verificar el tiempo de bloque.");
+  const currentExpiry = timing.currentBlockTime + Number(entity.expiresAt - timing.currentBlock) * timing.blockDuration;
+  if (entity.expiresAt <= timing.currentBlock || targetExpiresAt <= currentExpiry) throw new Error("Selecciona una fecha posterior a la expiración actual.");
+  if (targetExpiresAt - currentExpiry > 365 * 86400) throw new Error("Puedes agregar hasta 365 días por operación.");
+  const targetBlock = timing.currentBlock + BigInt(Math.ceil((targetExpiresAt - timing.currentBlockTime) / timing.blockDuration));
+  await assertSession(account);
+  let result;
+  try { result = await client.extendEntity({ entityKey: entityKey as Hex, expires: ExpirationTime.atBlock(targetBlock) }); }
+  catch (error) {
+    if (submittedHash) throw Object.assign(new Error("La transacción fue enviada, pero no se pudo verificar su confirmación. Revisa el enlace y actualiza antes de volver a firmar."), { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${submittedHash}` });
+    throw error;
+  }
+  const { txHash, expiresAt } = result;
+  // SDK 0.8 reads the confirmed ExpiryExtended event; dates remain block-time estimates.
+  return { expiresAt: timing.currentBlockTime + Number(expiresAt - timing.currentBlock) * timing.blockDuration,
+    txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${txHash}` };
 }
-
-export async function deleteEntityWithWallet(account: string, entityKey: string): Promise<WriteResult> {
-  await ensureChain();
-  await assertOwner(entityKey, account, "delete"); // fails (no wallet prompt) if not owner / unverifiable
-  const { txHash } = await wallet(account).deleteEntity({ entityKey: entityKey as `0x${string}` });
-  const { cost } = await costFromReceipt(txHash); // delete emits no BTL event → cost = gas only
-  return { cost, txUrl: txHash ? `${EXPLORER}/tx/${txHash}` : undefined };
-}
-
-export interface PostResult {
-  entityKey?: string;
-  txUrl?: string;
-}
-
-export async function createPostWithWallet(account: string, text: string, handle: string, project: string): Promise<PostResult> {
-  await ensureChain();
-  const postId = `live-${crypto.randomUUID()}`;
-  const { txHash, entityKey } = await wallet(account).createEntity({
-    payload: jsonToPayload({ text, postId, createdAt: new Date().toISOString(), live: true }),
-    contentType: "application/json",
-    attributes: [
-      { key: "project", value: project },
-      { key: "entityType", value: "post" },
-      { key: "postId", value: postId },
-      { key: "authorHandle", value: handle },
-      { key: "live", value: 1 },
-    ],
-    expiresIn: POST_TTL,
+export async function createSocialSampleWithWallet(account: string) {
+  const run = async () => {
+    await assertSession(account);
+    const pendingKey = `arkiv-graph:seed:${CHAIN.id}:${account.toLowerCase()}:${PROJECT}`;
+    // Check storage BEFORE signing; unavailable storage must not lose a sent hash.
+    localStorage.setItem(`${pendingKey}:available`, "1");
+    localStorage.removeItem(`${pendingKey}:available`);
+    const pendingHash = localStorage.getItem(pendingKey);
+    // A successful query can recover a confirmed seed even while receipt lookup fails.
+    const existing = await pub.select({ key: true }).ownedBy(account as Hex).where(eq("project", PROJECT)).limit(1).fetch();
+    if (existing.entities.length) return { alreadyCreated: true, ...(pendingHash && KEY.test(pendingHash) ? { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash}` } : {}) };
+    if (pendingHash && KEY.test(pendingHash)) {
+      let receipt;
+      try { receipt = await pub.getTransactionReceipt({ hash: pendingHash as Hex }); }
+      catch { throw new Error(`Hay una creación pendiente. Revisa ${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash} antes de volver a firmar.`); }
+      if (receipt.status === "success") {
+        // Confirm absence at a head that includes the receipt before allowing a new seed.
+        const timing = await pub.getBlockTiming();
+        if (timing.currentBlock <= receipt.blockNumber) throw new Error("La creación se confirmó. Espera un bloque y pulsa Actualizar antes de volver a intentar.");
+        const confirmed = await pub.select({ key: true }).ownedBy(account as Hex).where(eq("project", PROJECT)).limit(1).fetch();
+        if (confirmed.entities.length) return { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash}`, alreadyCreated: true };
+        throw new Error(`La creación está confirmada pero sus entidades no aparecen. Pueden estar pendientes de consulta o haber expirado. Revisa ${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash}; no vuelvas a firmar sin verificarlo.`);
+      }
+      localStorage.removeItem(pendingKey);
+    }
+    const client = await writer(account, hash => localStorage.setItem(pendingKey, hash));
+    await assertSession(account);
+    const result = await client.executeBatch({ creates: socialSample() });
+    return { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${result.txHash}`, alreadyCreated: false };
+  };
+  if (navigator.locks) return navigator.locks.request(`arkiv-graph-seed-${account.toLowerCase()}`, { ifAvailable: true }, lock => {
+    if (!lock) throw new Error("Ya hay una creación en curso en otra pestaña.");
+    return run();
   });
-  return { entityKey, txUrl: txHash ? `${EXPLORER}/tx/${txHash}` : undefined };
+  return run();
 }

@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "arkiv-graph — your Arkiv database as a live graph",
+  title: "arkiv-graph — tu app en tabla y grafo",
   description:
-    "arkiv-graph turns your Arkiv entities into an interactive graph or relational tables. Nodes are entities, edges are the relationships you define, and references to other chains show up as external nodes. Live demo: a fake social app stored entirely on an Arkiv testnet.",
+    "Consulta las entidades de tu app en tablas y un grafo. Crea una muestra social en Tiramisu y firma Lifetime Extension desde tu wallet.",
   metadataBase: new URL("https://arkiv-graph-example.vercel.app"),
   openGraph: {
-    title: "arkiv-graph — your Arkiv database as a live graph",
-    description: "Nodes are entities, edges are relationships, other chains show up as external nodes. Live on Braga testnet.",
+    title: "arkiv-graph — tu app en tabla y grafo",
+    description: "Tus Arkiv entities y sus relaciones en tabla y grafo. Tiramisu testnet.",
     url: "https://arkiv-graph-example.vercel.app",
     siteName: "arkiv-graph",
   },
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="es">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

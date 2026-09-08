@@ -126,7 +126,7 @@ describe("buildGraph", () => {
     expect(ref!.target).toBe(hex64(201));
   });
 
-  it("computes TTL fraction from block timing", () => {
+  it("computes lifetime fraction from block timing", () => {
     const e: ArkivEntityLike = {
       key: USER_A,
       attributes: [{ key: "entityType", value: "user" }],
@@ -184,8 +184,8 @@ describe("external chain detection", () => {
     expect(g.edges.some((e) => e.kind === "external" && e.source === POST_1)).toBe(true);
   });
 
-  it("does NOT treat Braga's own chainId as external", () => {
-    const entities = [entity(POST_1, "post", { text: "x" }, { sourceChainId: 60138453102 })];
+  it("does NOT treat Tiramisu's own chainId as external", () => {
+    const entities = [entity(POST_1, "post", { text: "x" }, { sourceChainId: 7738577 })];
     const g = buildGraph(entities);
     expect(g.nodes.some((n) => n.kind === "external")).toBe(false);
   });

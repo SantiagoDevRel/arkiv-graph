@@ -20,7 +20,7 @@ export interface ArkivGraphProps {
   showSearch?: boolean;
   /** render the built-in detail panel on click (default true). */
   showDetail?: boolean;
-  /** fade entity nodes as their TTL runs down (default true). */
+  /** fade entity nodes as their lifetime runs down (default true). */
   fadeExpiring?: boolean;
   /** animate particles along join/external edges (default true). */
   animate?: boolean;

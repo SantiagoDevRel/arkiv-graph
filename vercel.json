@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "feat/tiramisu-dashboard": false
+    }
+  },
   "framework": "nextjs",
   "installCommand": "pnpm install",
   "buildCommand": "pnpm build",

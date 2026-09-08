@@ -3,6 +3,8 @@ import type { ChainInfo } from "./types.js";
 /** Arkiv's Braga testnet chain id. Entities pointing here are NEVER external. */
 export const BRAGA_CHAIN_ID = 60138453102;
 export const BRAGA_EXPLORER = "https://explorer.braga.hoodi.arkiv.network";
+export const TIRAMISU_CHAIN_ID = 7738577;
+export const TIRAMISU_EXPLORER = "https://indexer.tiramisu.db-chain.testnet.arkiv.network";
 
 /**
  * Built-in chain registry: chainId → display info. Used to label and colour
@@ -10,6 +12,7 @@ export const BRAGA_EXPLORER = "https://explorer.braga.hoodi.arkiv.network";
  * `external.registry`. Colours are each chain's brand colour.
  */
 export const CHAIN_REGISTRY: Record<string | number, ChainInfo> = {
+  [TIRAMISU_CHAIN_ID]: { name: "Arkiv Tiramisu", short: "Arkiv", color: "#FE7446", explorer: TIRAMISU_EXPLORER },
   [BRAGA_CHAIN_ID]: {
     name: "Arkiv (Braga)",
     short: "Arkiv",

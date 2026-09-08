@@ -1,7 +1,7 @@
 import { addExternalForEntity } from "./external.js";
 import { attrValues, normalizeEntity, type NormEntity } from "./normalize.js";
 import { computeTtl } from "./ttl.js";
-import { BRAGA_EXPLORER } from "./chains.js";
+import { TIRAMISU_EXPLORER } from "./chains.js";
 import type {
   ArkivEntityLike,
   BuildGraphOptions,
@@ -54,13 +54,13 @@ export function labelForRule(rule: LinkRule): string {
 /**
  * Turn a flat list of Arkiv entities into a graph. Nodes are entities; edges are
  * derived from the `links` you supply (Arkiv has no native joins, so YOU declare
- * how records relate). References to other chains become external nodes.
+ * how entities relate). References to other chains become external nodes.
  */
 export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptions = {}): Graph {
   const typeAttr = options.typeAttribute ?? "entityType";
   const links = options.links ?? [];
   const createPlaceholders = options.createPlaceholders !== false;
-  const arkivExplorer = (options.arkivExplorer ?? BRAGA_EXPLORER).replace(/\/$/, "");
+  const arkivExplorer = (options.arkivExplorer ?? TIRAMISU_EXPLORER).replace(/\/$/, "");
 
   const joinTypes = new Set(
     links.filter((l): l is JoinRule => l.type === "join").map((l) => l.entityType),

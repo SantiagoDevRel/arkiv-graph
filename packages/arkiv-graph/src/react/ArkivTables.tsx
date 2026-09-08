@@ -191,7 +191,7 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
       style={{ position: "relative", width: "100%", height, background: theme.background, borderRadius: 12, border: `1px solid ${theme.muted}22`, overflow: "hidden", display: "flex", flexDirection: "column", fontFamily: SANS }}
     >
       {/* tabs */}
-      <div className={scrollClass} style={{ display: "flex", gap: 6, padding: 10, overflowX: "auto", borderBottom: `1px solid ${theme.muted}22`, flexShrink: 0 }}>
+      <div className={scrollClass} role="region" aria-label="Entity types; scroll for more" tabIndex={0} style={{ display: "flex", gap: 6, flexWrap: "wrap", maxHeight: 128, padding: 10, overflowX: "auto", overflowY: "auto", borderBottom: `1px solid ${theme.muted}22`, flexShrink: 0 }}>
         {model.tables.map((t, i) => (
           <button key={t.type} onClick={() => { setTab(i); setSort(null); setSelected(null); }} style={tabStyle(tab === i)}>
             {t.type} <span style={{ opacity: 0.7 }}>{t.count}</span>
@@ -202,7 +202,7 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
       </div>
 
       {/* body */}
-      <div className={scrollClass} style={{ flex: 1, overflow: "auto" }}>
+      <div className={scrollClass} role="region" aria-label="Entity table; scroll horizontally for more columns" tabIndex={0} style={{ flex: 1, overflow: "auto" }}>
         {tab === tableCount ? (
           <SchemaPanel model={model} colorOf={colorOf} theme={theme} />
         ) : active ? (
@@ -238,6 +238,8 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
                     style={{
                       position: "sticky",
                       top: 0,
+                      right: 0,
+                      zIndex: 2,
                       textAlign: "right",
                       padding: "8px 12px",
                       background: "#191919",
@@ -290,7 +292,7 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
                   {hasActions && (
                     <td
                       onClick={(e) => e.stopPropagation()}
-                      style={{ padding: "8px 12px", textAlign: "right", whiteSpace: "nowrap", cursor: "default" }}
+                      style={{ position: "sticky", right: 0, zIndex: 1, background: theme.background, padding: "8px 12px", textAlign: "right", whiteSpace: "nowrap", cursor: "default" }}
                     >
                       {ENTITY_KEY_RE.test(row.id) ? (
                         <EntityActionsCell
