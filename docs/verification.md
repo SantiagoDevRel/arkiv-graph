@@ -128,3 +128,23 @@ corrections: ESM/CJS, SSR (7889 characters), strict TypeScript and the real empt
 Tiramisu read pass. The coverage-only Codex wrapper returned a summary but its
 requested per-item retry timed out; the main agent completed the literal checklist
 manually. This does not replace the completed Claude reviews or executable checks.
+
+## Source handoff and clean checkout
+
+- Graph/sample source: commit `7487fc1`, immutable tag `v0.3.0-rc.1`, pushed to
+  `SantiagoDevRel/arkiv-graph`. Hub candidate: `e73e8f5` on
+  `Arkiv-Network/arkiv-hub` branch `feat/tools-arkiv-graph`. No PR or deployment.
+- Tag source, package README and consumer AGENTS links return HTTP 200.
+- A fresh clone of the public tag passed `pnpm install --frozen-lockfile` and
+  `pnpm build:lib`. It contained no `.env.local`. Its Next.js 15.5.25 dev server
+  returned HTTP 200 and the real scoped API returned zero entities/nodes/tables;
+  an isolated 390px browser confirmed the matching empty DOM, no overflow and no
+  page errors. Port 3016 was used only to avoid the existing preview on 3012,
+  then the disposable server was stopped.
+- Claude's final UI closure opened the updated 390/768 screenshots and confirmed
+  the mobile prompt, tag URLs and prior fixes. The review is closed; the release
+  remains blocked by the explicit gates above.
+- npm was checked again after the source push: latest is still `0.2.0` and
+  `npm whoami` returns `ENEEDAUTH`. No private signing key was configured and no
+  transaction was submitted. Main review servers remain on localhost:3012 and
+  localhost:3014/tools.
