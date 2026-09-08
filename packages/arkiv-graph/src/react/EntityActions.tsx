@@ -364,7 +364,8 @@ export function EntityActionPanel({
           </>
         ) : (
           <div style={{ color: theme.muted, fontSize: 13, lineHeight: 1.5 }}>
-            This permanently removes the entity from Arkiv before it expires. This can&apos;t be undone.
+            <p>This removes only the selected entity from active queries. It cannot be undone from this dashboard. Related entities and historical copies are not erased.</p>
+            <code style={{ display: "block", overflowWrap: "anywhere", fontFamily: MONO }}>{row.id}</code>
           </div>
         )}
 

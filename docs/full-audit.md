@@ -88,5 +88,54 @@ use controlled providers, not the user's funds.
 
 **These packages are intended for testnet use.**
 
-Candidate publication artifact:16 allowlisted files; SHA1 `4c0e943db5bd2c0f6553f2f3bebe60a5912f4ac0`.
-The npm publish attempt requested EOTP; browser security verification is pending.
+The original audit artifact was superseded by the deletion follow-up below.
+
+## Delete entity follow-up — 2026-09-08
+
+The sample now wires the existing optional `onDeleteEntity` callback to SDK
+0.8.0 `deleteEntity`. Fresh owner, active entity, wallet account and Tiramisu
+checks precede signing; the existing writer estimates the exact operation and
+does not automatically retry submissions. The candidate confirmation shows the
+full entity key and explains that deletion does not cascade or erase historical
+copies. There is no undo operation or full Supabase feature parity.
+
+- 31 package tests and 18 wallet tests pass, along with TypeScript and the full
+  production build. The six new wallet cases cover one-operation deletion,
+  invalid/foreign/missing/expired entities, account/network changes, rejection,
+  reverted operations and preservation of a submitted hash after receipt failure.
+- Controlled rendered checks at 390, 600, 601, 768, 900, 901 and 1440 px verify
+  cancellation without submission, full-key confirmation, wallet rejection and
+  one successful deletion while a related entity remains. Screenshots at 390,
+  768 and 1440 px were visually inspected; no page overflow was found.
+- A real disposable entity was created and deleted with Rabby / Arkiv Wallet on
+  Tiramisu. Both receipts succeeded. Decoded deletion calldata contains exactly
+  one operation (Delete, 5) for that entity, with zero transferred value. Fresh
+  SDK lookup reports absence; the scoped API and UI show zero entities. The
+  existing social example still returns 35 entities. Exact receipts and keys:
+  [delete-verification.json](./delete-verification.json).
+- The isolated candidate passed the copied README example (`2 1 2`), CJS/ESM
+  imports, React SSR and strict consumer TypeScript checks.
+- Claude and native Grok reviewed the deletion source. Claude flagged the
+  difference between the registry 0.3.0 confirmation and candidate 0.3.1; the
+  sample README now explicitly distinguishes them. Publishing and repinning is
+  still required before the maintained sample uses the improved confirmation.
+- Both reviewers closed the deletion source review: Claude turn 6 and native
+  Grok turn 5 returned `STATUS: OK`. Claude independently fetched both successful
+  receipts and verified their block heights and gas usage. Grok checked source
+  and documentation only. Neither claimed the main agent's UI/tests as their own.
+- A separate controlled empty-wallet browser check confirmed that a non-owner
+  sees no Delete action, connecting retains the public example, switching to
+  their own empty app works, and browsing makes zero signing requests.
+
+Deletion and Lifetime Extension do not have the sample-creation durable pending
+marker. If confirmation is uncertain, inspect the returned transaction link and
+refresh before manually retrying; a repeated manual attempt can waste gas.
+
+The shared browser had a pre-existing service worker on localhost:3016 serving
+older chunks. The real UI verification used 127.0.0.1:3016, without that worker;
+no unrelated browser cache or registration was removed.
+
+Current candidate: 16 allowlisted files; SHA1
+`0e7863a3edbbd7765e918d410110e17e1d2d60f3`.
+Npm browser security verification remains pending. The local tarball is not a
+published release, and the old hosted Braga demo has not been replaced.

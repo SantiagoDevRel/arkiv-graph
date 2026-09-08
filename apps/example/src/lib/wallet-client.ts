@@ -183,3 +183,23 @@ export async function createSocialSampleWithWallet(account: string) {
   });
   return run();
 }
+
+export async function deleteEntityWithWallet(account: string, entityKey: string): Promise<WriteResult> {
+  if (!KEY.test(entityKey)) throw new Error("Invalid entity key.");
+  await assertSession(account);
+  const entity = await pub.getEntity(entityKey as Hex);
+  if (entity.owner.toLowerCase() !== account.toLowerCase()) throw new Error("You can only delete entities owned by your wallet.");
+  const timing = await pub.getBlockTiming();
+  if (entity.expiresAt <= timing.currentBlock) throw new Error("This entity has already expired. Refresh the table.");
+  let submittedHash: Hex | undefined;
+  const client = await writer(account, hash => { submittedHash = hash; });
+  await assertSession(account);
+  try {
+    // SDK 0.8 waits for a successful receipt. No related entities are deleted.
+    const result = await client.deleteEntity({ entityKey: entityKey as Hex });
+    return { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${result.txHash}` };
+  } catch (error) {
+    if (submittedHash) throw Object.assign(new Error("The deletion transaction was submitted, but its confirmation could not be verified. Check the transaction and refresh before signing again."), { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${submittedHash}` });
+    throw error;
+  }
+}

@@ -13,7 +13,7 @@ Do not replace it with a workspace link or duplicate the library to make a demo
 pass. The README documents setup and the verification report records release status.
 Ask the developer which public owner, app namespace, entity type attribute and
 link rules identify their app. Connecting a wallet and funding Tiramisu are only
-required for creation/extension; public reads need neither signing nor secrets.
+required for creation/extension/deletion; public reads need neither signing nor secrets.
 
 Keep `config.ts` authoritative for read/write network identity. Keep `arkiv.ts`
 server-only; do not create a server signing endpoint. All visitor writes use the
@@ -29,7 +29,14 @@ not authorization. Default demo owner is public configuration, never a signer.
 
 To verify: follow only the README in a clean checkout, check the npm-resolved
 version, create the sample on Tiramisu, compare query counts with table/graph,
-extend one owned entity and query its changed expiry. Test empty/error/loading,
+extend one owned entity and query its changed expiry. For deletion, use a
+disposable entity created for the test and verify its absence after confirmation.
+Never choose an existing user entity merely to exercise the Delete button. Test empty/error/loading,
 rejected signatures and account/chain changes separately. Inspect three viewport
 widths. Report any missing wallet signature or unavailable network as unverified,
 not successful. Do not request a private key to finish a normal consumer flow.
+
+Deletion uses the existing package callback and explicit confirmation. Recheck
+ownership and liveness before signing; delete only the selected entity, never its
+related entities. Cancellation must not invoke the wallet. Do not treat a
+confirmation error or an empty query as proof that a transaction was not sent.

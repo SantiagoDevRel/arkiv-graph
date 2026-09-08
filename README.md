@@ -2,7 +2,7 @@
 
 Interactive graphs and tables for Arkiv entities. Define relationships once,
 inspect your app data in either view, and optionally wire wallet-signed Lifetime
-Extension. **These packages are intended for testnet use.**
+Extension and single-entity deletion. **These packages are intended for testnet use.**
 
 **arkiv-graph@0.3.0 is published on npm.** The sample pins that registry release.
 The hosted sample still serves the older release; use the local sample below.

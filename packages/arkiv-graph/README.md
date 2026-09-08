@@ -333,9 +333,24 @@ from its event. Return a confirmed `expiresAt` and `txUrl` from your callback;
 refetch in `onMutated`. Dates are estimates based on block time, not exact clocks.
 
 The sample restricts extensions to the owner even if another app creates entities
-with permissionless extension. It never exposes delete actions. The library's
-existing optional `onDeleteEntity` callback remains available to consumers who
-explicitly implement deletion and confirmation themselves.
+with permissionless extension. The sample also implements the existing optional
+`onDeleteEntity` callback for single-entity deletion, restricted to the connected owner.
+
+## Delete an entity with your wallet
+
+Pass `onDeleteEntity` to `ArkivTables`; omit it to hide Delete. Its confirmation
+passes `{ entityKey, row }` to your handler. Use the sample's
+`deleteEntityWithWallet` implementation as the complete reference: re-read the
+entity, check ownership/liveness and active account/network, then call SDK0.8
+`wallet.deleteEntity({ entityKey })`. Resolve only after a successful receipt,
+return `{ txUrl }` and refetch in `onMutated`. A canceled dialog must not call the
+handler; a rejected or uncertain transaction must not report success.
+
+Deletion removes one entity from active queries. Related entities remain and may
+show unresolved references. There is no automatic cascade or dashboard undo;
+historical copies may remain. Test deletion with a disposable entity you created
+for that purpose. The SDK's readonly creation flag protects payload/attributes;
+it does not prevent the owner from deleting the entity.
 
 ## Prerequisites and troubleshooting
 

@@ -5,8 +5,13 @@
 A small social app on Tiramisu, viewed through `arkiv-graph`.
 This checkout consumes **arkiv-graph@0.3.0 from npm**, pinned in its manifest
 and lockfile. It does not require building the local library.
+The improved deletion confirmation (full entity key and explicit limits) is in
+the unpublished 0.3.1 candidate. Until that version is published and pinned here,
+this checkout uses 0.3.0's older confirmation wording; do not treat its wording
+as a guarantee of historical erasure. The candidate was separately verified in
+an isolated consumer. See [deletion verification](../../docs/delete-verification.json).
 One dataset powers the graph and tables. Connect your wallet, create
-the sample, inspect a user/post/comment or relation, and extend an entity's life.
+the sample, inspect a user/post/comment or relation, extend an entity's life, or delete an entity you own.
 The fictional social content is public test data; chain ownership belongs to the
 wallet that creates it.
 
@@ -16,7 +21,7 @@ Prerequisites: Node.js 22 and pnpm 9. No env file, access key or signing key is
 needed to run the app or read public entities.
 
 ```bash
-git clone --branch v0.3.0 https://github.com/SantiagoDevRel/arkiv-graph.git
+git clone --branch feat/tiramisu-dashboard https://github.com/SantiagoDevRel/arkiv-graph.git
 cd arkiv-graph
 pnpm install --frozen-lockfile
 pnpm dev
@@ -34,6 +39,10 @@ release and is not evidence of this version's Tiramisu flow.
    `project = arkiv-graph-social-v2`; table and graph show the same entities.
 4. In the table, select Lifetime Extension/Extend, choose a later date and sign.
    After confirmation the app refetches the entity and its new expiration.
+5. To delete a disposable entity you own, select **Delete**, review the exact
+   entity in the confirmation and sign with your wallet. After receipt confirmation,
+   the dashboard refetches; the entity is absent from active queries. Cancellation
+   and rejected signatures leave it unchanged. Do not use important data for a test.
 
 Writes require test GLM from https://hub.arkiv.network/faucet. No mainnet funds or
 private key entry are part of this flow. If a wallet is absent, reads still work.
@@ -41,7 +50,7 @@ Real creation and extension were tested with Rabby's injected EIP-1193 provider.
 MetaMask uses the same interface, but its actual extension UI was not tested.
 The default read-only showcase owner is configured publicly in `src/lib/config.ts`.
 An empty wallet can always select **View public example** to return to the demo.
-Only the connected owner can extend their entities; viewing the demo never uses
+Only the connected owner can extend or delete their entities; viewing the demo never uses
 its owner's signer or requires their private key. Advanced settings let you inspect
 another app by owner, namespace attribute/value and entity type attribute.
 
@@ -52,7 +61,7 @@ another app by owner, namespace attribute/value and entity type attribute.
 - `src/lib/arkiv.ts`: server-only read client and social link rules.
 - `GET /api/graph`: read-only, owner-scoped and app-filtered, explicit fields,
   bounded result size, no-store responses. No signing API or arbitrary RPC proxy.
-- `src/lib/wallet-client.ts`: wallet-signed creation and extension. SDK 0.8 uses
+- `src/lib/wallet-client.ts`: wallet-signed creation, extension and deletion. SDK 0.8 uses
   `executeBatch`, typed attributes and `expires`. It waits for confirmations.
   Before signing, it simulates the exact calldata, supplies a gas buffer and
   rechecks the active account/network. A simulation failure does not open signing.
@@ -62,8 +71,9 @@ The UI does not make data private or add SQL joins. Social relationships resolve
 by handles/post ids; arbitrary app relationships need the link rules documented in
 the package. Queries are limited to 500 entities and mark partial results.
 Refresh is manual, with an automatic refetch after confirmed mutations. Dates are
-block-time estimates. The UI restricts extension to the connected owner and does
-not offer deletion. Testnet entities can expire and the network can reset.
+block-time estimates. The UI restricts extension and deletion to the connected owner. Deletion affects
+only the selected entity: related entities remain, potentially with unresolved
+references. There is no cascade, undo, or guarantee of erasing historical copies. Testnet entities can expire and the network can reset.
 
 Before a public deployment, configure request limits at the hosting edge or RPC
 provider. The read-only API is unauthenticated and bounds each query, but does not
@@ -124,3 +134,16 @@ real-chain evidence, browser coverage and remaining limitations.
 The optional `scripts/seed-local.mjs` is maintainer-only local automation with an
 explicitly authorized testnet wallet and an env file outside the repo. It is not
 needed by consumers and is excluded from deployment. The web app never reads it.
+
+## Delete integration
+
+The published package already exposes `onDeleteEntity`. The sample connects it
+to `deleteEntityWithWallet(account, entityKey)`, which rereads ownership/liveness,
+checks Tiramisu and the active account, simulates the exact operation and waits
+for SDK receipt confirmation. It submits one `deleteEntity({ entityKey })` call,
+with no cascade or automatic retries. An uncertain outcome retains its transaction
+link; check it and refresh before attempting another signature.
+
+The deletion feature does not provide full Supabase parity: arbitrary content
+editing, SQL, relational constraints, private access policies and undo are outside
+this sample. The create action generates the existing social example.

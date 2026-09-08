@@ -16,7 +16,7 @@ or infer a relational database that Arkiv does not provide.
   if it differs from `entityType`. Do not assume every app uses `project`.
 - Which attributes relate entities: entity keys, stable business ids, or join
   entities. Ask for representative data/schema; do not invent relationships.
-- Read-only or wallet-signed Lifetime Extension? For writes, the developer needs
+- Read-only, wallet-signed Lifetime Extension, or single-entity deletion? For writes, the developer needs
   an injected wallet and test GLM from the Hub faucet linked in the README.
   Never ask them to put a private key into frontend code or paste it into chat.
 
@@ -33,8 +33,10 @@ or infer a relational database that Arkiv does not provide.
   transpilation setting in the README; test the installed package, not a workspace alias.
 - Missing/expired references may produce ghost nodes. External references are
   drawn from entity attributes; no other blockchain is queried.
-- Mutations are optional callbacks. Check chain, active account, owner, current
-  entity expiry and a strictly later target immediately before signing.
+- Mutations are optional callbacks. Check chain, active account, owner and current
+  entity liveness immediately before signing. Extension additionally requires a
+  strictly later target. Deletion requires explicit confirmation of the exact
+  entity key; no implicit cascade or promise to erase historical copies.
 - SDK 0.8 extension sets `expires` to a future block/date; it is not additive.
   Only show success after confirmation. Keep a transaction hash if confirmation
   is uncertain, and refetch after confirmed changes.
@@ -46,5 +48,6 @@ the fetched entities and table output; never compare a wallet query with the
 whole-network `getEntityCount()`. Check public scope,
 empty/error states, and truncated results. For React inspect rendered narrow,
 intermediate and wide layouts. Wallet tests must cover rejection, wrong account,
-wrong owner/network and confirmed expiry change. Report mocks separately from
+wrong owner/network, confirmed expiry change and confirmed deletion of a disposable
+entity created for the test. Never delete existing developer data as a test. Report mocks separately from
 real Tiramisu evidence. Legitimate missing inputs are questions, not assumptions.

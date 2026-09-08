@@ -1,8 +1,8 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArkivGraph, ArkivTables, type ExtendEntityParams } from "arkiv-graph/react";
+import { ArkivGraph, ArkivTables, type ExtendEntityParams, type DeleteEntityParams } from "arkiv-graph/react";
 import type { Graph, TablesModel } from "arkiv-graph";
-import { connectWallet, createSocialSampleWithWallet, extendEntityWithWallet, getConnectedAccount, hasWallet, onAccountsChanged, walletErrorMessage } from "@/lib/wallet-client";
+import { connectWallet, createSocialSampleWithWallet, deleteEntityWithWallet, extendEntityWithWallet, getConnectedAccount, hasWallet, onAccountsChanged, walletErrorMessage } from "@/lib/wallet-client";
 import { DEMO_OWNER, PROJECT, PUBLIC_CHAIN, TYPE_ATTRIBUTE } from "@/lib/config";
 import { SAMPLE_COUNT, SAMPLE_DAYS } from "@/lib/social-sample";
 
@@ -82,6 +82,18 @@ export function Showcase() {
     }
   };
   const canManageScope = !!account && scope.address.toLowerCase() === account.toLowerCase();
+  const remove = async ({ entityKey }: DeleteEntityParams) => {
+    if (!account) throw new Error("Connect the owner's wallet before deleting this entity.");
+    setNotice(""); setNoticeError(false); setTxUrl("");
+    try {
+      const result = await deleteEntityWithWallet(account, entityKey);
+      setNotice("Entity deletion confirmed. The table is fetching the updated entities.");
+      setTxUrl(result.txUrl ?? "");
+      return result;
+    } catch (error) {
+      throw Object.assign(new Error(walletErrorMessage(error)), { txUrl: (error as { txUrl?: string })?.txUrl });
+    }
+  };
   const isOwnSample = canManageScope && scope.project === PROJECT && scope.projectKey === "project";
   const isPublicExample = scope.address.toLowerCase() === DEMO_OWNER.toLowerCase() && scope.project === PROJECT && scope.projectKey === "project" && scope.typeKey === TYPE_ATTRIBUTE;
   return <>
@@ -93,7 +105,7 @@ export function Showcase() {
           <button className="btn primary" onClick={connect} disabled={busy || !walletPresent}>{busy ? "Connecting…" : "Connect wallet"}</button>}
       </div>
     </header>
-    <section className="intro"><h1>Your app, in tables and a graph.</h1><p>Query your entities and their relationships. Extend their lifetime with your wallet.</p></section>
+    <section className="intro"><h1>Your app, in tables and a graph.</h1><p>Query your entities and their relationships. Extend or delete entities with your wallet.</p></section>
     {isPublicExample && <p className="help">Public social example. Explore without a wallet; connect yours to view or create your own app.</p>}
     <form className="dashboard-controls" aria-label="Select app" onSubmit={e => { e.preventDefault(); setScope({ ...form, address: form.address.trim(), project: form.project.trim() }); }}>
       <div className="toolbar">
@@ -128,12 +140,12 @@ export function Showcase() {
     <section className="graph-shell" aria-label="App entities" aria-busy={loading}>
       {loading ? <div className="empty-state" role="status">Querying your app's entities…</div> : error ?
         <div className="empty-state" role="alert"><p>{error}</p><button className="btn" onClick={() => setRevision(v => v + 1)}>Retry</button></div> : data?.loaded ?
-        view === "tables" ? <ArkivTables model={data.tables} graph={data.graph} height={600} signerAddress={account ?? undefined} onExtendEntity={canManageScope ? extend : undefined} onMutated={() => setRevision(v => v + 1)} /> : <ArkivGraph data={data.graph} height={600} /> :
+        view === "tables" ? <ArkivTables model={data.tables} graph={data.graph} height={600} signerAddress={account ?? undefined} onExtendEntity={canManageScope ? extend : undefined} onDeleteEntity={canManageScope ? remove : undefined} onMutated={() => setRevision(v => v + 1)} /> : <ArkivGraph data={data.graph} height={600} /> :
         <div className="empty-state"><h3>{isOwnSample ? "Create your first sample" : "This app has no active entities"}</h3><p>{isPublicExample ? "The public example has no active entities. Its entities may have expired. You can create your own sample with your wallet." : "No entities match this wallet and these attributes. View the public example, or create your own sample with your wallet."}</p><button className="btn primary" onClick={() => setShowCreate(true)}>Prepare social sample</button></div>}
     </section>
     {data?.truncated && <p className="notice">Partial results: {data.loaded} entities loaded. Filter by app to narrow the query.</p>}
-    {!walletPresent && <p className="help">To create or extend entities, open this app with a compatible wallet. You can query without connecting a wallet.</p>}
-    <p className="help">Queries return public data. Connect your wallet to sign Lifetime Extension for entities you own. Expiration dates are estimated from block timing.</p>
+    {!walletPresent && <p className="help">To create, extend or delete entities, open this app with a compatible wallet. You can query without connecting a wallet.</p>}
+    <p className="help">Queries return public data. Connect your wallet to extend or delete entities you own. Deletion affects one entity, not its related entities or historical copies. Expiration dates are estimated from block timing.</p>
     <a className="text-button" href={`${PUBLIC_CHAIN.explorerUrl}/data?q=${encodeURIComponent(scope.address)}`} target="_blank" rel="noreferrer">View in Block Explorer ↗</a>
   </>;
 }
