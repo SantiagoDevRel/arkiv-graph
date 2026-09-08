@@ -62,9 +62,6 @@ export function buildRelationshipColors(
   return map;
 }
 
-let paletteCursor = 0;
-const assigned = new Map<string, string>();
-
 /** Stable colour for a node — brand colours for known types, chain colours for
  *  external nodes, a rotating palette for everything else. */
 export function nodeColorFor(node: GraphNode, theme: ArkivGraphTheme = ARKIV_THEME): string {
@@ -73,13 +70,11 @@ export function nodeColorFor(node: GraphNode, theme: ArkivGraphTheme = ARKIV_THE
   if (node.kind === "wallet") return theme.walletColor;
   if (node.kind === "tag") return theme.tagColor;
   const type = (node.entityType ?? "").toLowerCase();
-  if (type && theme.entityColors[type]) return theme.entityColors[type]!;
+  if (type && Object.hasOwn(theme.entityColors, type)) return theme.entityColors[type]!;
   if (type) {
-    if (!assigned.has(type)) {
-      assigned.set(type, theme.palette[paletteCursor % theme.palette.length]!);
-      paletteCursor++;
-    }
-    return assigned.get(type)!;
+    let hash = 0;
+    for (let i = 0; i < type.length; i++) hash = (Math.imul(hash, 31) + type.charCodeAt(i)) >>> 0;
+    return theme.palette[hash % theme.palette.length] ?? theme.accent;
   }
   return theme.accent;
 }

@@ -448,7 +448,7 @@ function ResultView({
         <Field label="New expiry" value={formatExpiry(extendRes?.expiresAt ?? fallbackExpiry)} theme={theme} />
       )}
       {result?.cost && <Field label="Cost" value={result.cost} theme={theme} />}
-      {result?.txUrl && (
+      {result?.txUrl && /^https?:\/\//i.test(result.txUrl) && (
         <a
           href={result.txUrl}
           target="_blank"

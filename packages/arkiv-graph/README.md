@@ -4,11 +4,13 @@
 
 **These packages are intended for testnet use.**
 
+**Registry availability:** run `npm view arkiv-graph@0.3.1 version` before installation. If this release has not reached npm yet, use the [published 0.3.0 guide](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0/packages/arkiv-graph/README.md). A local checkout is not proof of publication.
+
 Version **0.3.1** targets **@arkiv-network/sdk 0.8.0**, **viem 2.56.3**, **Node.js 22.22.3**, and **Tiramisu testnet (7738577)**. SDK 0.6/0.7 clients are not supported by `fetchArkivGraph` in this release. Legacy plain entity arrays remain accepted by `buildGraph`.
 
 Nodes are your entities. Edges are the relationships *you* define (Arkiv has no joins — you declare how entities relate). References to other chains show up as **external nodes**, drawn purely from what your entities already store — `arkiv-graph` never reads those chains.
 
-> Hosted sample: https://arkiv-graph-example.vercel.app. The deployed release and verification status are recorded in [verification.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1/docs/verification.md).
+> The existing hosted sample still uses the retired Braga network; it is not the Tiramisu sample described here. Run the sample locally. Release and verification status are recorded in [verification.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/feat/tiramisu-dashboard/docs/verification.md).
 
 
 
@@ -319,7 +321,7 @@ preserves its `"use client"` directive. The core import is safe on the server.
 The library does not hold keys or submit transactions. Pass `onExtendEntity` to
 `ArkivTables` to enable the action; omit it for a read-only view. The callback
 receives `{ entityKey, targetExpiresAt, row }`, where the target is Unix seconds.
-Use the [sample wallet implementation](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1/apps/example/src/lib/wallet-client.ts)
+Use the [sample wallet implementation](https://github.com/SantiagoDevRel/arkiv-graph/blob/feat/tiramisu-dashboard/apps/example/src/lib/wallet-client.ts)
 as the complete integration reference, including account/chain checks.
 
 With SDK 0.8, an extension **sets a new expiry**, using
@@ -371,10 +373,14 @@ explicitly implement deletion and confirmation themselves.
 ## Source, sample, and agent guides
 
 - [Source repository](https://github.com/SantiagoDevRel/arkiv-graph)
-- [Runnable sample and setup](https://github.com/SantiagoDevRel/arkiv-graph/tree/v0.3.1/apps/example)
-- [Hosted sample](https://arkiv-graph-example.vercel.app)
-- [Consumer AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1/packages/arkiv-graph/AGENTS.md)
-- [Sample AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1/apps/example/AGENTS.md)
+- [Runnable sample and setup](https://github.com/SantiagoDevRel/arkiv-graph/tree/feat/tiramisu-dashboard/apps/example)
+- [Legacy hosted sample (Braga; not the current Tiramisu demo)](https://arkiv-graph-example.vercel.app)
+- [Consumer AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/feat/tiramisu-dashboard/packages/arkiv-graph/AGENTS.md)
+- [Sample AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/feat/tiramisu-dashboard/apps/example/AGENTS.md)
 
 Give your agent the applicable guide explicitly. Installing a package does not
 mean an agent will discover instructions inside `node_modules`.
+
+### Join entities with incomplete relationships
+
+A join entity becomes an edge only when its endpoints resolve (or placeholders are enabled). Missing endpoints, self-references, or excluded endpoints leave the entity visible as an isolated node and a junction-table row with empty relationship cells and a warning. Join entities do not participate in owner, reference, shared, tag, or external-detection rules. Their owner, attributes and expiration remain available in the table and detail view. Repeated legacy attribute keys use the first value consistently in graph and table matching.

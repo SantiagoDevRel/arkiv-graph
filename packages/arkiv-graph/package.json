@@ -10,8 +10,7 @@
     "ethereum",
     "web3",
     "database",
-    "react",
-    "golem"
+    "react"
   ],
   "license": "MIT",
   "author": "Santiago Trujillo Zuluaga (Arkiv DevRel)",
@@ -20,7 +19,7 @@
     "url": "https://github.com/SantiagoDevRel/arkiv-graph.git",
     "directory": "packages/arkiv-graph"
   },
-  "homepage": "https://arkiv-graph-example.vercel.app",
+  "homepage": "https://github.com/SantiagoDevRel/arkiv-graph#readme",
   "type": "module",
   "sideEffects": false,
   "files": [

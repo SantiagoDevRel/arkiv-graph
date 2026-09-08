@@ -240,7 +240,7 @@ export interface BuildGraphOptions {
   /**
    * The active Arkiv chain id — treated as "native" (never external). Convenience
    * for direct buildGraph consumers; equivalent to setting `external.nativeChainIds`.
-   * Defaults to Braga when neither is set.
+   * Defaults to Tiramisu when neither is set.
    */
   nativeChainId?: number;
 }

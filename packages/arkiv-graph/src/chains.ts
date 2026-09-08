@@ -46,7 +46,10 @@ export function lookupChain(
 ): ChainInfo | undefined {
   if (chainId === undefined || chainId === null || chainId === "") return undefined;
   const merged = registry ? { ...CHAIN_REGISTRY, ...registry } : CHAIN_REGISTRY;
-  return merged[chainId] ?? merged[String(chainId)] ?? merged[Number(chainId)];
+  for (const key of [chainId, String(chainId), Number(chainId)]) {
+    if (Object.hasOwn(merged, key)) return merged[key];
+  }
+  return undefined;
 }
 
 export function txExplorerUrl(chain: ChainInfo | undefined, txHash: string): string | undefined {

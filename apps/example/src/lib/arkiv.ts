@@ -3,9 +3,7 @@ import { createPublicClient } from "@arkiv-network/sdk";
 import { http } from "viem";
 import type { LinkRule } from "arkiv-graph";
 import { CHAIN, PUBLIC_CHAIN, PROJECT, DEMO_OWNER } from "./config";
-export { PUBLIC_CHAIN, PROJECT };
-export const TRUSTED_ADDRESS = DEMO_OWNER;
-export const NETWORK_NAME = CHAIN.name;
+export { PROJECT };
 export const NATIVE_CHAIN_ID = CHAIN.id;
 export const EXPLORER = PUBLIC_CHAIN.explorerUrl;
 export function publicClient() {
@@ -38,6 +36,3 @@ export const SOCIAL_LINKS: LinkRule[] = [
     label: "likes",
   },
 ];
-
-
-export const EXTERNAL_CONFIG = { enabled: true };

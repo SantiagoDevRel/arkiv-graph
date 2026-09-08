@@ -93,6 +93,11 @@ Do not expose the candidate publicly until that operational control is verified.
   origin: `localStorage.removeItem("arkiv-graph:seed:7738577:<lowercase-owner>:arkiv-graph-social-v2")`.
   Replace the owner placeholder. Never clear this marker while a transaction is
   pending or merely because a query is empty. There is no automatic reset.
+  A `submitting` marker means the wallet result or hash storage was interrupted.
+  Check the wallet history and Tiramisu receipt first; keep the marker while the
+  result is uncertain. A known user rejection clears only that attempt.
+- Lifetime Extension: this sample accepts at most 365 additional days per operation.
+  Invalid dates are rejected before requesting a wallet network change or signature.
 
 ## Checks
 

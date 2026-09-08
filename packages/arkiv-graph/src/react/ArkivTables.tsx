@@ -17,7 +17,7 @@ export interface ArkivTablesProps {
   /**
    * Enable a per-row "Extend" action (a date picker that extends an entity's
    * expiry). Receives the entity key + the absolute target date the user picked;
-   * perform the actual `extendEntity` write yourself (server-side, signed). When
+   * perform the actual signed `extendEntity` write in your handler. When
    * omitted, no Extend button is shown — read-only views stay read-only.
    */
   onExtendEntity?: ExtendHandler;
@@ -39,7 +39,7 @@ interface ActiveAction {
   now: number;
 }
 
-const ENTITY_KEY_RE = /^0x[0-9a-fA-F]{16,}$/;
+const ENTITY_KEY_RE = /^0x[0-9a-fA-F]{64}$/;
 
 const SANS = "system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
 const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
@@ -155,7 +155,9 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
           return (
             <button
               key={i}
-              onClick={clickable ? () => selectNode(r.targetId) : undefined}
+              type="button"
+              disabled={!clickable}
+              onClick={(event) => { event.stopPropagation(); if (clickable) selectNode(r.targetId); }}
               title={`${r.relationship} ${arrow(r.direction)} ${r.targetLabel}`}
               style={{
                 display: "inline-flex",

@@ -77,11 +77,12 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
 
   // react-force-graph-2d touches `window`, so load it client-side only.
   const [FG, setFG] = useState<React.ComponentType<any> | null>(null);
+  const [rendererFailed, setRendererFailed] = useState(false);
   useEffect(() => {
     let alive = true;
     import("react-force-graph-2d")
       .then((m) => alive && setFG(() => m.default))
-      .catch(() => {});
+      .catch(() => { if (alive) setRendererFailed(true); });
     return () => {
       alive = false;
     };
@@ -117,7 +118,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
   // Stable graph data for the force engine (memoized on data identity).
   const graphData = useMemo(() => {
     const links = data.edges.map((e) => ({ ...e }));
-    return { nodes: data.nodes, links };
+    return { nodes: data.nodes.map(n => ({ ...n })), links };
   }, [data]);
 
   const nodeById = useMemo(() => {
@@ -552,7 +553,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
         />
       ) : (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height, color: theme.muted, fontFamily: SANS, fontSize: 13 }}>
-          Loading graph…
+          {rendererFailed ? <span role="alert">Could not load the graph renderer. Check your connection and reload the page.</span> : <span role="status">Loading graph…</span>}
         </div>
       )}
 

@@ -1,7 +1,5 @@
 import { ARKIV_THEME, type ArkivGraphTheme } from "./theme.js";
 
-let injected = false;
-
 /**
  * Inject (once) a branded scrollbar style and return the class name to apply to
  * scroll containers. In the showcase the app's global CSS already styles
@@ -9,12 +7,15 @@ let injected = false;
  * scoped to a class so it never overrides the host app's scrollbars.
  */
 export function ensureScrollbarStyle(theme: ArkivGraphTheme = ARKIV_THEME): string {
-  const cls = "arkiv-scrollbar";
-  if (injected || typeof document === "undefined") return cls;
-  injected = true;
+  const colors = `${theme.background}|${theme.accent}`;
+  let hash = 0;
+  for (let i = 0; i < colors.length; i++) hash = (Math.imul(hash, 31) + colors.charCodeAt(i)) >>> 0;
+  const cls = `arkiv-scrollbar-${hash.toString(36)}`;
+  if (typeof document === "undefined" || document.getElementById(cls)) return cls;
   const track = theme.background;
   const thumb = theme.accent;
   const style = document.createElement("style");
+  style.id = cls;
   style.setAttribute("data-arkiv-graph", "scrollbar");
   style.textContent = [
     `.${cls}{scrollbar-width:thin;scrollbar-color:${thumb} ${track}}`,

@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArkivGraph, ArkivTables, type ExtendEntityParams } from "arkiv-graph/react";
 import type { Graph, TablesModel } from "arkiv-graph";
 import { connectWallet, createSocialSampleWithWallet, extendEntityWithWallet, getConnectedAccount, hasWallet, onAccountsChanged, walletErrorMessage } from "@/lib/wallet-client";
@@ -26,6 +26,10 @@ export function Showcase() {
   const [revision, setRevision] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
   const [advanced, setAdvanced] = useState(false);
+  const appInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    appInput.current?.setCustomValidity(new TextEncoder().encode(form.project).length > 128 ? "The app value must fit in 128 UTF-8 bytes." : "");
+  }, [form.project]);
 
   const showWallet = useCallback((address: string) => {
     const next = { ...INITIAL, address };
@@ -61,7 +65,7 @@ export function Showcase() {
       const result = await createSocialSampleWithWallet(a);
       setNotice(result.alreadyCreated ? "The sample already exists. Its entities have been loaded." : "Sample created and confirmed on Tiramisu.");
       setTxUrl(result.txUrl ?? ""); setShowCreate(false); showWallet(a); setRevision(v => v + 1);
-    } catch (e) { setNotice(walletErrorMessage(e)); setNoticeError(true); }
+    } catch (e) { setNotice(walletErrorMessage(e)); setNoticeError(true); setTxUrl((e as { txUrl?: string })?.txUrl ?? ""); }
     finally { setCreating(false); }
   };
   const extend = async ({ entityKey, targetExpiresAt }: ExtendEntityParams) => {
@@ -93,7 +97,7 @@ export function Showcase() {
     {isPublicExample && <p className="help">Public social example. Explore without a wallet; connect yours to view or create your own app.</p>}
     <form className="dashboard-controls" aria-label="Select app" onSubmit={e => { e.preventDefault(); setScope({ ...form, address: form.address.trim(), project: form.project.trim() }); }}>
       <div className="toolbar">
-        <label className="app-field">APP<input aria-label="App" maxLength={128} value={form.project} onChange={e => setForm({ ...form, project: e.target.value })} placeholder="All your apps" /></label>
+        <label className="app-field">APP<input ref={appInput} aria-label="App" maxLength={128} value={form.project} onChange={e => setForm({ ...form, project: e.target.value })} placeholder="All your apps" /></label>
         <button className="btn" type="submit" disabled={creating}>Load</button>
         <div className="seg" aria-label="View"><button type="button" aria-pressed={view === "tables"} className={view === "tables" ? "active" : ""} onClick={() => setView("tables")}>Table</button><button type="button" aria-pressed={view === "graph"} className={view === "graph" ? "active" : ""} onClick={() => setView("graph")}>Graph</button></div>
         <button type="button" className="text-button advanced-toggle" aria-expanded={advanced} onClick={() => setAdvanced(v => !v)}>Advanced {advanced ? "−" : "+"}</button>

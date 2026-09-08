@@ -61,7 +61,7 @@ async function assertSession(account: string) {
   if (!ADDRESS.test(account) || !provider || await getConnectedAccount() !== account.toLowerCase()) throw new Error("The account changed. Connect again before signing.");
   if (Number(await provider.request({ method: "eth_chainId" })) !== CHAIN.id) throw new Error("The network changed. Select Tiramisu before signing.");
 }
-async function writer(account: string, onSent?: (hash: Hex) => void) {
+async function writer(account: string, onSent?: (hash: Hex) => void, beforeSend?: () => void) {
   await ensureChain();
   await assertSession(account);
   if (await pub.getChainId() !== CHAIN.id) throw new Error("The RPC does not match Tiramisu.");
@@ -78,11 +78,12 @@ async function writer(account: string, onSent?: (hash: Hex) => void) {
       if (estimated <= 0n) throw new Error("Could not estimate gas for this operation.");
       await assertSession(account);
       forwarded = { ...request, params: [{ ...tx, gas: `0x${((estimated * 120n + 99n) / 100n).toString(16)}` }] };
+      beforeSend?.();
     }
     const result = await provider.request(forwarded);
     if (request.method === "eth_sendTransaction" && typeof result === "string" && KEY.test(result)) onSent?.(result as Hex);
     return result;
-  } });
+  } }, { retryCount: 0 });
   return createWalletClient({ account: account as Hex, chain: CHAIN, transport });
 }
 export interface WriteResult { expiresAt?: number; txUrl?: string; cost?: string }
@@ -98,7 +99,6 @@ export function walletErrorMessage(error: unknown): string {
 export async function extendEntityWithWallet(account: string, entityKey: string, targetExpiresAt: number): Promise<WriteResult> {
   if (!KEY.test(entityKey) || !Number.isSafeInteger(targetExpiresAt)) throw new Error("Invalid entity or date.");
   let submittedHash: Hex | undefined;
-  const client = await writer(account, hash => { submittedHash = hash; });
   const entity = await pub.getEntity(entityKey as Hex);
   if (entity.owner.toLowerCase() !== account.toLowerCase()) throw new Error("You can only extend entities owned by your wallet.");
   const timing = await pub.getBlockTiming();
@@ -107,6 +107,7 @@ export async function extendEntityWithWallet(account: string, entityKey: string,
   if (entity.expiresAt <= timing.currentBlock || targetExpiresAt <= currentExpiry) throw new Error("Select a date later than the current expiration.");
   if (targetExpiresAt - currentExpiry > 365 * 86400) throw new Error("You can add up to 365 days per operation.");
   const targetBlock = timing.currentBlock + BigInt(Math.ceil((targetExpiresAt - timing.currentBlockTime) / timing.blockDuration));
+  const client = await writer(account, hash => { submittedHash = hash; });
   await assertSession(account);
   let result;
   try { result = await client.extendEntity({ entityKey: entityKey as Hex, expires: ExpirationTime.atBlock(targetBlock) }); }
@@ -130,6 +131,7 @@ export async function createSocialSampleWithWallet(account: string) {
     // A successful query can recover a confirmed seed even while receipt lookup fails.
     const existing = await pub.select({ key: true }).ownedBy(account as Hex).where(eq("project", PROJECT)).limit(1).fetch();
     if (existing.entities.length) return { alreadyCreated: true, ...(pendingHash && KEY.test(pendingHash) ? { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash}` } : {}) };
+    if (pendingHash && !KEY.test(pendingHash)) throw new Error("A previous sample submission has no verified transaction hash. Check your wallet activity before retrying; automatic resubmission is blocked.");
     if (pendingHash && KEY.test(pendingHash)) {
       let receipt;
       try { receipt = await pub.getTransactionReceipt({ hash: pendingHash as Hex }); }
@@ -144,10 +146,36 @@ export async function createSocialSampleWithWallet(account: string) {
       }
       localStorage.removeItem(pendingKey);
     }
-    const client = await writer(account, hash => localStorage.setItem(pendingKey, hash));
+    let submittedHash: Hex | undefined;
+    let started = false;
+    const client = await writer(account, hash => {
+      submittedHash = hash;
+      localStorage.setItem(pendingKey, hash);
+    }, () => {
+      if (localStorage.getItem(pendingKey)) throw new Error("Sample creation is already pending. Check your wallet activity before retrying.");
+      // Persist uncertainty BEFORE sending. If storage fails after the wallet
+      // returns a hash, the marker still prevents an accidental duplicate.
+      localStorage.setItem(pendingKey, "submitting");
+      started = true;
+    });
     await assertSession(account);
-    const result = await client.executeBatch({ creates: socialSample() });
-    return { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${result.txHash}`, alreadyCreated: false };
+    try {
+      const result = await client.executeBatch({ creates: socialSample() });
+      return { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${result.txHash}`, alreadyCreated: false };
+    } catch (error) {
+      if (submittedHash) throw Object.assign(new Error("The sample transaction was submitted, but its confirmation could not be verified. Check the transaction and refresh before signing again."), { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${submittedHash}` });
+      if (started) {
+        let cause = error as { code?: number; name?: string; cause?: unknown } | undefined;
+        for (let i = 0; cause && i < 8; i++, cause = cause.cause as typeof cause) {
+          if (cause.code === 4001 || cause.name === "UserRejectedRequestError") {
+            localStorage.removeItem(pendingKey);
+            throw error;
+          }
+        }
+        throw new Error("The wallet did not return a transaction hash. Check your wallet activity; automatic resubmission is blocked until the result is verified.");
+      }
+      throw error;
+    }
   };
   if (navigator.locks) return navigator.locks.request(`arkiv-graph-seed-${account.toLowerCase()}`, { ifAvailable: true }, lock => {
     if (!lock) throw new Error("Sample creation is already in progress in another tab.");

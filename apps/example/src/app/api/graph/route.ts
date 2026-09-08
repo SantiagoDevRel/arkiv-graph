@@ -1,6 +1,7 @@
 import { buildGraph, buildTables, fetchArkivGraph, type LinkRule } from "arkiv-graph";
 import { EXPLORER, NATIVE_CHAIN_ID, PROJECT, publicClient, SOCIAL_LINKS, trustedAddress } from "@/lib/arkiv";
 import { TYPE_ATTRIBUTE } from "@/lib/config";
+import { isValidAttributeName } from "@arkiv-network/sdk/attr";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -17,7 +18,9 @@ export async function GET(req: Request) {
   const project = params.get("project") ?? PROJECT;
   const projectKey = params.get("projectKey") ?? "project";
   const typeKey = params.get("typeKey") ?? TYPE_ATTRIBUTE;
-  if (!ADDR_RE.test(address) || !ATTR_RE.test(projectKey) || !ATTR_RE.test(typeKey) || new TextEncoder().encode(project).length > 128 || /[\u0000-\u001f\u007f]/.test(project)) return json({ error: "Check the wallet address and your app's attributes." }, 400);
+  if (!ADDR_RE.test(address)) return json({ error: "Enter a valid owner wallet address." }, 400);
+  if (![projectKey, typeKey].every(key => ATTR_RE.test(key) && isValidAttributeName(key))) return json({ error: "App and type attributes must use valid, non-reserved attribute names." }, 400);
+  if (new TextEncoder().encode(project).length > 128 || /[\u0000-\u001f\u007f]/.test(project)) return json({ error: "The app value must fit in 128 UTF-8 bytes and contain no control characters." }, 400);
   try {
     const result = await fetchArkivGraph({ client: publicClient(), ownedBy: address,
       attributes: project ? { [projectKey]: project } : {}, explorerUrl: EXPLORER,

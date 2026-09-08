@@ -304,7 +304,7 @@ its real API and 390px DOM both showed35 with no overflow or page errors.
 
 ## Documentation patch prepared (not yet published)
 
-The corrected0.3.1 tarball contains no runtime changes. It fixes the React theme
+The earlier documentation-only0.3.1 tarball was never published and has been superseded by the full-repository audit fixes below. It fixes the React theme
 type import location, documents the normalized-entity input to `detectGroups`,
 and conditionally passes optional block timing in both README snippets.
 TypeScript5.9.3 with strict and exactOptionalPropertyTypes passes these patterns.
@@ -312,3 +312,9 @@ Claude rechecked the documentation, identified the second snippet, and that
 matching correction was applied. All dist files match published0.3.0 byte for
 byte. Publication still requires npm security-key confirmation; the sample and
 Hub continue to use the actually published0.3.0 until the registry confirms it.
+
+## Full-repository audit follow-up (2026-09-08)
+
+Claude Code and native Grok 1.0.13 (`grok-build`, Grok 4.6 on the grok.com subscription, not Cursor) independently reviewed all authored runtime source and the Tools card. Sessions: `claude-1284f1` and `grok-build-4742a1`. Both initial turns timed out; resumed turns delivered reports with explicit coverage inventories. They did not run builds, browser checks or transactions. The main agent reproduced findings and validated the fixes; the evidence is recorded below. See [full-audit.md](./full-audit.md) for status and evidence.
+
+The local0.3.1 candidate now includes runtime changes and is **not published**. Its earlier documentation-only tarball and byte-identity claims do not describe this candidate. The sample still pins published0.3.0 pending release.

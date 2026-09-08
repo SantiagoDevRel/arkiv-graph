@@ -109,4 +109,33 @@ describe("wallet writes", () => {
     expect(mocks.executeBatch).not.toHaveBeenCalled();
     expect(localStorage.getItem(pendingKey)).toBe(entityKey);
   });
+  it("retains a submitted seed hash after confirmation fails and blocks duplicate submission", async () => {
+    const pendingKey = `arkiv-graph:seed:7738577:${account}:arkiv-graph-social-v2`;
+    mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [account] : method === "eth_chainId" ? "0x7614d1" : entityKey);
+    mocks.executeBatch.mockImplementation(async () => {
+      await mocks.walletConfig.transport({}).request({ method: "eth_sendTransaction", params: [{ from: account, to: "0x4400000000000000000000000000000000000044", data: "0x1234" }] });
+      throw new Error("Receipt timeout");
+    });
+    await expect(createSocialSampleWithWallet(account)).rejects.toMatchObject({ txUrl: expect.stringContaining(entityKey) });
+    expect(localStorage.getItem(pendingKey)).toBe(entityKey);
+    mocks.getTransactionReceipt.mockRejectedValue(new Error("Still pending"));
+    await expect(createSocialSampleWithWallet(account)).rejects.toThrow("pending");
+    expect(mocks.executeBatch).toHaveBeenCalledTimes(1);
+  });
+  it("preserves uncertainty when storage fails after sending, and recovers a known wallet rejection", async () => {
+    const pendingKey = `arkiv-graph:seed:7738577:${account}:arkiv-graph-social-v2`;
+    const original = localStorage.setItem;
+    localStorage.setItem = (key, value) => { if (value === entityKey) throw new Error("Quota exceeded"); original(key, value); };
+    mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [account] : method === "eth_chainId" ? "0x7614d1" : entityKey);
+    mocks.executeBatch.mockImplementation(async () => mocks.walletConfig.transport({}).request({ method: "eth_sendTransaction", params: [{ from: account, to: "0x4400000000000000000000000000000000000044", data: "0x1234" }] }));
+    await expect(createSocialSampleWithWallet(account)).rejects.toMatchObject({ txUrl: expect.stringContaining(entityKey) });
+    expect(localStorage.getItem(pendingKey)).toBe("submitting");
+    await expect(createSocialSampleWithWallet(account)).rejects.toThrow("automatic resubmission is blocked");
+    expect(mocks.executeBatch).toHaveBeenCalledTimes(1);
+    // Simulate the developer verifying the wallet history, then testing a rejection.
+    localStorage.removeItem(pendingKey);
+    mocks.request.mockImplementation(async ({ method }) => { if (method === "eth_sendTransaction") throw Object.assign(new Error("Rejected"), { code: 4001 }); return method === "eth_accounts" ? [account] : "0x7614d1"; });
+    await expect(createSocialSampleWithWallet(account)).rejects.toThrow("Rejected");
+    expect(localStorage.getItem(pendingKey)).toBeNull();
+  });
 });

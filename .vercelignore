@@ -2,6 +2,7 @@
 !/package.json
 !/pnpm-lock.yaml
 !/pnpm-workspace.yaml
+!/.npmrc
 !/tsconfig.base.json
 !/vercel.json
 !/apps
@@ -13,6 +14,7 @@
 !/apps/example/next-env.d.ts
 !/apps/example/tsconfig.json
 !/apps/example/src
+/apps/example/src/app/settings-mockup.tsx
 !/apps/example/public
 !/packages
 /packages/*
