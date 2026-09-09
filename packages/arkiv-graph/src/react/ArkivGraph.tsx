@@ -20,7 +20,7 @@ export interface ArkivGraphProps {
   showSearch?: boolean;
   /** render the built-in detail panel on click (default true). */
   showDetail?: boolean;
-  /** fade entity nodes as their TTL runs down (default true). */
+  /** fade entity nodes as their lifetime runs down (default true). */
   fadeExpiring?: boolean;
   /** animate particles along join/external edges (default true). */
   animate?: boolean;
@@ -77,11 +77,12 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
 
   // react-force-graph-2d touches `window`, so load it client-side only.
   const [FG, setFG] = useState<React.ComponentType<any> | null>(null);
+  const [rendererFailed, setRendererFailed] = useState(false);
   useEffect(() => {
     let alive = true;
     import("react-force-graph-2d")
       .then((m) => alive && setFG(() => m.default))
-      .catch(() => {});
+      .catch(() => { if (alive) setRendererFailed(true); });
     return () => {
       alive = false;
     };
@@ -117,7 +118,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
   // Stable graph data for the force engine (memoized on data identity).
   const graphData = useMemo(() => {
     const links = data.edges.map((e) => ({ ...e }));
-    return { nodes: data.nodes, links };
+    return { nodes: data.nodes.map(n => ({ ...n })), links };
   }, [data]);
 
   const nodeById = useMemo(() => {
@@ -301,7 +302,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
       }
       if (selected && selected.id === node.id) {
         ctx.lineWidth = 2.5 / scale;
-        ctx.strokeStyle = "#ffffff";
+        ctx.strokeStyle = theme.text;
         ctx.stroke();
       }
       if (node.__pinned) {
@@ -452,7 +453,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
             padding: "7px 10px",
             fontSize: 12,
             color: theme.text,
-            background: "rgba(26,26,26,0.9)",
+            background: theme.surface ?? theme.background,
             border: `1px solid ${theme.muted}44`,
             borderRadius: 8,
             outline: "none",
@@ -487,7 +488,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
                   fontSize: 11,
                   fontFamily: SANS,
                   color: off ? theme.muted : theme.text,
-                  background: "rgba(26,26,26,0.85)",
+                  background: theme.surface ?? theme.background,
                   border: `1px solid ${c.color}${off ? "22" : "88"}`,
                   borderRadius: 20,
                   padding: "3px 9px",
@@ -552,7 +553,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
         />
       ) : (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height, color: theme.muted, fontFamily: SANS, fontSize: 13 }}>
-          Loading graph…
+          {rendererFailed ? <span role="alert">Could not load the graph renderer. Check your connection and reload the page.</span> : <span role="status">Loading graph…</span>}
         </div>
       )}
 
@@ -566,7 +567,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
             fontSize: 11,
             color: theme.muted,
             fontFamily: SANS,
-            background: "rgba(26,26,26,0.78)",
+            background: theme.surface ?? theme.background,
             borderRadius: 8,
             padding: "7px 10px",
             maxWidth: "56%",
@@ -646,8 +647,8 @@ function ZoomButton({
         justifyContent: "center",
         fontSize: small ? 14 : 19,
         lineHeight: 1,
-        color: hover ? "#160a00" : theme.text,
-        background: hover ? theme.accent : "rgba(26,26,26,0.9)",
+        color: hover ? (theme.onAccent ?? "#160a00") : theme.text,
+        background: hover ? theme.accent : (theme.surface ?? theme.background),
         border: `1px solid ${hover ? theme.accent : theme.muted + "44"}`,
         borderRadius: 8,
         cursor: "pointer",

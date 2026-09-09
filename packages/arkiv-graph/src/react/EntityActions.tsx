@@ -1,21 +1,21 @@
 import * as React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { TableRow } from "../index.js";
 import { formatExpiry, formatTtl } from "../ttl.js";
 import { ARKIV_THEME, type ArkivGraphTheme } from "./theme.js";
 
 const SANS = "system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
 const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
-const DANGER = "#ff5d6c";
+
 
 // ── public callback types ────────────────────────────────────────────────────
 
-/** Passed to `onExtendEntity`. The component picks an ABSOLUTE target date; how a
- *  duration is derived from it (Arkiv's `extendEntity` is additive: new expiry =
- *  old expiry + duration) is the consumer's call — compute it server-side from
- *  the entity's real on-chain expiry, don't trust client values for that. */
+/** Passed to `onExtendEntity`. The component picks an ABSOLUTE target date.
+ * SDK 0.8 sets an absolute expiry with ExpirationTime.atBlock; it is not additive.
+ * Re-read ownership, expiry and block timing before signing, validate the target,
+ * and resolve only after the transaction is confirmed. */
 export interface ExtendEntityParams {
-  /** the entity's on-chain key (a 0x + 64 hex string on Braga). */
+  /** the entity's on-chain key (0x + 64 hex characters). */
   entityKey: string;
   /** absolute unix SECONDS the user wants the entity to live until. */
   targetExpiresAt: number;
@@ -99,7 +99,8 @@ export function EntityActionsCell({
     display: "inline-flex",
     alignItems: "center",
     gap: 4,
-    fontSize: 11,
+    fontSize: 12,
+    minHeight: 44,
     fontFamily: SANS,
     fontWeight: 600,
     color,
@@ -133,7 +134,7 @@ export function EntityActionsCell({
             e.stopPropagation();
             onDelete();
           }}
-          style={btn(DANGER)}
+          style={btn((theme.danger ?? "#ff5d6c"))}
         >
           ✕ Delete
         </button>
@@ -182,12 +183,12 @@ export function EntityActionPanel({
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState<string>("");
   const [result, setResult] = useState<ExtendEntityResult | DeleteEntityResult | null>(null);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  const dialog = useRef<HTMLDivElement>(null);
+  const inputId = useId();
   useEffect(() => {
-    return () => {
-      if (closeTimer.current) clearTimeout(closeTimer.current);
-    };
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dialog.current?.focus();
+    return () => { if (previous?.isConnected) previous.focus(); };
   }, []);
 
   // Esc closes the panel (except mid-transaction, so a pending sign isn't orphaned)
@@ -200,8 +201,8 @@ export function EntityActionPanel({
   }, [status, onClose]);
 
   // ownership: when the signer is known and differs from the row's owner, the
-  // mutation will be rejected on-chain — surface it up front (the server still
-  // enforces it, this is just a helpful heads-up).
+  // surface the mismatch up front. The callback must recheck live ownership;
+  // chain rules remain authoritative, including permissionless extension flags.
   const owner = row.owner?.toLowerCase();
   const signer = signerAddress?.toLowerCase();
   const notOwner = !!owner && !!signer && owner !== signer;
@@ -214,11 +215,12 @@ export function EntityActionPanel({
     setResult(r ?? null);
     setStatus("done");
     onMutated?.();
-    closeTimer.current = setTimeout(onClose, 2800);
   };
   const fail = (e: unknown) => {
     setStatus("error");
     setMessage(e instanceof Error ? e.message : String(e) || "Something went wrong.");
+    const txUrl = (e as { txUrl?: unknown })?.txUrl;
+    setResult(typeof txUrl === "string" && /^https?:\/\//i.test(txUrl) ? { txUrl } : null);
   };
 
   const runExtend = async () => {
@@ -245,33 +247,47 @@ export function EntityActionPanel({
   };
 
   const pending = status === "pending";
-  const accent = kind === "extend" ? theme.accent : DANGER;
+  const accent = kind === "extend" ? theme.accent : (theme.danger ?? "#ff5d6c");
 
   return (
     <>
       {/* backdrop */}
       <div
         onClick={status === "pending" ? undefined : onClose}
-        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 6 }}
+        style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000 }}
       />
       <div
+        ref={dialog}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
+        aria-label={kind === "extend" ? "Lifetime Extension" : "Delete entity"}
+        onKeyDown={(event) => {
+          if (event.key !== "Tab") return;
+          const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), a[href]'));
+          const first = items[0], last = items[items.length - 1];
+          if (!first) { event.preventDefault(); return; }
+          if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog.current)) {
+            event.preventDefault(); last?.focus();
+          } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === dialog.current)) {
+            event.preventDefault(); first.focus();
+          }
+        }}
         style={{
-          position: "absolute",
+          position: "fixed",
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
           width: "min(380px, calc(100% - 32px))",
           maxHeight: "calc(100% - 32px)",
           overflowY: "auto",
-          background: "rgba(26,26,26,0.98)",
+          background: theme.surface ?? theme.background,
           border: `1px solid ${accent}66`,
           borderRadius: 12,
           padding: 16,
           boxShadow: "0 10px 40px rgba(0,0,0,0.6)",
           backdropFilter: "blur(6px)",
-          zIndex: 7,
+          zIndex: 1001,
           fontFamily: SANS,
         }}
       >
@@ -295,7 +311,7 @@ export function EntityActionPanel({
         <div style={{ color: theme.muted, fontSize: 11, fontFamily: MONO, marginBottom: 10 }}>{short(row.id)}</div>
 
         {notOwner && status !== "done" && (
-          <div style={{ background: `${DANGER}14`, border: `1px solid ${DANGER}55`, borderRadius: 8, padding: "8px 10px", marginBottom: 12, fontSize: 12, color: theme.text, lineHeight: 1.45 }}>
+          <div style={{ background: `${(theme.danger ?? "#ff5d6c")}14`, border: `1px solid ${(theme.danger ?? "#ff5d6c")}55`, borderRadius: 8, padding: "8px 10px", marginBottom: 12, fontSize: 12, color: theme.text, lineHeight: 1.45 }}>
             ⚠ This entity is owned by <code style={{ fontFamily: MONO }}>{short(row.owner)}</code>. Only its owner can{" "}
             {kind === "extend" ? "extend" : "delete"} it{signer ? <> — your signer is <code style={{ fontFamily: MONO }}>{short(signerAddress)}</code></> : null}.
           </div>
@@ -307,11 +323,11 @@ export function EntityActionPanel({
         ) : kind === "extend" ? (
           <>
             <Field label="Current expiry" value={current != null ? formatExpiry(current) : "unknown"} theme={theme} />
-            <label htmlFor="arkiv-extend-until" style={{ display: "block", color: theme.muted, fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, margin: "12px 0 6px" }}>
+            <label htmlFor={inputId} style={{ display: "block", color: theme.muted, fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, margin: "12px 0 6px" }}>
               Extend until
             </label>
             <input
-              id="arkiv-extend-until"
+              id={inputId}
               type="datetime-local"
               value={secondsToLocalInput(target)}
               min={secondsToLocalInput(minTarget)}
@@ -332,10 +348,10 @@ export function EntityActionPanel({
                 padding: "8px 10px",
                 fontSize: 13,
                 fontFamily: SANS,
-                colorScheme: "dark",
+                colorScheme: theme.colorScheme ?? "dark",
               }}
             />
-            <div style={{ marginTop: 8, fontSize: 12, color: targetTooEarly ? DANGER : theme.muted, lineHeight: 1.5 }}>
+            <div style={{ marginTop: 8, fontSize: 12, color: targetTooEarly ? (theme.danger ?? "#ff5d6c") : theme.muted, lineHeight: 1.5 }}>
               {targetTooEarly ? (
                 "Pick a date after the current expiry — you can only extend forward."
               ) : (
@@ -348,13 +364,15 @@ export function EntityActionPanel({
           </>
         ) : (
           <div style={{ color: theme.muted, fontSize: 13, lineHeight: 1.5 }}>
-            This permanently removes the entity from Arkiv before its TTL. This can&apos;t be undone.
+            <p>This removes only the selected entity from active queries. It cannot be undone from this dashboard. Related entities and historical copies are not erased.</p>
+            <code style={{ display: "block", overflowWrap: "anywhere", fontFamily: MONO }}>{row.id}</code>
           </div>
         )}
 
         {status === "error" && (
-          <div style={{ marginTop: 12, background: `${DANGER}14`, border: `1px solid ${DANGER}55`, borderRadius: 8, padding: "8px 10px", fontSize: 12.5, color: theme.text, lineHeight: 1.45 }}>
+          <div role="alert" style={{ marginTop: 12, background: `${(theme.danger ?? "#ff5d6c")}14`, border: `1px solid ${(theme.danger ?? "#ff5d6c")}55`, borderRadius: 8, padding: "8px 10px", fontSize: 12.5, color: theme.text, lineHeight: 1.45 }}>
             ✕ {message}
+            {result?.txUrl && <p><a href={result.txUrl} target="_blank" rel="noopener noreferrer" style={{ color: theme.accent }}>View transaction ↗</a></p>}
           </div>
         )}
 
@@ -384,7 +402,7 @@ export function EntityActionPanel({
               disabled={pending || (kind === "extend" && targetTooEarly)}
               style={{
                 background: accent,
-                color: kind === "extend" ? "#160a00" : "#fff",
+                color: kind === "extend" ? (theme.onAccent ?? "#160a00") : "#fff",
                 border: "none",
                 borderRadius: 8,
                 padding: "7px 14px",
@@ -424,14 +442,14 @@ function ResultView({
   const extendRes = result as ExtendEntityResult | null;
   return (
     <div style={{ fontSize: 13, color: theme.text, lineHeight: 1.6 }}>
-      <div style={{ color: "#43d6a6", fontWeight: 700, marginBottom: 8 }}>
+      <div style={{ color: theme.success ?? "#43d6a6", fontWeight: 700, marginBottom: 8 }}>
         ✓ {kind === "extend" ? "Extended on-chain" : "Deleted on-chain"}
       </div>
       {kind === "extend" && (
         <Field label="New expiry" value={formatExpiry(extendRes?.expiresAt ?? fallbackExpiry)} theme={theme} />
       )}
       {result?.cost && <Field label="Cost" value={result.cost} theme={theme} />}
-      {result?.txUrl && (
+      {result?.txUrl && /^https?:\/\//i.test(result.txUrl) && (
         <a
           href={result.txUrl}
           target="_blank"

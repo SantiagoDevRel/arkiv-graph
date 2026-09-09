@@ -6,7 +6,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // arkiv-graph ships ESM + a CJS graph renderer (react-force-graph-2d) — let
+  // Keep the local preview independent from production build output.
+  distDir: process.env.NODE_ENV === "development" ? ".next-dev" : ".next",
+  // arkiv-graph ships ESM + CJS; its graph renderer is ESM-only — let
   // Next transpile them so the bundling is consistent.
   transpilePackages: ["arkiv-graph", "react-force-graph-2d"],
   // Scope file-tracing to this repo (a stray lockfile higher up otherwise

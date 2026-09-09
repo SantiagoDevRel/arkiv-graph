@@ -1,7 +1,7 @@
 import { addExternalForEntity } from "./external.js";
 import { attrValues, normalizeEntity, type NormEntity } from "./normalize.js";
 import { computeTtl } from "./ttl.js";
-import { BRAGA_EXPLORER } from "./chains.js";
+import { TIRAMISU_EXPLORER } from "./chains.js";
 import type {
   ArkivEntityLike,
   BuildGraphOptions,
@@ -54,13 +54,13 @@ export function labelForRule(rule: LinkRule): string {
 /**
  * Turn a flat list of Arkiv entities into a graph. Nodes are entities; edges are
  * derived from the `links` you supply (Arkiv has no native joins, so YOU declare
- * how records relate). References to other chains become external nodes.
+ * how entities relate). References to other chains become external nodes.
  */
 export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptions = {}): Graph {
   const typeAttr = options.typeAttribute ?? "entityType";
   const links = options.links ?? [];
   const createPlaceholders = options.createPlaceholders !== false;
-  const arkivExplorer = (options.arkivExplorer ?? BRAGA_EXPLORER).replace(/\/$/, "");
+  const arkivExplorer = (options.arkivExplorer ?? TIRAMISU_EXPLORER).replace(/\/$/, "");
 
   const joinTypes = new Set(
     links.filter((l): l is JoinRule => l.type === "join").map((l) => l.entityType),
@@ -85,11 +85,9 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
 
   // ── 1. entity nodes (skip join-entity types — they become edges) ────────────
   const entityNodeKeys: string[] = [];
-  for (const e of norms) {
+  function addEntityNode(e: NormEntity) {
     const entityType = e.attrMap.get(typeAttr);
     const typeStr = entityType != null ? String(entityType) : undefined;
-    if (typeStr && joinTypes.has(typeStr)) continue; // collapsed into an edge later
-
     const ttl = computeTtl(e.expiresAtBlock, e.createdAtBlock, options.blockTiming);
     nodes.set(e.key, {
       id: e.key,
@@ -105,8 +103,12 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
       ttlSeconds: ttl.ttlSeconds,
       expiresAt: ttl.expiresAt,
       ttlFraction: ttl.ttlFraction,
-      explorerUrl: `${arkivExplorer}/entity/${e.key}`,
+      explorerUrl: `${arkivExplorer}/entity/${encodeURIComponent(e.key)}`,
     });
+  }
+  for (const e of norms) {
+    if (joinTypes.has(String(e.attrMap.get(typeAttr) ?? ""))) continue;
+    addEntityNode(e);
     entityNodeKeys.push(e.key);
   }
 
@@ -129,6 +131,14 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
 
   // ── 3. link rules ───────────────────────────────────────────────────────────
   for (const rule of links) applyRule(rule);
+
+  // A join can only collapse when it produced an edge. Keep malformed or
+  // out-of-scope joins visible so a dashboard never silently loses entities.
+  // Restored joins are isolated; join entities do not participate in other rules.
+  const collapsed = new Set(edges.flatMap(e => e.viaEntityKey ? [e.viaEntityKey] : []));
+  for (const e of norms) {
+    if (joinTypes.has(String(e.attrMap.get(typeAttr) ?? "")) && !collapsed.has(e.key)) addEntityNode(e);
+  }
 
   // ── 4. degree ───────────────────────────────────────────────────────────────
   const degree = new Map<string, number>();
@@ -216,7 +226,7 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
                 label: shortKey(tk),
                 entityType: rule.targetType,
                 unresolved: true,
-                explorerUrl: `${arkivExplorer}/entity/${tk}`,
+                explorerUrl: `${arkivExplorer}/entity/${encodeURIComponent(tk)}`,
               });
             } else if (rule.targetType && targetNode.entityType && targetNode.entityType !== rule.targetType) {
               continue;
@@ -316,7 +326,7 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
                 kind: "entity",
                 label: isUnresolved ? id.split(":").slice(2).join(":") || id : shortKey(id),
                 unresolved: true,
-                explorerUrl: isUnresolved ? undefined : `${arkivExplorer}/entity/${id}`,
+                explorerUrl: isUnresolved ? undefined : `${arkivExplorer}/entity/${encodeURIComponent(id)}`,
               });
             }
           }

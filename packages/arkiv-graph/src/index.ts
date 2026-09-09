@@ -16,6 +16,8 @@ export {
   CHAIN_REGISTRY,
   BRAGA_CHAIN_ID,
   BRAGA_EXPLORER,
+  TIRAMISU_CHAIN_ID,
+  TIRAMISU_EXPLORER,
   lookupChain,
   txExplorerUrl,
   addressExplorerUrl,

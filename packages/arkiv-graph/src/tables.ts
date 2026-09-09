@@ -58,8 +58,6 @@ export interface BuildTablesOptions {
   blockTiming?: BlockTiming;
 }
 
-const HIDDEN_ATTRS = new Set(["project", "entityType"]);
-
 function shortHex(s: string): string {
   return /^0x[0-9a-fA-F]{8,}$/.test(s) ? `${s.slice(0, 6)}…${s.slice(-4)}` : s;
 }
@@ -69,6 +67,7 @@ function edgeId(e: { source: unknown }): string {
 
 export function buildTables(graph: Graph, entities: ArkivEntityLike[], options: BuildTablesOptions = {}): TablesModel {
   const links = options.links ?? [];
+  const hiddenAttrs = new Set(["project", options.typeAttribute ?? "entityType"]);
   const joinTypes = new Set(links.filter((l): l is JoinRule => l.type === "join").map((l) => l.entityType));
 
   const nodeById = new Map<string, GraphNode>();
@@ -111,7 +110,7 @@ export function buildTables(graph: Graph, entities: ArkivEntityLike[], options: 
     const attrKeys = new Set<string>();
     const relLabels = new Set<string>();
     for (const n of nodes) {
-      for (const a of n.attributes ?? []) if (!HIDDEN_ATTRS.has(a.key)) attrKeys.add(a.key);
+      for (const a of n.attributes ?? []) if (!hiddenAttrs.has(a.key)) attrKeys.add(a.key);
       for (const label of incident.get(n.id)?.keys() ?? []) relLabels.add(label);
     }
     const hasTtl = nodes.some((n) => typeof n.expiresAt === "number");
@@ -127,8 +126,9 @@ export function buildTables(graph: Graph, entities: ArkivEntityLike[], options: 
         _key: shortHex(n.id),
         _owner: n.owner ? shortHex(n.owner) : "",
       };
-      const attrMap = new Map((n.attributes ?? []).map((a) => [a.key, String(a.value)]));
-      for (const k of attrKeys) cells[`attr:${k}`] = attrMap.get(k) ?? "";
+      const attrMap = normByKey.get(n.id)?.attrMap ?? new Map<string, string | number>();
+      for (const a of n.attributes ?? []) if (!attrMap.has(a.key)) attrMap.set(a.key, a.value);
+      for (const k of attrKeys) cells[`attr:${k}`] = String(attrMap.get(k) ?? "");
       const inc = incident.get(n.id);
       for (const l of relLabels) cells[`rel:${l}`] = inc?.get(l) ?? [];
       return { id: n.id, label: n.label, entityType: n.entityType, owner: n.owner, ttlSeconds: n.ttlSeconds, expiresAt: n.expiresAt, cells };
@@ -137,32 +137,39 @@ export function buildTables(graph: Graph, entities: ArkivEntityLike[], options: 
   }
 
   // ── junction tables (one per join entityType) ───────────────────────────────
-  const joinRowsByType = new Map<string, { from: RelRef; to: RelRef; norm?: NormEntity; label: string }[]>();
+  type JoinRow = { from: RelRef[]; to: RelRef[]; norm: NormEntity; label: string };
+  const joinRowsByType = new Map<string, JoinRow[]>();
+  const joinRowByKey = new Map<string, JoinRow>();
+  for (const norm of normByKey.values()) {
+    const type = String(norm.attrMap.get(options.typeAttribute ?? "entityType") ?? "");
+    if (!joinTypes.has(type)) continue;
+    const row: JoinRow = { from: [], to: [], norm, label: type };
+    joinRowByKey.set(norm.key, row);
+    (joinRowsByType.get(type) ?? joinRowsByType.set(type, []).get(type)!).push(row);
+  }
   for (const e of graph.edges) {
     if (e.kind !== "join" || !e.viaEntityKey) continue;
-    const norm = normByKey.get(e.viaEntityKey);
-    const t = norm ? String(norm.attrMap.get(options.typeAttribute ?? "entityType") ?? "") : "";
-    if (!t) continue;
+    const row = joinRowByKey.get(e.viaEntityKey);
+    if (!row) continue;
     const s = edgeId({ source: e.source });
     const tgt = typeof (e as any).target === "string" ? e.target : (e as any).target?.id;
     const label = e.label ?? e.kind;
-    const from: RelRef = { relationship: label, targetId: s, targetLabel: nodeById.get(s)?.label ?? shortHex(s), direction: "out" };
-    const to: RelRef = { relationship: label, targetId: tgt, targetLabel: nodeById.get(tgt)?.label ?? shortHex(tgt), direction: "out" };
-    (joinRowsByType.get(t) ?? joinRowsByType.set(t, []).get(t)!).push({ from, to, norm, label });
+    row.from.push({ relationship: label, targetId: s, targetLabel: nodeById.get(s)?.label ?? shortHex(s), direction: e.directed ? "out" : "both", unresolved: nodeById.get(s)?.unresolved });
+    row.to.push({ relationship: label, targetId: tgt, targetLabel: nodeById.get(tgt)?.label ?? shortHex(tgt), direction: e.directed ? "out" : "both", unresolved: nodeById.get(tgt)?.unresolved });
+    row.label = label;
   }
   for (const [type, jrows] of [...joinRowsByType.entries()].sort()) {
     const attrKeys = new Set<string>();
-    for (const r of jrows) for (const a of r.norm?.attributes ?? []) if (!HIDDEN_ATTRS.has(a.key)) attrKeys.add(a.key);
-    const rows: TableRow[] = jrows.map((r, i) => {
+    for (const r of jrows) for (const a of r.norm.attributes) if (!hiddenAttrs.has(a.key)) attrKeys.add(a.key);
+    const rows: TableRow[] = jrows.map((r) => {
       const cells: Record<string, string | RelRef[]> = {
-        _from: [r.from],
-        _to: [r.to],
+        _from: r.from,
+        _to: r.to,
         _owner: r.norm?.owner ? shortHex(r.norm.owner) : "",
       };
-      const attrMap = new Map((r.norm?.attributes ?? []).map((a) => [a.key, String(a.value)]));
-      for (const k of attrKeys) cells[`attr:${k}`] = attrMap.get(k) ?? "";
+      for (const k of attrKeys) cells[`attr:${k}`] = String(r.norm.attrMap.get(k) ?? "");
       const ttl = r.norm ? computeTtl(r.norm.expiresAtBlock, r.norm.createdAtBlock, options.blockTiming) : {};
-      return { id: r.norm?.key ?? `${type}-${i}`, label: `${r.from.targetLabel} ${r.label} ${r.to.targetLabel}`, entityType: type, owner: r.norm?.owner, ttlSeconds: ttl.ttlSeconds, expiresAt: ttl.expiresAt, cells };
+      return { id: r.norm.key, label: r.from[0] && r.to[0] ? `${r.from[0].targetLabel} ${r.label} ${r.to[0].targetLabel}` : `${type} ${shortHex(r.norm.key)}`, entityType: type, owner: r.norm.owner, ttlSeconds: ttl.ttlSeconds, expiresAt: ttl.expiresAt, cells };
     });
     const hasTtl = rows.some((r) => typeof r.expiresAt === "number");
     const columns: TableColumn[] = [
@@ -189,6 +196,8 @@ export function buildTables(graph: Graph, entities: ArkivEntityLike[], options: 
   });
 
   const warnings: string[] = [];
+  const unlinkedJoins = [...joinRowByKey.values()].filter(row => row.from.length === 0).length;
+  if (unlinkedJoins) warnings.push(`${unlinkedJoins} join ${unlinkedJoins === 1 ? "entity has" : "entities have"} no drawable relationship. Check endpoint attributes and scope; the entities remain visible.`);
   const unresolved = graph.nodes.filter((n) => n.unresolved).length;
   if (unresolved > 0) warnings.push(`${unresolved} reference${unresolved > 1 ? "s" : ""} point to entities not loaded (expired or out of scope).`);
   for (const r of relationships) if (r.count === 0) warnings.push(`Link rule "${r.label}" (${r.kind}) matched 0 rows — check the attribute names.`);

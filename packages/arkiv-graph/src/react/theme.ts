@@ -2,6 +2,13 @@ import type { GraphNode } from "../types.js";
 
 export interface ArkivGraphTheme {
   background: string;
+  /** Optional surface/control colors; omitted values preserve the dark defaults. */
+  surface?: string;
+  colorScheme?: "dark" | "light";
+  onAccent?: string;
+  danger?: string;
+  success?: string;
+  warning?: string;
   text: string;
   muted: string;
   /** colour for Arkiv entity nodes, keyed by entityType (lowercased). */
@@ -22,6 +29,7 @@ export interface ArkivGraphTheme {
 // ink text (#f0ede8) on page #111111. Brand colours anchor the node/edge palettes.
 export const ARKIV_THEME: ArkivGraphTheme = {
   background: "#111111",
+  surface: "#191919",
   text: "#f0ede8",
   muted: "#a0a0a0",
   accent: "#fe7446",
@@ -62,9 +70,6 @@ export function buildRelationshipColors(
   return map;
 }
 
-let paletteCursor = 0;
-const assigned = new Map<string, string>();
-
 /** Stable colour for a node — brand colours for known types, chain colours for
  *  external nodes, a rotating palette for everything else. */
 export function nodeColorFor(node: GraphNode, theme: ArkivGraphTheme = ARKIV_THEME): string {
@@ -73,13 +78,11 @@ export function nodeColorFor(node: GraphNode, theme: ArkivGraphTheme = ARKIV_THE
   if (node.kind === "wallet") return theme.walletColor;
   if (node.kind === "tag") return theme.tagColor;
   const type = (node.entityType ?? "").toLowerCase();
-  if (type && theme.entityColors[type]) return theme.entityColors[type]!;
+  if (type && Object.hasOwn(theme.entityColors, type)) return theme.entityColors[type]!;
   if (type) {
-    if (!assigned.has(type)) {
-      assigned.set(type, theme.palette[paletteCursor % theme.palette.length]!);
-      paletteCursor++;
-    }
-    return assigned.get(type)!;
+    let hash = 0;
+    for (let i = 0; i < type.length; i++) hash = (Math.imul(hash, 31) + type.charCodeAt(i)) >>> 0;
+    return theme.palette[hash % theme.palette.length] ?? theme.accent;
   }
   return theme.accent;
 }

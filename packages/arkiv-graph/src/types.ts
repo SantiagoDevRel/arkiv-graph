@@ -2,7 +2,7 @@
 // arkiv-graph — core types
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** An Arkiv attribute. Values are string | number only (the SDK drops bigint/boolean). */
+/** A normalized attribute. SDK bigint/boolean values are preserved as strings. */
 export interface ArkivAttribute {
   key: string;
   value: string | number;
@@ -14,16 +14,20 @@ export interface ArkivAttribute {
  * indexer) work too — only `key` is strictly required.
  */
 export interface ArkivEntityLike {
-  /** Entity key — the unique id, a 0x + 64 hex string on Braga. */
+  /** Entity key — the unique id, a 0x + 64 hex string on Arkiv. */
   key: string;
   owner?: string;
   creator?: string;
   contentType?: string;
-  /** TTL anchor. bigint from the SDK; number/string also accepted. */
+  /** Expiration anchor. bigint from the SDK; number/string also accepted. */
   expiresAtBlock?: bigint | number | string;
   createdAtBlock?: bigint | number | string;
   lastModifiedAtBlock?: bigint | number | string;
-  attributes?: ArkivAttribute[];
+  attributes?: ArkivAttribute[] | Readonly<Record<string, { readonly type: string; readonly value: unknown }>>;
+  /** SDK 0.8 block metadata. Legacy aliases above remain accepted for plain inputs. */
+  expiresAt?: bigint | number | string;
+  createdAt?: bigint | number | string;
+  updatedAt?: bigint | number | string;
   /** Raw payload bytes, an already-parsed object, or absent. */
   payload?: unknown;
   /** SDK entities expose toJson() to parse the payload — used if present. */
@@ -227,7 +231,7 @@ export interface BuildGraphOptions {
   typeAttribute?: string;
   /** payload field (or attribute) to use as a node's display label. */
   labelKey?: string;
-  /** block timing, so TTL (fade) can be computed. */
+  /** block timing, so remaining lifetime (fade) can be computed. */
   blockTiming?: BlockTiming;
   /** create faint placeholder nodes for references whose target wasn't fetched. Default true. */
   createPlaceholders?: boolean;
@@ -236,7 +240,7 @@ export interface BuildGraphOptions {
   /**
    * The active Arkiv chain id — treated as "native" (never external). Convenience
    * for direct buildGraph consumers; equivalent to setting `external.nativeChainIds`.
-   * Defaults to Braga when neither is set.
+   * Defaults to Tiramisu when neither is set.
    */
   nativeChainId?: number;
 }

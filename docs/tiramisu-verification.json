@@ -1,0 +1,44 @@
+{
+  "verifiedAt": "2026-09-08T18:41:05.888Z",
+  "chainId": 7738577,
+  "owner": "0xa618a2736431f24c26f1c8dac9ca00ecc845a1c6",
+  "project": "arkiv-graph-social-v2",
+  "entityCount": 35,
+  "typeCounts": {
+    "post": 8,
+    "user": 6,
+    "comment": 6,
+    "like": 8,
+    "follow": 7
+  },
+  "graphNodes": 20,
+  "graphEdges": 35,
+  "tableCount": 5,
+  "extension": {
+    "entityKey": "0xd4fc7c76c9c48badf8ff70cbacf5c362fa9c3dacff3b6d840ac879a371bc7b3d",
+    "owner": "0xa618a2736431f24c26f1c8dac9ca00ecc845a1c6",
+    "oldExpiryBlock": "1488148",
+    "newExpiryBlock": "2784148",
+    "oldExpiryUnix": 1791484648,
+    "newExpiryUnix": 1794076648,
+    "onlyExtension": true,
+    "estimatedGas": 25581,
+    "walletGas": 38372
+  },
+  "transactions": [
+    {
+      "hash": "0x9cb8265153434717a45f09accba557bff27dbf714c59bcc8df5b0933b1a2eeaa",
+      "status": "success",
+      "block": "192148",
+      "gasUsed": "3504560",
+      "costWei": "4205472007009120"
+    },
+    {
+      "hash": "0xe8b3e1b99b0e83f194e883db0ad3c930b0fa8171c33c98cde34ac301a0cd17e0",
+      "status": "success",
+      "block": "192198",
+      "gasUsed": "25240",
+      "costWei": "30288000050480"
+    }
+  ]
+}

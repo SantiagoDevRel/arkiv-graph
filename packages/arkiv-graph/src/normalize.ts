@@ -80,7 +80,13 @@ function bytesToString(p: unknown): string | undefined {
 }
 
 export function normalizeEntity(entity: ArkivEntityLike): NormEntity {
-  const attributes = Array.isArray(entity.attributes) ? entity.attributes : [];
+  const attributes: ArkivAttribute[] = Array.isArray(entity.attributes)
+    ? entity.attributes
+    : Object.entries(entity.attributes ?? {}).map(([key, typed]) => ({
+        key,
+        // Preserve large integers and decimal values exactly in tables and link matching.
+        value: typeof typed.value === "number" ? typed.value : String(typed.value),
+      }));
   const attrMap = new Map<string, string | number>();
   for (const a of attributes) {
     if (a && a.key != null && !attrMap.has(a.key)) attrMap.set(a.key, a.value);
@@ -92,8 +98,8 @@ export function normalizeEntity(entity: ArkivEntityLike): NormEntity {
     attributes,
     attrMap,
     payload: decodePayload(entity),
-    expiresAtBlock: toNum(entity.expiresAtBlock),
-    createdAtBlock: toNum(entity.createdAtBlock),
+    expiresAtBlock: toNum(entity.expiresAt ?? entity.expiresAtBlock),
+    createdAtBlock: toNum(entity.createdAt ?? entity.createdAtBlock),
     raw: entity,
   };
 }

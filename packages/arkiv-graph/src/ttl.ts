@@ -10,7 +10,7 @@ export interface Ttl {
 }
 
 /**
- * Convert Arkiv's block-based TTL into wall-clock seconds + a 0..1 "life
+ * Convert Arkiv's block-based expiration into wall-clock seconds + a 0..1 "life
  * remaining" fraction for the fade effect. Needs block timing from
  * `publicClient.getBlockTiming()`.
  */
@@ -22,9 +22,10 @@ export function computeTtl(
   if (!timing || expiresAtBlock == null) return {};
   const current = Number(timing.currentBlock);
   // Block heights are tiny on Arkiv today, but guard against precision loss so a
-  // huge value degrades to "unknown TTL" rather than a wrong number.
+  // huge value degrades to "unknown expiration" rather than a wrong number.
   if (!Number.isSafeInteger(current) || !Number.isSafeInteger(expiresAtBlock)) return {};
-  const dur = timing.blockDuration || 2;
+  if (!Number.isFinite(timing.blockDuration) || timing.blockDuration <= 0 || !Number.isFinite(timing.currentBlockTime)) return {};
+  const dur = timing.blockDuration;
   const blocksLeft = expiresAtBlock - current;
   const ttlSeconds = blocksLeft * dur;
   const expiresAt = timing.currentBlockTime + ttlSeconds;
@@ -60,7 +61,7 @@ export function formatExpiry(expiresAt: number | undefined): string {
 
 /** Human "2d 3h", "5m", "expired". */
 export function formatTtl(ttlSeconds: number | undefined): string {
-  if (ttlSeconds == null) return "—";
+  if (ttlSeconds == null || !Number.isFinite(ttlSeconds)) return "—";
   if (ttlSeconds <= 0) return "expired";
   const d = Math.floor(ttlSeconds / 86400);
   const h = Math.floor((ttlSeconds % 86400) / 3600);

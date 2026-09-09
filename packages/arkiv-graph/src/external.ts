@@ -1,4 +1,4 @@
-import { addressExplorerUrl, BRAGA_CHAIN_ID, lookupChain, txExplorerUrl } from "./chains.js";
+import { addressExplorerUrl, TIRAMISU_CHAIN_ID, lookupChain, txExplorerUrl } from "./chains.js";
 import type { NormEntity } from "./normalize.js";
 import type { ExternalConfig, GraphEdge, GraphNode } from "./types.js";
 
@@ -75,7 +75,7 @@ export function detectGroups(
   }
 
   // A group is external only if it names a chain, a contract, or a tx. A bare
-  // address with no chain/contract/tx is most likely a local Braga wallet — drop it.
+  // address with no chain/contract/tx is most likely a local Arkiv wallet — drop it.
   return [...groups.values()].filter((g) => g.chainId != null || g.contract || g.tx);
 }
 
@@ -95,8 +95,8 @@ export function addExternalForEntity(
   if (cfg?.enabled === false) return;
   // The active network is authoritative: if the caller supplied nativeChainIds,
   // use ONLY those (so a post-sunset reference to the OLD chain is no longer
-  // wrongly treated as native). Braga is only the fallback when none are given.
-  const ids = cfg?.nativeChainIds?.length ? cfg.nativeChainIds : [BRAGA_CHAIN_ID];
+  // wrongly treated as native). Tiramisu is only the fallback when none are given.
+  const ids = cfg?.nativeChainIds?.length ? cfg.nativeChainIds : [TIRAMISU_CHAIN_ID];
   const native = new Set<number | string>();
   for (const id of ids) {
     native.add(id);

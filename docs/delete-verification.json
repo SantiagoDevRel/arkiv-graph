@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-08T23:35:07.560Z",
+  "network": "Tiramisu",
+  "chainId": 7738577,
+  "sdk": "0.8.0",
+  "candidate": "arkiv-graph 0.3.1 (local tarball)",
+  "wallet": "Rabby / Arkiv Wallet",
+  "owner": "0xa618a2736431f24c26f1c8dac9ca00ecc845a1c6",
+  "entityKey": "0x3e185ba0f41e9cde9b643f0592f19354e7e7fba5778e80fe90b435d7e0182a71",
+  "project": "arkiv-graph-delete-check-20260908",
+  "creation": {
+    "hash": "0xe9802ced4bbc12c880b61ac8129a3c0b853b7af1e5863d60ed0f06a1333fc3e2",
+    "status": "success",
+    "block": "200686",
+    "gasUsed": "92064"
+  },
+  "deletion": {
+    "hash": "0xa482fdc487c791fd7783fc35a8d2b527e2910b5dba7d6eb949c9ba837a54c9a9",
+    "status": "success",
+    "block": "201011",
+    "gasUsed": "24510",
+    "operationCount": 1,
+    "operation": 5,
+    "value": "0"
+  },
+  "after": {
+    "getEntity": "No entity found",
+    "scopedApiCount": 0,
+    "socialApiCount": 35,
+    "ui": "Entity deletion confirmed; This app has no active entities"
+  },
+  "scope": "Only the disposable entity created for this verification was deleted. No existing social entity was deleted."
+}

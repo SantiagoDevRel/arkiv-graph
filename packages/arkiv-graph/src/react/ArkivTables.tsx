@@ -17,7 +17,7 @@ export interface ArkivTablesProps {
   /**
    * Enable a per-row "Extend" action (a date picker that extends an entity's
    * expiry). Receives the entity key + the absolute target date the user picked;
-   * perform the actual `extendEntity` write yourself (server-side, signed). When
+   * perform the actual signed `extendEntity` write in your handler. When
    * omitted, no Extend button is shown — read-only views stay read-only.
    */
   onExtendEntity?: ExtendHandler;
@@ -39,7 +39,7 @@ interface ActiveAction {
   now: number;
 }
 
-const ENTITY_KEY_RE = /^0x[0-9a-fA-F]{16,}$/;
+const ENTITY_KEY_RE = /^0x[0-9a-fA-F]{64}$/;
 
 const SANS = "system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
 const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
@@ -136,7 +136,7 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
   const tabStyle = (on: boolean): React.CSSProperties => ({
     border: "none",
     background: on ? theme.accent : "transparent",
-    color: on ? "#160a00" : theme.muted,
+    color: on ? (theme.onAccent ?? "#160a00") : theme.muted,
     fontSize: 12,
     fontWeight: 600,
     padding: "6px 12px",
@@ -155,7 +155,9 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
           return (
             <button
               key={i}
-              onClick={clickable ? () => selectNode(r.targetId) : undefined}
+              type="button"
+              disabled={!clickable}
+              onClick={(event) => { event.stopPropagation(); if (clickable) selectNode(r.targetId); }}
               title={`${r.relationship} ${arrow(r.direction)} ${r.targetLabel}`}
               style={{
                 display: "inline-flex",
@@ -191,7 +193,7 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
       style={{ position: "relative", width: "100%", height, background: theme.background, borderRadius: 12, border: `1px solid ${theme.muted}22`, overflow: "hidden", display: "flex", flexDirection: "column", fontFamily: SANS }}
     >
       {/* tabs */}
-      <div className={scrollClass} style={{ display: "flex", gap: 6, padding: 10, overflowX: "auto", borderBottom: `1px solid ${theme.muted}22`, flexShrink: 0 }}>
+      <div className={scrollClass} role="region" aria-label="Entity types; scroll for more" tabIndex={0} style={{ display: "flex", gap: 6, flexWrap: "wrap", maxHeight: 128, padding: 10, overflowX: "auto", overflowY: "auto", borderBottom: `1px solid ${theme.muted}22`, flexShrink: 0 }}>
         {model.tables.map((t, i) => (
           <button key={t.type} onClick={() => { setTab(i); setSort(null); setSelected(null); }} style={tabStyle(tab === i)}>
             {t.type} <span style={{ opacity: 0.7 }}>{t.count}</span>
@@ -202,7 +204,7 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
       </div>
 
       {/* body */}
-      <div className={scrollClass} style={{ flex: 1, overflow: "auto" }}>
+      <div className={scrollClass} role="region" aria-label="Entity table; scroll horizontally for more columns" tabIndex={0} style={{ flex: 1, overflow: "auto" }}>
         {tab === tableCount ? (
           <SchemaPanel model={model} colorOf={colorOf} theme={theme} />
         ) : active ? (
@@ -218,7 +220,7 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
                       top: 0,
                       textAlign: "left",
                       padding: "8px 12px",
-                      background: "#191919",
+                      background: theme.surface ?? theme.background,
                       color: c.kind === "relationship" ? colorOf(c.label) : theme.muted,
                       fontWeight: 600,
                       fontSize: 11,
@@ -238,9 +240,11 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
                     style={{
                       position: "sticky",
                       top: 0,
+                      right: 0,
+                      zIndex: 2,
                       textAlign: "right",
                       padding: "8px 12px",
-                      background: "#191919",
+                      background: theme.surface ?? theme.background,
                       color: theme.muted,
                       fontWeight: 600,
                       fontSize: 11,
@@ -290,7 +294,7 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
                   {hasActions && (
                     <td
                       onClick={(e) => e.stopPropagation()}
-                      style={{ padding: "8px 12px", textAlign: "right", whiteSpace: "nowrap", cursor: "default" }}
+                      style={{ position: "sticky", right: 0, zIndex: 1, background: theme.background, padding: "8px 12px", textAlign: "right", whiteSpace: "nowrap", cursor: "default" }}
                     >
                       {ENTITY_KEY_RE.test(row.id) ? (
                         <EntityActionsCell
@@ -350,7 +354,7 @@ function SchemaPanel({ model, colorOf, theme }: { model: TablesModel; colorOf: (
         <>
           <div style={{ color: theme.muted, fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, margin: "16px 0 8px" }}>checks</div>
           {model.warnings.map((w, i) => (
-            <div key={i} style={{ color: "#ffb020", padding: "3px 0", display: "flex", gap: 8 }}>
+            <div key={i} style={{ color: theme.warning ?? "#ffb020", padding: "3px 0", display: "flex", gap: 8 }}>
               <span style={{ flexShrink: 0 }}>⚠</span>
               <span>{w}</span>
             </div>
@@ -358,7 +362,7 @@ function SchemaPanel({ model, colorOf, theme }: { model: TablesModel; colorOf: (
         </>
       )}
       {model.warnings.length === 0 && (
-        <div style={{ color: "#43d6a6", marginTop: 14 }}>✓ No schema issues detected in the loaded rows.</div>
+        <div style={{ color: theme.success ?? "#43d6a6", marginTop: 14 }}>✓ No schema issues detected in the loaded rows.</div>
       )}
       <p style={{ color: theme.muted, fontSize: 11, marginTop: 18, opacity: 0.8 }}>
         Arkiv has no joins, foreign keys, or migrations — these relationships are inferred from the link rules you

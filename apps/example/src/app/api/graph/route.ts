@@ -1,65 +1,49 @@
-import { buildTables, fetchArkivGraph } from "arkiv-graph";
-import { EXPLORER, EXTERNAL_CONFIG, NATIVE_CHAIN_ID, PROJECT, publicClient, SOCIAL_LINKS, trustedAddress } from "@/lib/arkiv";
-
+import { buildGraph, buildTables, fetchArkivGraph, type LinkRule } from "arkiv-graph";
+import { EXPLORER, NATIVE_CHAIN_ID, PROJECT, publicClient, SOCIAL_LINKS, trustedAddress } from "@/lib/arkiv";
+import { TYPE_ATTRIBUTE } from "@/lib/config";
+import { isValidAttributeName } from "@arkiv-network/sdk/attr";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
 const ADDR_RE = /^0x[0-9a-fA-F]{40}$/;
-
-function json(data: unknown, init?: ResponseInit) {
-  const body = JSON.stringify(data, (_k, v) => (typeof v === "bigint" ? Number(v) : v));
-  return new Response(body, {
-    ...init,
-    headers: { "content-type": "application/json", "cache-control": "no-store", ...(init?.headers ?? {}) },
+const ATTR_RE = /^[A-Za-z][A-Za-z0-9_]{0,31}$/;
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data, (_k, v) => typeof v === "bigint" ? String(v) : v), {
+    status, headers: { "content-type": "application/json", "cache-control": "no-store" },
   });
 }
-
 export async function GET(req: Request) {
+  const params = new URL(req.url).searchParams;
+  const address = params.get("address") ?? trustedAddress();
+  const project = params.get("project") ?? PROJECT;
+  const projectKey = params.get("projectKey") ?? "project";
+  const typeKey = params.get("typeKey") ?? TYPE_ATTRIBUTE;
+  if (!ADDR_RE.test(address)) return json({ error: "Enter a valid owner wallet address." }, 400);
+  if (![projectKey, typeKey].every(key => ATTR_RE.test(key) && isValidAttributeName(key))) return json({ error: "App and type attributes must use valid, non-reserved attribute names." }, 400);
+  if (new TextEncoder().encode(project).length > 128 || /[\u0000-\u001f\u007f]/.test(project)) return json({ error: "The app value must fit in 128 UTF-8 bytes and contain no control characters." }, 400);
   try {
-    const url = new URL(req.url);
-    const address = url.searchParams.get("address")?.trim();
-
-    if (address && !ADDR_RE.test(address)) {
-      return json({ error: "Invalid address" }, { status: 400 });
+    const result = await fetchArkivGraph({ client: publicClient(), ownedBy: address,
+      attributes: project ? { [projectKey]: project } : {}, explorerUrl: EXPLORER,
+      nativeChainId: NATIVE_CHAIN_ID, limit: 500, typeAttribute: typeKey });
+    // Only apply the social schema to the social app. Other apps get key references.
+    const links: LinkRule[] = projectKey === "project" && project === PROJECT ? SOCIAL_LINKS : [];
+    const directKeys = new Set<string>();
+    const entityKeys = new Set(result.entities.map(e => e.key));
+    for (const entity of result.entities) {
+      const attrs = entity.attributes;
+      if (Array.isArray(attrs)) {
+        for (const attr of attrs) if (entityKeys.has(String(attr.value))) directKeys.add(attr.key);
+      } else for (const [name, attr] of Object.entries(attrs ?? {})) {
+        // A transaction hash is also 32 bytes. Only infer typed keys or fetched targets.
+        if (attr.type === "key" || entityKeys.has(String(attr.value))) directKeys.add(name);
+      }
     }
-
-    const common = {
-      client: publicClient() as any,
-      links: SOCIAL_LINKS,
-      external: EXTERNAL_CONFIG,
-      labelKey: undefined,
-      arkivExplorer: EXPLORER,
-      explorerUrl: EXPLORER,
-      nativeChainId: NATIVE_CHAIN_ID, // active Arkiv network is "native", not external
-      limit: address ? 400 : 600,
-    };
-
-    const result = address
-      ? await fetchArkivGraph({ ...common, ownedBy: address })
-      : await fetchArkivGraph({ ...common, project: PROJECT, createdBy: trustedAddress() });
-
-    const tables = buildTables(result.graph, result.entities, { links: SOCIAL_LINKS, blockTiming: result.blockTiming });
-
-    return json({
-      mode: address ? "wallet" : "demo",
-      address: address ?? trustedAddress(),
-      project: address ? null : PROJECT,
-      explorer: EXPLORER,
-      truncated: !!result.truncated, // true if we hit the read limit (giant DB)
-      loaded: result.entities.length,
-      blockTiming: result.blockTiming
-        ? {
-            currentBlock: Number(result.blockTiming.currentBlock),
-            currentBlockTime: result.blockTiming.currentBlockTime,
-            blockDuration: result.blockTiming.blockDuration,
-          }
-        : null,
-      graph: result.graph,
-      tables,
-    });
-  } catch (err) {
-    console.error("graph route error:", (err as Error)?.message);
-    return json({ error: "Failed to load graph from Arkiv." }, { status: 500 });
+    const resolvedLinks = [...links, ...Array.from(directKeys, attribute => ({ type: "reference" as const, attribute }))];
+    const graph = buildGraph(result.entities, { links: resolvedLinks, typeAttribute: typeKey, blockTiming: result.blockTiming, arkivExplorer: EXPLORER, nativeChainId: NATIVE_CHAIN_ID });
+    const tables = buildTables(graph, result.entities, { links: resolvedLinks, typeAttribute: typeKey, blockTiming: result.blockTiming });
+    return json({ address, project, projectKey, typeKey, graph, tables, loaded: result.entities.length,
+      truncated: result.truncated, blockTiming: result.blockTiming ? { ...result.blockTiming, currentBlock: Number(result.blockTiming.currentBlock) } : null });
+  } catch {
+    return json({ error: "Could not query Tiramisu. Wait a few seconds, then refresh." }, 503);
   }
 }

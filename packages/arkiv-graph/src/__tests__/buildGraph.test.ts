@@ -3,6 +3,8 @@ import { buildGraph } from "../buildGraph.js";
 import { buildTables } from "../tables.js";
 import { detectGroups } from "../external.js";
 import { normalizeEntity } from "../normalize.js";
+import { lookupChain } from "../chains.js";
+import { ARKIV_THEME, nodeColorFor } from "../react/theme.js";
 import type { ArkivEntityLike, LinkRule } from "../types.js";
 
 const hex64 = (n: number) => "0x" + n.toString(16).padStart(64, "0");
@@ -126,7 +128,7 @@ describe("buildGraph", () => {
     expect(ref!.target).toBe(hex64(201));
   });
 
-  it("computes TTL fraction from block timing", () => {
+  it("computes lifetime fraction from block timing", () => {
     const e: ArkivEntityLike = {
       key: USER_A,
       attributes: [{ key: "entityType", value: "user" }],
@@ -184,8 +186,8 @@ describe("external chain detection", () => {
     expect(g.edges.some((e) => e.kind === "external" && e.source === POST_1)).toBe(true);
   });
 
-  it("does NOT treat Braga's own chainId as external", () => {
-    const entities = [entity(POST_1, "post", { text: "x" }, { sourceChainId: 60138453102 })];
+  it("does NOT treat Tiramisu's own chainId as external", () => {
+    const entities = [entity(POST_1, "post", { text: "x" }, { sourceChainId: 7738577 })];
     const g = buildGraph(entities);
     expect(g.nodes.some((n) => n.kind === "external")).toBe(false);
   });
@@ -209,6 +211,33 @@ describe("external chain detection", () => {
 });
 
 describe("buildTables", () => {
+  it("uses the configured type column and the same first attribute value as the graph", () => {
+    const e = entity(USER_A, "legacy", {}, { entity_type: "custom", handle: "first" });
+    (e.attributes as { key: string; value: string }[]).push({ key: "handle", value: "last" });
+    const graph = buildGraph([e], { typeAttribute: "entity_type", labelKey: "handle" });
+    const model = buildTables(graph, [e], { typeAttribute: "entity_type" });
+    expect(graph.nodes[0]!.label).toBe("first");
+    expect(model.tables[0]!.rows[0]!.cells["attr:handle"]).toBe("first");
+    expect(model.tables[0]!.columns.some(c => c.id === "attr:entity_type")).toBe(false);
+    expect(model.tables[0]!.columns.some(c => c.id === "attr:entityType")).toBe(true);
+  });
+
+  it("preserves join entities without a drawable relationship, once per entity", () => {
+    const entities = [
+      entity(USER_A, "user", {}),
+      entity(LIKE_1, "like", {}, { userKey: USER_A }),
+      entity(COMMENT_1, "like", {}, { userKey: USER_A, postKey: USER_A }),
+    ];
+    const graph = buildGraph(entities, { links: SOCIAL_LINKS });
+    const model = buildTables(graph, entities, { links: SOCIAL_LINKS });
+    expect(graph.nodes.filter(n => !n.unresolved).map(n => n.id)).toEqual(expect.arrayContaining(entities.map(e => e.key)));
+    const table = model.tables.find(t => t.type === "like")!;
+    expect(table.count).toBe(2);
+    expect(table.rows.map(r => r.id)).toEqual([LIKE_1, COMMENT_1]);
+    expect(table.rows.every(r => (r.cells._from as unknown[]).length === 0)).toBe(true);
+    expect(model.warnings.some(w => w.includes("2 join entities"))).toBe(true);
+  });
+
   it("builds collection tables per type, a junction table for joins, and a relationship summary", () => {
     const entities = [
       entity(USER_A, "user", { handle: "alice" }),
@@ -235,5 +264,26 @@ describe("buildTables", () => {
     expect(Array.isArray(cell) && cell[0]?.targetId).toBe(USER_A);
     // relationship summary counts edges
     expect(t.relationships.find((r) => r.label === "likes")?.count).toBe(1);
+  });
+});
+
+describe("untrusted type names and explorer paths", () => {
+  it("does not treat prototype properties as chain metadata or theme colors", () => {
+    for (const type of ["__proto__", "constructor", "toString"]) {
+      expect(lookupChain(type)).toBeUndefined();
+      expect(typeof nodeColorFor({ id: USER_A, kind: "entity", label: type, entityType: type })).toBe("string");
+    }
+  });
+  it("chooses custom colors independently of previous graphs and themes", () => {
+    const node = { id: USER_A, kind: "entity" as const, label: "custom", entityType: "custom" };
+    const before = nodeColorFor(node);
+    nodeColorFor({ ...node, entityType: "another" });
+    expect(nodeColorFor(node)).toBe(before);
+    expect(nodeColorFor(node, { ...ARKIV_THEME, palette: ["#abcdef"] })).toBe("#abcdef");
+    expect(nodeColorFor(node, { ...ARKIV_THEME, palette: [] })).toBe(ARKIV_THEME.accent);
+  });
+  it("encodes attribute references as a path segment instead of URL query syntax", () => {
+    const graph = buildGraph([entity(USER_A, "post", {}, { authorKey: "wrong?#/path" })], { links: [{ type: "reference", attribute: "authorKey" }] });
+    expect(graph.nodes.find(n => n.unresolved)!.explorerUrl).toContain("wrong%3F%23%2Fpath");
   });
 });

@@ -1,67 +1,52 @@
 # arkiv-graph
 
-**See your [Arkiv](https://docs.arkiv.network) database as a live graph.** A drop-in library + a real, on-chain showcase.
+Interactive graphs and tables for Arkiv entities. Define relationships once,
+inspect your app data in either view, and optionally wire wallet-signed Lifetime
+Extension and single-entity deletion. **These packages are intended for testnet use.**
 
-- 📦 **Library** ([`packages/arkiv-graph`](./packages/arkiv-graph)) — `npm i arkiv-graph`. Turns Arkiv entities into an interactive **force-directed graph** (drag a node to pin it) **or a Supabase-like tables view**. Nodes/rows are entities; edges/foreign-keys are the relationships you define; references to other chains appear as external nodes (drawn without reading those chains).
-- 🌐 **Showcase** ([`apps/example`](./apps/example)) — **https://arkiv-graph-example.vercel.app**. A tiny social app (users, posts, comments, follows, likes) stored **entirely on an Arkiv testnet** (Braga today), visualized with the library — Graph **and** Tables views. From the Tables view you can **extend** or **delete** any entity, and **post** new ones — every write is signed by **your own wallet** (viem + MetaMask), never a server key. Only an entity's owner can change it; a non-owner gets a clear "you're not the owner" message.
+**arkiv-graph@0.3.1 is published on npm.** The local and hosted samples consume
+that exact registry release on Tiramisu. Explore the public social example without
+a wallet; connect your own wallet to create and manage your app's entities.
 
-![arkiv-graph graph view](./docs/screenshot.png)
-![arkiv-graph tables view](./docs/tables.png)
+- [npm package](https://www.npmjs.com/package/arkiv-graph)
+- [Package README: install, API, compatibility, examples](./packages/arkiv-graph/README.md)
+- [Sample app: clean checkout and wallet workflow](./apps/example/README.md)
+- [Hosted sample](https://arkiv-graph-example.vercel.app)
+- [Verification evidence and release status](./docs/release-0.3.1.md)
+- [Official logo provenance and theme](./docs/brand-assets.md)
+- Agent guides: [package consumer](./packages/arkiv-graph/AGENTS.md),
+  [sample consumer](./apps/example/AGENTS.md), [repo maintainer](./AGENTS.md).
+  Give the relevant guide to your agent explicitly; npm installation does not
+  automatically load instructions from node_modules.
 
-> **Network plug-and-play:** Arkiv testnets rotate (Braga is sunset ~mid-2026). Nothing is hardcoded to one network — swapping is an **env/config change**, never a code edit. See [Pointing at a different Arkiv network](./packages/arkiv-graph/README.md#pointing-at-a-different-arkiv-network-plug-and-play) and the [`.env.local.example`](./apps/example/.env.local.example).
+## Run the sample
 
-## Why
-
-The Arkiv entity explorer is a flat list — you can't *see* how records relate or spot clusters. And because Arkiv has no joins, the data model is invisible until you draw it. `arkiv-graph` makes the relationships you've designed visible, debuggable, and demoable — and shows where your data reaches into other chains.
-
-## Monorepo layout
-
-```
-arkiv-graph/
-├─ packages/arkiv-graph/   # the published library (core + /react)
-│  ├─ src/                 # buildGraph, link rules, external detection, fetch, <ArkivGraph>
-│  └─ README.md            # ← library docs (install, API, link-rule cookbook)
-├─ apps/example/           # the Next.js showcase (arkiv-graph-example.vercel.app)
-│  ├─ src/app/             # page, showcase client, /api/graph (read-only)
-│  ├─ src/lib/             # arkiv.ts (server reads) + wallet-client.ts (client-side writes via the user's wallet)
-│  └─ scripts/seed.mjs     # seeds the social demo into Braga (one batch tx, burner-signed)
-└─ docs/
-```
-
-## Develop
+Node.js 22, pnpm 9:
 
 ```bash
-pnpm install
-pnpm build:lib                 # build the library (tsup → dist)
-pnpm test                      # library unit tests (vitest)
-
-# showcase:
-cp apps/example/.env.local.example apps/example/.env.local   # add a Braga burner PRIVATE_KEY
-pnpm seed                      # seed the demo into Braga (skips if already seeded; --reseed to rebuild)
-pnpm dev                       # → http://localhost:3012
+git clone --branch v0.3.1-docs.1 https://github.com/SantiagoDevRel/arkiv-graph.git
+cd arkiv-graph
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
-The `PRIVATE_KEY` is a **throwaway Braga testnet burner** used only to **seed** the demo and as the read scope — the running app never signs with it. **Live writes (extend / delete / post) are signed by the visitor's own wallet** (viem + MetaMask), so no private key is ever in the app or the browser bundle. Never use a mainnet key. Get test GLM (for the burner to seed, and for your own wallet to write) at the [Braga faucet](https://braga.hoodi.arkiv.network/faucet/).
+Open http://localhost:3012. The sample consumes `arkiv-graph@0.3.1` from npm.
+No env file or signing key is required to run/read it.
+Connect an injected wallet and use test GLM to create your own social sample on Tiramisu.
 
-## Library in 10 lines
+## Develop the library
 
-```tsx
-import { fetchArkivGraph } from "arkiv-graph";
-import { ArkivGraph } from "arkiv-graph/react";
-
-const { graph } = await fetchArkivGraph({
-  project: "my-app",
-  createdBy: "0xYourWallet",
-  links: [
-    { type: "reference", attribute: "authorKey", targetType: "user", label: "by" },
-    { type: "join", entityType: "like", sourceAttr: "userKey", targetAttr: "postKey", label: "likes" },
-  ],
-});
-// <ArkivGraph data={graph} height={600} />
+```bash
+pnpm build:lib
+pnpm test
+pnpm test:wallet
+pnpm typecheck
+pnpm build
 ```
 
-Full docs: [`packages/arkiv-graph/README.md`](./packages/arkiv-graph/README.md) · LLM integration guide: [`AGENTS.md`](./AGENTS.md).
+`packages/arkiv-graph` holds the core and React entry; `apps/example` holds the
+consumer dapp. For a new release, verify a tarball in a disposable consumer,
+publish, then update the sample's exact npm version and lockfile.
+See the verification document for the actual published status and evidence.
 
-## License
-
-MIT © Arkiv DevRel
+MIT · Arkiv DevRel
