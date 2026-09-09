@@ -9,6 +9,11 @@
   --font-brutal: "Brutal Type", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f6f4ef; --surface: #e9e6de; --border: #c6c3bb;
+  --text: #111111; --muted: #5f5d58;
+}
 * { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: #555 var(--bg); }
 html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-mono); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
 button, input { font: inherit; }
@@ -22,17 +27,26 @@ h1, h2, h3 { font-family: var(--font-brutal); font-weight: 500; line-height: 1.2
 h1 { font-size: clamp(26px, 3vw, 36px); }
 h3 { font-size: 22px; }
 .wrap { max-width: 1440px; padding: 0 32px 32px; margin: 0 auto; }
-.site-header { min-height: 88px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding: 20px 0; }
-.brand { font-family: var(--font-brutal); font-size: 26px; font-weight: 900; white-space: nowrap; }
+.site-header { min-height: 88px; display: grid; grid-template-columns: auto 1fr auto auto; gap: 20px; align-items: center; border-bottom: 1px solid var(--border); padding: 20px 0; }
+.brand { display: flex; align-items: center; gap: 16px; white-space: nowrap; }
+.brand img { width: 112px; height: auto; display: block; }
+.brand .logo-light { display: none; }
+:root[data-theme="light"] .brand .logo-dark { display: none; }
+:root[data-theme="light"] .brand .logo-light { display: block; }
 .brand span { font-family: var(--font-mono); font-size: 17px; font-weight: 400; color: var(--muted); margin-left: 6px; }
-.network-badge { font-size: 12px; color: var(--orange); border: 1px solid #fe744640; background: #fe74460a; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+.network-badge { justify-self: start; font-size: 12px; color: var(--orange); border: 1px solid #fe744640; background: #fe74460a; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
 .wallet-control { margin-left: auto; }
+.theme-toggle { display: grid; place-items: center; flex: 0 0 44px; padding: 0; width: 44px; }
 .intro { margin: 28px 0; }
 .intro p { margin: 8px 0 0; color: var(--muted); max-width: 850px; }
 .btn { min-height: 44px; padding: 9px 16px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--text); font-size: 14px; line-height: 1.4; }
 .btn:hover:not(:disabled) { background: var(--surface); border-color: #666; }
 .btn.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
 .btn.primary:hover:not(:disabled) { background: #2026b7; }
+.btn.wallet-connect { background: var(--orange); border-color: var(--orange); color: #111111; font-weight: 600; }
+.btn.wallet-connect:hover:not(:disabled) { background: #e5673f; border-color: #e5673f; }
+:root[data-theme="light"] .network-badge { color: var(--blue); }
+:root[data-theme="light"] a:hover, :root[data-theme="light"] .text-button:hover { color: var(--blue); }
 .dashboard-controls { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
 .toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); min-width: 0; }
@@ -62,12 +76,19 @@ input { min-height: 44px; min-width: 0; width: 100%; padding: 9px 12px; backgrou
 .foot nav { display: flex; gap: 24px; margin-left: auto; }
 .foot small { flex-basis: 100%; font-size: 12px; }
 @media (max-width: 900px) { .wrap { padding-inline: 24px; } .advanced-fields { grid-template-columns: repeat(2,minmax(0,1fr)); } .owner-field { grid-column: 1/-1; } .app-field { max-width: none; } }
+@media (max-width: 900px) {
+  .site-header { grid-template-columns: 1fr auto; }
+  .theme-toggle { grid-column: 2; grid-row: 1; justify-self: end; }
+  .network-badge { grid-column: 1; grid-row: 2; }
+  .wallet-control { grid-column: 2; grid-row: 2; }
+}
 @media (max-width: 600px) {
   .wrap { padding-inline: 16px; }
   .site-header { gap: 12px; padding: 16px 0; }
-  .brand { font-size: 24px; }
-  .network-badge { margin-left: auto; }
-  .wallet-control { width: 100%; margin-left: 0; }
+  .brand { gap: 10px; }
+  .brand img { width: 100px; }
+  .network-badge { grid-column: 1/-1; }
+  .wallet-control { grid-column: 1/-1; grid-row: 3; width: 100%; margin-left: 0; }
   .wallet-control .btn { width: 100%; }
   .intro { margin: 24px 0; }
   .toolbar { gap: 10px; }

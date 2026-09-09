@@ -4,13 +4,13 @@
 
 **These packages are intended for testnet use.**
 
-**Registry availability:** run `npm view arkiv-graph@0.3.1 version` before installation. If this release has not reached npm yet, use the [published 0.3.0 guide](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.0/packages/arkiv-graph/README.md). A local checkout is not proof of publication.
+**Published release:** `arkiv-graph@0.3.1`. Verify it with `npm view arkiv-graph@0.3.1 version`; the hosted sample consumes this exact registry version.
 
 Version **0.3.1** targets **@arkiv-network/sdk 0.8.0**, **viem 2.56.3**, **Node.js 22.22.3**, and **Tiramisu testnet (7738577)**. SDK 0.6/0.7 clients are not supported by `fetchArkivGraph` in this release. Legacy plain entity arrays remain accepted by `buildGraph`.
 
 Nodes are your entities. Edges are the relationships *you* define (Arkiv has no joins — you declare how entities relate). References to other chains show up as **external nodes**, drawn purely from what your entities already store — `arkiv-graph` never reads those chains.
 
-> The existing hosted sample still uses the retired Braga network; it is not the Tiramisu sample described here. Run the sample locally. Release and verification status are recorded in [verification.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/feat/tiramisu-dashboard/docs/verification.md).
+> Explore the [Tiramisu sample](https://arkiv-graph-example.vercel.app) without a wallet. See [release evidence](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1/docs/release-0.3.1.md) for the tested versions, audits and limitations.
 
 
 
@@ -204,6 +204,14 @@ theme and mutation callback types come from `arkiv-graph/react`:
 ```ts
 import type { ArkivGraphTheme } from "arkiv-graph/react";
 ```
+
+Pass the same `theme` to `ArkivGraph` and `ArkivTables`. In 0.3.1, optional
+`surface`, `colorScheme` (`"dark"` or `"light"`), `onAccent`, `danger`, `success`
+and `warning` colors also style sticky headers, detail/action panels and native
+date inputs. Existing theme objects remain compatible. Set contrasting text,
+muted, relationship and accent colors as well as the background for light mode;
+see the [sample theme configuration](https://github.com/SantiagoDevRel/arkiv-graph/blob/feat/tiramisu-dashboard/apps/example/src/lib/themes.ts).
+The library does not change the host page's theme or persist preferences.
 
 `detectGroups(entity, config?, internalKeys?)` accepts one normalized `NormEntity`,
 not a graph. `config` is `ExternalConfig`; `internalKeys` is `Set<string>`.

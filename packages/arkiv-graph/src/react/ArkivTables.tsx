@@ -136,7 +136,7 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
   const tabStyle = (on: boolean): React.CSSProperties => ({
     border: "none",
     background: on ? theme.accent : "transparent",
-    color: on ? "#160a00" : theme.muted,
+    color: on ? (theme.onAccent ?? "#160a00") : theme.muted,
     fontSize: 12,
     fontWeight: 600,
     padding: "6px 12px",
@@ -220,7 +220,7 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
                       top: 0,
                       textAlign: "left",
                       padding: "8px 12px",
-                      background: "#191919",
+                      background: theme.surface ?? theme.background,
                       color: c.kind === "relationship" ? colorOf(c.label) : theme.muted,
                       fontWeight: 600,
                       fontSize: 11,
@@ -244,7 +244,7 @@ export function ArkivTables({ model, graph, theme = ARKIV_THEME, height = 600, o
                       zIndex: 2,
                       textAlign: "right",
                       padding: "8px 12px",
-                      background: "#191919",
+                      background: theme.surface ?? theme.background,
                       color: theme.muted,
                       fontWeight: 600,
                       fontSize: 11,
@@ -354,7 +354,7 @@ function SchemaPanel({ model, colorOf, theme }: { model: TablesModel; colorOf: (
         <>
           <div style={{ color: theme.muted, fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, margin: "16px 0 8px" }}>checks</div>
           {model.warnings.map((w, i) => (
-            <div key={i} style={{ color: "#ffb020", padding: "3px 0", display: "flex", gap: 8 }}>
+            <div key={i} style={{ color: theme.warning ?? "#ffb020", padding: "3px 0", display: "flex", gap: 8 }}>
               <span style={{ flexShrink: 0 }}>⚠</span>
               <span>{w}</span>
             </div>
@@ -362,7 +362,7 @@ function SchemaPanel({ model, colorOf, theme }: { model: TablesModel; colorOf: (
         </>
       )}
       {model.warnings.length === 0 && (
-        <div style={{ color: "#43d6a6", marginTop: 14 }}>✓ No schema issues detected in the loaded rows.</div>
+        <div style={{ color: theme.success ?? "#43d6a6", marginTop: 14 }}>✓ No schema issues detected in the loaded rows.</div>
       )}
       <p style={{ color: theme.muted, fontSize: 11, marginTop: 18, opacity: 0.8 }}>
         Arkiv has no joins, foreign keys, or migrations — these relationships are inferred from the link rules you

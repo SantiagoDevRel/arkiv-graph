@@ -1,5 +1,8 @@
 # Verification — arkiv-graph 0.3.0
 
+> Historical checkpoints below retain their status at the time. **0.3.1 is now
+> published and deployed on Tiramisu.** See [current release evidence](./release-0.3.1.md).
+
 Published npm release, checked on 2026-09-08. **These packages are intended for testnet use.**
 
 ## Release status

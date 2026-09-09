@@ -5,11 +5,24 @@ import type { Graph, TablesModel } from "arkiv-graph";
 import { connectWallet, createSocialSampleWithWallet, deleteEntityWithWallet, extendEntityWithWallet, getConnectedAccount, hasWallet, onAccountsChanged, walletErrorMessage } from "@/lib/wallet-client";
 import { DEMO_OWNER, PROJECT, PUBLIC_CHAIN, TYPE_ATTRIBUTE } from "@/lib/config";
 import { SAMPLE_COUNT, SAMPLE_DAYS } from "@/lib/social-sample";
+import { DASHBOARD_THEMES } from "@/lib/themes";
+import Image from "next/image";
 
 interface GraphResponse { address: string; project: string; graph: Graph; tables: TablesModel; loaded: number; truncated: boolean; blockTiming: { currentBlock: number } | null }
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const INITIAL = { address: DEMO_OWNER, project: PROJECT, projectKey: "project", typeKey: TYPE_ATTRIBUTE };
 export function Showcase() {
+  const [mode, setMode] = useState<"dark" | "light">("dark");
+  useEffect(() => {
+    setMode(document.documentElement.dataset.theme === "light" ? "light" : "dark");
+  }, []);
+  const toggleTheme = () => {
+    const next = mode === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    setMode(next);
+    try { localStorage.setItem("arkiv-graph:theme", next); } catch { /* The control works without persistence. */ }
+  };
+  const theme = DASHBOARD_THEMES[mode];
   const [scope, setScope] = useState(INITIAL);
   const [form, setForm] = useState(INITIAL);
   const [account, setAccount] = useState<string | null>(null);
@@ -44,7 +57,12 @@ export function Showcase() {
     const controller = new AbortController();
     setLoading(true); setError(""); setData(null);
     void fetch(`/api/graph?${new URLSearchParams(scope)}`, { cache: "no-store", signal: controller.signal })
-      .then(async response => { const result = await response.json(); if (!response.ok) throw new Error(result.error); return result; })
+      .then(async response => {
+        if (response.status === 429) throw new Error("Too many queries. Wait a minute, then select Retry.");
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+        return result;
+      })
       .then(result => { if (!controller.signal.aborted) setData(result); })
       .catch(e => { if (!controller.signal.aborted) setError(e.message); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
@@ -98,12 +116,17 @@ export function Showcase() {
   const isPublicExample = scope.address.toLowerCase() === DEMO_OWNER.toLowerCase() && scope.project === PROJECT && scope.projectKey === "project" && scope.typeKey === TYPE_ATTRIBUTE;
   return <>
     <header className="site-header">
-      <a className="brand" href="/">[ ARKIV ] <span>GRAPH</span></a>
+      <a className="brand" href="/" aria-label="Arkiv Graph home"><Image className="logo-dark" src="/arkiv-wordmark-white.svg" alt="Arkiv" width={1389} height={320} priority /><Image className="logo-light" src="/arkiv-wordmark-black.svg" alt="Arkiv" width={1389} height={320} priority /><span>GRAPH</span></a>
       <span className="network-badge">Tiramisu testnet</span>
       <div className="wallet-control">
         {account ? <button className="btn" onClick={() => showWallet(account)} disabled={creating}>View my app · {short(account)}</button> :
-          <button className="btn primary" onClick={connect} disabled={busy || !walletPresent}>{busy ? "Connecting…" : "Connect wallet"}</button>}
+          <button className="btn wallet-connect" onClick={connect} disabled={busy || !walletPresent}>{busy ? "Connecting…" : "Connect wallet"}</button>}
       </div>
+      <button className="btn theme-toggle" onClick={toggleTheme} aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`} title={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          {mode === "dark" ? <><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" /></> : <path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z" />}
+        </svg>
+      </button>
     </header>
     <section className="intro"><h1>Your app, in tables and a graph.</h1><p>Query your entities and their relationships. Extend or delete entities with your wallet.</p></section>
     {isPublicExample && <p className="help">Public social example. Explore without a wallet; connect yours to view or create your own app.</p>}
@@ -140,7 +163,7 @@ export function Showcase() {
     <section className="graph-shell" aria-label="App entities" aria-busy={loading}>
       {loading ? <div className="empty-state" role="status">Querying your app's entities…</div> : error ?
         <div className="empty-state" role="alert"><p>{error}</p><button className="btn" onClick={() => setRevision(v => v + 1)}>Retry</button></div> : data?.loaded ?
-        view === "tables" ? <ArkivTables model={data.tables} graph={data.graph} height={600} signerAddress={account ?? undefined} onExtendEntity={canManageScope ? extend : undefined} onDeleteEntity={canManageScope ? remove : undefined} onMutated={() => setRevision(v => v + 1)} /> : <ArkivGraph data={data.graph} height={600} /> :
+        view === "tables" ? <ArkivTables model={data.tables} graph={data.graph} theme={theme} height={600} signerAddress={account ?? undefined} onExtendEntity={canManageScope ? extend : undefined} onDeleteEntity={canManageScope ? remove : undefined} onMutated={() => setRevision(v => v + 1)} /> : <ArkivGraph data={data.graph} theme={theme} height={600} /> :
         <div className="empty-state"><h3>{isOwnSample ? "Create your first sample" : "This app has no active entities"}</h3><p>{isPublicExample ? "The public example has no active entities. Its entities may have expired. You can create your own sample with your wallet." : "No entities match this wallet and these attributes. View the public example, or create your own sample with your wallet."}</p><button className="btn primary" onClick={() => setShowCreate(true)}>Prepare social sample</button></div>}
     </section>
     {data?.truncated && <p className="notice">Partial results: {data.loaded} entities loaded. Filter by app to narrow the query.</p>}

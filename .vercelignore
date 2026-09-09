@@ -16,6 +16,7 @@
 !/apps/example/src
 /apps/example/src/app/settings-mockup.tsx
 !/apps/example/public
+/apps/example/public/icon.svg
 !/packages
 /packages/*
 !/packages/arkiv-graph

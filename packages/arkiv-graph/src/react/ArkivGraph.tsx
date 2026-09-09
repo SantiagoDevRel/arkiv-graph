@@ -302,7 +302,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
       }
       if (selected && selected.id === node.id) {
         ctx.lineWidth = 2.5 / scale;
-        ctx.strokeStyle = "#ffffff";
+        ctx.strokeStyle = theme.text;
         ctx.stroke();
       }
       if (node.__pinned) {
@@ -453,7 +453,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
             padding: "7px 10px",
             fontSize: 12,
             color: theme.text,
-            background: "rgba(26,26,26,0.9)",
+            background: theme.surface ?? theme.background,
             border: `1px solid ${theme.muted}44`,
             borderRadius: 8,
             outline: "none",
@@ -488,7 +488,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
                   fontSize: 11,
                   fontFamily: SANS,
                   color: off ? theme.muted : theme.text,
-                  background: "rgba(26,26,26,0.85)",
+                  background: theme.surface ?? theme.background,
                   border: `1px solid ${c.color}${off ? "22" : "88"}`,
                   borderRadius: 20,
                   padding: "3px 9px",
@@ -567,7 +567,7 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
             fontSize: 11,
             color: theme.muted,
             fontFamily: SANS,
-            background: "rgba(26,26,26,0.78)",
+            background: theme.surface ?? theme.background,
             borderRadius: 8,
             padding: "7px 10px",
             maxWidth: "56%",
@@ -647,8 +647,8 @@ function ZoomButton({
         justifyContent: "center",
         fontSize: small ? 14 : 19,
         lineHeight: 1,
-        color: hover ? "#160a00" : theme.text,
-        background: hover ? theme.accent : "rgba(26,26,26,0.9)",
+        color: hover ? (theme.onAccent ?? "#160a00") : theme.text,
+        background: hover ? theme.accent : (theme.surface ?? theme.background),
         border: `1px solid ${hover ? theme.accent : theme.muted + "44"}`,
         borderRadius: 8,
         cursor: "pointer",

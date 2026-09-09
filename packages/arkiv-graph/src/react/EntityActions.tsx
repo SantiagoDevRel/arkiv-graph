@@ -6,7 +6,7 @@ import { ARKIV_THEME, type ArkivGraphTheme } from "./theme.js";
 
 const SANS = "system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
 const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
-const DANGER = "#ff5d6c";
+
 
 // ── public callback types ────────────────────────────────────────────────────
 
@@ -134,7 +134,7 @@ export function EntityActionsCell({
             e.stopPropagation();
             onDelete();
           }}
-          style={btn(DANGER)}
+          style={btn((theme.danger ?? "#ff5d6c"))}
         >
           ✕ Delete
         </button>
@@ -247,7 +247,7 @@ export function EntityActionPanel({
   };
 
   const pending = status === "pending";
-  const accent = kind === "extend" ? theme.accent : DANGER;
+  const accent = kind === "extend" ? theme.accent : (theme.danger ?? "#ff5d6c");
 
   return (
     <>
@@ -281,7 +281,7 @@ export function EntityActionPanel({
           width: "min(380px, calc(100% - 32px))",
           maxHeight: "calc(100% - 32px)",
           overflowY: "auto",
-          background: "rgba(26,26,26,0.98)",
+          background: theme.surface ?? theme.background,
           border: `1px solid ${accent}66`,
           borderRadius: 12,
           padding: 16,
@@ -311,7 +311,7 @@ export function EntityActionPanel({
         <div style={{ color: theme.muted, fontSize: 11, fontFamily: MONO, marginBottom: 10 }}>{short(row.id)}</div>
 
         {notOwner && status !== "done" && (
-          <div style={{ background: `${DANGER}14`, border: `1px solid ${DANGER}55`, borderRadius: 8, padding: "8px 10px", marginBottom: 12, fontSize: 12, color: theme.text, lineHeight: 1.45 }}>
+          <div style={{ background: `${(theme.danger ?? "#ff5d6c")}14`, border: `1px solid ${(theme.danger ?? "#ff5d6c")}55`, borderRadius: 8, padding: "8px 10px", marginBottom: 12, fontSize: 12, color: theme.text, lineHeight: 1.45 }}>
             ⚠ This entity is owned by <code style={{ fontFamily: MONO }}>{short(row.owner)}</code>. Only its owner can{" "}
             {kind === "extend" ? "extend" : "delete"} it{signer ? <> — your signer is <code style={{ fontFamily: MONO }}>{short(signerAddress)}</code></> : null}.
           </div>
@@ -348,10 +348,10 @@ export function EntityActionPanel({
                 padding: "8px 10px",
                 fontSize: 13,
                 fontFamily: SANS,
-                colorScheme: "dark",
+                colorScheme: theme.colorScheme ?? "dark",
               }}
             />
-            <div style={{ marginTop: 8, fontSize: 12, color: targetTooEarly ? DANGER : theme.muted, lineHeight: 1.5 }}>
+            <div style={{ marginTop: 8, fontSize: 12, color: targetTooEarly ? (theme.danger ?? "#ff5d6c") : theme.muted, lineHeight: 1.5 }}>
               {targetTooEarly ? (
                 "Pick a date after the current expiry — you can only extend forward."
               ) : (
@@ -370,7 +370,7 @@ export function EntityActionPanel({
         )}
 
         {status === "error" && (
-          <div role="alert" style={{ marginTop: 12, background: `${DANGER}14`, border: `1px solid ${DANGER}55`, borderRadius: 8, padding: "8px 10px", fontSize: 12.5, color: theme.text, lineHeight: 1.45 }}>
+          <div role="alert" style={{ marginTop: 12, background: `${(theme.danger ?? "#ff5d6c")}14`, border: `1px solid ${(theme.danger ?? "#ff5d6c")}55`, borderRadius: 8, padding: "8px 10px", fontSize: 12.5, color: theme.text, lineHeight: 1.45 }}>
             ✕ {message}
             {result?.txUrl && <p><a href={result.txUrl} target="_blank" rel="noopener noreferrer" style={{ color: theme.accent }}>View transaction ↗</a></p>}
           </div>
@@ -402,7 +402,7 @@ export function EntityActionPanel({
               disabled={pending || (kind === "extend" && targetTooEarly)}
               style={{
                 background: accent,
-                color: kind === "extend" ? "#160a00" : "#fff",
+                color: kind === "extend" ? (theme.onAccent ?? "#160a00") : "#fff",
                 border: "none",
                 borderRadius: 8,
                 padding: "7px 14px",
@@ -442,7 +442,7 @@ function ResultView({
   const extendRes = result as ExtendEntityResult | null;
   return (
     <div style={{ fontSize: 13, color: theme.text, lineHeight: 1.6 }}>
-      <div style={{ color: "#43d6a6", fontWeight: 700, marginBottom: 8 }}>
+      <div style={{ color: theme.success ?? "#43d6a6", fontWeight: 700, marginBottom: 8 }}>
         ✓ {kind === "extend" ? "Extended on-chain" : "Deleted on-chain"}
       </div>
       {kind === "extend" && (

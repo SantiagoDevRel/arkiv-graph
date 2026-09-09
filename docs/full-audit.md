@@ -1,5 +1,9 @@
 # Full repository audit — 2026-09-08
 
+> This is the historical pre-publication audit. Its publication gates have since
+> closed; see [0.3.1 release evidence](./release-0.3.1.md), including the final
+> Claude, native Grok and Muse reviews and deployed theme checks.
+
 ## Status and scope
 
 The source fixes below have passed local verification. **The patched npm version

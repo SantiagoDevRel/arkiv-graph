@@ -3,17 +3,19 @@
 **These packages are intended for testnet use.**
 
 A small social app on Tiramisu, viewed through `arkiv-graph`.
-This checkout consumes **arkiv-graph@0.3.0 from npm**, pinned in its manifest
+This checkout consumes **arkiv-graph@0.3.1 from npm**, pinned in its manifest
 and lockfile. It does not require building the local library.
-The improved deletion confirmation (full entity key and explicit limits) is in
-the unpublished 0.3.1 candidate. Until that version is published and pinned here,
-this checkout uses 0.3.0's older confirmation wording; do not treat its wording
-as a guarantee of historical erasure. The candidate was separately verified in
-an isolated consumer. See [deletion verification](../../docs/delete-verification.json).
+The 0.3.1 confirmation shows the full entity key and explicit deletion limits.
+See [deletion verification](../../docs/delete-verification.json).
 One dataset powers the graph and tables. Connect your wallet, create
 the sample, inspect a user/post/comment or relation, extend an entity's life, or delete an entity you own.
 The fictional social content is public test data; chain ownership belongs to the
 wallet that creates it.
+
+The header's sun/moon control switches the entire dashboard between dark and
+light. Dark is the first-visit default; an explicit choice persists locally when
+browser storage is available. The header and favicon use unmodified official
+Drive SVGs. See [asset provenance](../../docs/brand-assets.md).
 
 ## Clean checkout
 
@@ -21,14 +23,14 @@ Prerequisites: Node.js 22 and pnpm 9. No env file, access key or signing key is
 needed to run the app or read public entities.
 
 ```bash
-git clone --branch feat/tiramisu-dashboard https://github.com/SantiagoDevRel/arkiv-graph.git
+git clone --branch v0.3.1 https://github.com/SantiagoDevRel/arkiv-graph.git
 cd arkiv-graph
 pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open http://localhost:3012. The existing hosted sample still runs the older
-release and is not evidence of this version's Tiramisu flow.
+Open http://localhost:3012. The [hosted sample](https://arkiv-graph-example.vercel.app)
+also consumes npm 0.3.1 on Tiramisu; see [release evidence](../../docs/release-0.3.1.md).
 
 1. Explore the public social example without connecting. Select **Connect wallet**
    and authorize your wallet on Tiramisu when you want to write. Connecting keeps
@@ -75,10 +77,11 @@ block-time estimates. The UI restricts extension and deletion to the connected o
 only the selected entity: related entities remain, potentially with unresolved
 references. There is no cascade, undo, or guarantee of erasing historical copies. Testnet entities can expire and the network can reset.
 
-Before a public deployment, configure request limits at the hosting edge or RPC
-provider. The read-only API is unauthenticated and bounds each query, but does not
-provide a distributed rate limiter; abusive traffic can exhaust the RPC allowance.
-Do not expose the candidate publicly until that operational control is verified.
+The hosted sample limits `GET /api/graph` at the Vercel edge to 60 requests per
+IP per minute, returning HTTP 429 above that limit. People sharing an IP share
+the allowance. Before deploying your own copy, configure and verify equivalent
+hosting-edge or RPC-provider limits: the unauthenticated, bounded read route does
+not implement a distributed rate limiter in application code.
 
 ## Troubleshooting
 
@@ -87,7 +90,9 @@ Do not expose the candidate publicly until that operational control is verified.
 - Custom attribute names in the sample are lowercase snake_case. Tiramisu rejected
   uppercase names in a real pre-sign simulation; use the shared `TYPE_ATTRIBUTE`
   config (`entity_type`) and the matching social link rules.
-- RPC unavailable/rate-limited: use Retry after a delay; the app never fabricates data.
+- RPC unavailable: use Retry after a delay; the app never fabricates data.
+- Too many queries (429): wait one minute, then select Retry. A shared IP can
+  exhaust the hosted allowance even when your own tab made few requests.
 - Wallet rejects: no mutation is reported successful. Read the prompt and retry
   only if no transaction was already submitted.
 - Wrong owner/account/network: use the wallet that owns the entity and Tiramisu.
@@ -120,7 +125,7 @@ pnpm typecheck
 pnpm build
 ```
 
-See [verification.md](../../docs/verification.md) for exact tested versions,
+See [release evidence](../../docs/release-0.3.1.md) for exact tested versions,
 real-chain evidence, browser coverage and remaining limitations.
 
 ## Guides and links
