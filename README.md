@@ -24,7 +24,7 @@ a wallet; connect your own wallet to create and manage your app's entities.
 Node.js 22, pnpm 9:
 
 ```bash
-git clone --branch v0.3.1 https://github.com/SantiagoDevRel/arkiv-graph.git
+git clone --branch v0.3.1-docs.1 https://github.com/SantiagoDevRel/arkiv-graph.git
 cd arkiv-graph
 pnpm install --frozen-lockfile
 pnpm dev

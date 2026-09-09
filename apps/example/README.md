@@ -23,7 +23,7 @@ Prerequisites: Node.js 22 and pnpm 9. No env file, access key or signing key is
 needed to run the app or read public entities.
 
 ```bash
-git clone --branch v0.3.1 https://github.com/SantiagoDevRel/arkiv-graph.git
+git clone --branch v0.3.1-docs.1 https://github.com/SantiagoDevRel/arkiv-graph.git
 cd arkiv-graph
 pnpm install --frozen-lockfile
 pnpm dev

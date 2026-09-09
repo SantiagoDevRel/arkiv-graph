@@ -10,7 +10,7 @@ Version **0.3.1** targets **@arkiv-network/sdk 0.8.0**, **viem 2.56.3**, **Node.
 
 Nodes are your entities. Edges are the relationships *you* define (Arkiv has no joins — you declare how entities relate). References to other chains show up as **external nodes**, drawn purely from what your entities already store — `arkiv-graph` never reads those chains.
 
-> Explore the [Tiramisu sample](https://arkiv-graph-example.vercel.app) without a wallet. See [release evidence](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1/docs/release-0.3.1.md) for the tested versions, audits and limitations.
+> Explore the [Tiramisu sample](https://arkiv-graph-example.vercel.app) without a wallet. See [release evidence](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1-docs.1/docs/release-0.3.1.md) for the tested versions, audits and limitations.
 
 
 
@@ -210,7 +210,7 @@ Pass the same `theme` to `ArkivGraph` and `ArkivTables`. In 0.3.1, optional
 and `warning` colors also style sticky headers, detail/action panels and native
 date inputs. Existing theme objects remain compatible. Set contrasting text,
 muted, relationship and accent colors as well as the background for light mode;
-see the [sample theme configuration](https://github.com/SantiagoDevRel/arkiv-graph/blob/feat/tiramisu-dashboard/apps/example/src/lib/themes.ts).
+see the [sample theme configuration](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1-docs.1/apps/example/src/lib/themes.ts).
 The library does not change the host page's theme or persist preferences.
 
 `detectGroups(entity, config?, internalKeys?)` accepts one normalized `NormEntity`,
@@ -329,7 +329,7 @@ preserves its `"use client"` directive. The core import is safe on the server.
 The library does not hold keys or submit transactions. Pass `onExtendEntity` to
 `ArkivTables` to enable the action; omit it for a read-only view. The callback
 receives `{ entityKey, targetExpiresAt, row }`, where the target is Unix seconds.
-Use the [sample wallet implementation](https://github.com/SantiagoDevRel/arkiv-graph/blob/feat/tiramisu-dashboard/apps/example/src/lib/wallet-client.ts)
+Use the [sample wallet implementation](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1-docs.1/apps/example/src/lib/wallet-client.ts)
 as the complete integration reference, including account/chain checks.
 
 With SDK 0.8, an extension **sets a new expiry**, using
@@ -396,10 +396,10 @@ it does not prevent the owner from deleting the entity.
 ## Source, sample, and agent guides
 
 - [Source repository](https://github.com/SantiagoDevRel/arkiv-graph)
-- [Runnable sample and setup](https://github.com/SantiagoDevRel/arkiv-graph/tree/feat/tiramisu-dashboard/apps/example)
-- [Legacy hosted sample (Braga; not the current Tiramisu demo)](https://arkiv-graph-example.vercel.app)
-- [Consumer AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/feat/tiramisu-dashboard/packages/arkiv-graph/AGENTS.md)
-- [Sample AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/feat/tiramisu-dashboard/apps/example/AGENTS.md)
+- [Runnable sample and setup](https://github.com/SantiagoDevRel/arkiv-graph/tree/v0.3.1-docs.1/apps/example)
+- [Hosted Tiramisu sample](https://arkiv-graph-example.vercel.app)
+- [Consumer AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1-docs.1/packages/arkiv-graph/AGENTS.md)
+- [Sample AGENTS.md](https://github.com/SantiagoDevRel/arkiv-graph/blob/v0.3.1-docs.1/apps/example/AGENTS.md)
 
 Give your agent the applicable guide explicitly. Installing a package does not
 mean an agent will discover instructions inside `node_modules`.

@@ -10,6 +10,9 @@ Verified 2026-09-08/09. **These packages are intended for testnet use.**
   Integrity: `sha512-G6UERl7pMU+1PqirtQU+B+aiO27ozHDGmFMdSZCmV/wVOF+3WqRZUf1jBgfj+H5grYqzsa+Z6WR2fOJO3rtBtQ==`.
 - The package contains 16 allowlisted files: ESM, CommonJS, TypeScript declarations,
   README and the consumer `AGENTS.md` / `CLAUDE.md` pointer. No credentials.
+- Source tag `v0.3.1-docs.1` contains finalized consumer documentation and the same
+  0.3.1 runtime. The original `v0.3.1` tag is preserved; neither tag is a different
+  npm version.
 - The [hosted sample](https://arkiv-graph-example.vercel.app) consumes registry
   `arkiv-graph@0.3.1`, pinned in its manifest and lockfile. Workspace auto-linking
   is disabled. No implementation is copied into the sample.
@@ -90,13 +93,15 @@ See [creation/extension evidence](./tiramisu-verification.json) and
 [deletion evidence](./delete-verification.json). No signing key was placed in
 the app, chat or deployment.
 
-A fresh Claude consumer session, given the package guides and a minimal integration
-objective without the authoring chat, verified an independent installation and
-identified documentation gaps. Those were corrected and rechecked. A later cold
-consumer installed the published 0.3.0 baseline; the main agent repeated registry
-installation/import/SSR/strict-type checks against the final 0.3.1 artifact.
-See the detailed chronology in [verification.md](./verification.md). Do not
-interpret the earlier cold-agent check as an independent 0.3.1 transaction test.
+Earlier fresh Claude consumer sessions identified documentation gaps that were
+corrected; see [verification.md](./verification.md). A final independent Codex
+consumer, without this authoring chat, installed registry 0.3.1 using only the
+public guides. The offline example, core/React ESM and CJS imports and strict
+TypeScript 7.0.2 checks in both module modes passed. A real owner/project-scoped
+Tiramisu read returned zero entities, matching an independent SDK count of zero.
+Its dependency audit reported zero known advisories. It found a stale Braga link
+label and mutable source links; the finalized docs correct the label and pin links
+to `v0.3.1-docs.1`. This consumer check did not render the UI or sign transactions.
 
 ## Independent reviews
 
