@@ -4,7 +4,8 @@ This repo contains a publishable library (`packages/arkiv-graph`) and a consumer
 sample (`apps/example`). Read the [root README](./README.md), the
 [package consumer guide](./packages/arkiv-graph/AGENTS.md), and the
 [sample guide](./apps/example/AGENTS.md). Commands and compatibility live in the
-READMEs; release evidence lives in `docs/verification.md`.
+READMEs; current release evidence lives in `docs/release-0.3.1.md` and historical
+checkpoints in `docs/verification.md`.
 
 ## Maintainer invariants
 - The sample pins the published npm package. Do not ship `workspace:*` or local

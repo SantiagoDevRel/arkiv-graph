@@ -143,3 +143,35 @@ Muse could not run Node in its environment; this was not counted as a test pass.
 No audit establishes that software is "100% secure." No unresolved blocking
 source findings remain in the reviewed Arkiv Graph changes; the limits above
 are part of the release contract.
+
+## Final checkout and Hub delivery
+
+A new clone of `v0.3.1-docs.1` passed `pnpm install --frozen-lockfile` and
+`pnpm build:example`, without building the local library or creating an env file.
+Its import resolved to `node_modules/arkiv-graph/dist/index.cjs`, version 0.3.1.
+Running the built sample returned HTTP 200 and the same 35 entities, 20 nodes,
+35 edges and five tables. The independent consumer rechecked and closed both
+documentation findings against that tag.
+
+The compact official Hub card was merged in
+[PR #105](https://github.com/Arkiv-Network/arkiv-hub/pull/105), commit
+`39a950819d15d7fde035777a79f5b50ce818ea12`, and deployed to
+[Hub staging](https://stage.hub.arkiv.network/tools). The deployed version API
+matches that commit. Lint, typecheck, 207 unit tests and production build passed
+locally and CI passed. Four Tools navigation tests passed locally and against
+staging. Staging screenshots at 390/768/1440 px, closed/expanded disclosure,
+exact npm/prompt copying, links and the sitemap were checked; no page overflow
+or runtime errors were found. Local breakpoint checks additionally covered
+639/640 and 1279/1280 px.
+
+Claude Code session `claude-90fa9a` reviewed the card's frontend and usability.
+The stale tag dependency, static-code tab stop, hidden network/limitations and
+unused local-preview logic were resolved; turn 2 closed those findings. A Codex
+coverage-only pass separately checked the four requested UI/release items.
+
+**Production Hub remains a separate release:** `hub.arkiv.network/tools` still
+returned 404 at delivery. Promoting the wider Hub `develop` branch would include
+unrelated changes. Its existing Next.js 16.2.6 dependency also has known security
+advisories; the Tools PR explicitly reports that separate runtime-upgrade
+follow-up. These Hub findings do not describe the independently deployed
+Arkiv Graph sample on Next.js 15.5.25.

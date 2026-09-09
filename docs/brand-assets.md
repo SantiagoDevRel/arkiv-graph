@@ -4,6 +4,11 @@ Downloaded directly from [Arkiv Brand Assets on Drive](https://drive.google.com/
 on 2026-09-08, under **Arkiv Logo pack / New Logo**. SVG bytes are unchanged;
 only local filenames differ. The wordmark keeps its original aspect ratio.
 
+Hashes describe the original downloads, Git blobs and deployed assets. Windows
+Git may convert line endings in a working checkout; use the raw Git blob when
+verifying provenance (`git show HEAD:apps/example/public/<filename>`). This does
+not change the SVG paths, colors or proportions.
+
 | Local file in `apps/example/public` | Drive source | SHA-256 |
 | --- | --- | --- |
 | `arkiv-wordmark-white.svg` | [New Logo / [ ARKIV ] / SVG / LOGO white.svg](https://drive.google.com/file/d/1pUqKsNvDxDf_JNFpQOZVI8u6a979Gd_c/view) | `ef0040f22c08ea85fc66b065b2f01f36f1572219b63fe0564f0f277130f4cb5c` |
