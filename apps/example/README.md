@@ -113,6 +113,16 @@ not implement a distributed rate limiter in application code.
   result is uncertain. A known user rejection clears only that attempt.
 - Lifetime Extension: this sample accepts at most 365 additional days per operation.
   Invalid dates are rejected before requesting a wallet network change or signature.
+  After your wallet returns a hash, the existing status message shows its transaction
+  link. The app checks confirmation through Tiramisu's public RPC for up to 30 seconds.
+  A pending result releases the dialog and retains that hash across reloads; trying
+  again checks the same transaction instead of submitting another extension. Confirmed
+  recovery verifies its extension event and fetches the entity's current expiration.
+  After a testnet reset, Rabby can retain a higher nonce from its old local history.
+  Compare its proposed nonce with the network's current account nonce before signing;
+  an extension cannot confirm while earlier nonce slots are missing. Resetting wallet
+  history is a separate wallet action, not something this dapp performs automatically.
+  Queries also stop waiting after 30 seconds and offer Retry if the API does not respond.
 
 ## Checks
 

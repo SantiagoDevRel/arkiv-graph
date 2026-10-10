@@ -55,6 +55,8 @@ export function Showcase() {
   }, []);
   useEffect(() => {
     const controller = new AbortController();
+    let active = true;
+    const timeout = setTimeout(() => controller.abort(), 30000);
     setLoading(true); setError(""); setData(null);
     void fetch(`/api/graph?${new URLSearchParams(scope)}`, { cache: "no-store", signal: controller.signal })
       .then(async response => {
@@ -63,10 +65,10 @@ export function Showcase() {
         if (!response.ok) throw new Error(result.error);
         return result;
       })
-      .then(result => { if (!controller.signal.aborted) setData(result); })
-      .catch(e => { if (!controller.signal.aborted) setError(e.message); })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
+      .then(result => { if (active) setData(result); })
+      .catch(e => { if (active) setError(controller.signal.aborted ? "The query took too long. Select Retry to fetch the latest entities." : e.message); })
+      .finally(() => { clearTimeout(timeout); if (active) setLoading(false); });
+    return () => { active = false; clearTimeout(timeout); controller.abort(); };
   }, [scope, revision]);
   const connect = async () => {
     setBusy(true); setNotice(""); setNoticeError(false);
@@ -90,12 +92,16 @@ export function Showcase() {
     if (!account) throw new Error("Connect the owner's wallet before extending this entity.");
     setNotice(""); setNoticeError(false); setTxUrl("");
     try {
-      const result = await extendEntityWithWallet(account, entityKey, Math.floor(targetExpiresAt));
+      const result = await extendEntityWithWallet(account, entityKey, Math.floor(targetExpiresAt), url => {
+        setNotice("Transaction submitted. Waiting for confirmation on Tiramisu.");
+        setTxUrl(url);
+      });
       setNotice("Lifetime Extension confirmed. The table is fetching the updated expiration.");
       setTxUrl(result.txUrl ?? "");
       return result;
     } catch (error) {
       const message = walletErrorMessage(error);
+      setNotice(message); setNoticeError(true); setTxUrl((error as { txUrl?: string })?.txUrl ?? "");
       throw Object.assign(new Error(message), { txUrl: (error as { txUrl?: string })?.txUrl });
     }
   };
