@@ -140,6 +140,13 @@ The optional `scripts/seed-local.mjs` is maintainer-only local automation with a
 explicitly authorized testnet wallet and an env file outside the repo. It is not
 needed by consumers and is excluded from deployment. The web app never reads it.
 
+After a testnet reset, the maintainer can restore the shared dataset with
+`node scripts/seed-local.mjs /absolute/path/to/authorized.env /absolute/path/to/new-evidence.json`.
+The external file accepts `TESTNET_SEED_PRIVATE_KEY` or `ARKIV_PRIVATE_KEY` for the
+configured public owner. Existing data or prior attempt evidence prevents duplicate
+writes. Keep the evidence outside the checkout and inspect any uncertain receipt
+before another attempt. This does not add signing to the hosted app.
+
 ## Delete integration
 
 The published package already exposes `onDeleteEntity`. The sample connects it

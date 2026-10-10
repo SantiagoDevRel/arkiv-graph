@@ -18,7 +18,7 @@ const expectedOwner = "0xa618a2736431f24c26f1c8dac9ca00ecc845a1c6";
 const { outputFiles } = await build({ entryPoints: [fileURLToPath(new URL("../src/lib/social-sample.ts", import.meta.url))], bundle: true, write: false, platform: "node", format: "esm" });
 const { socialSample } = await import(`data:text/javascript;base64,${Buffer.from(outputFiles[0].text).toString("base64")}`);
 const raw = readFileSync(envPath, "utf8");
-const secret = raw.match(/^TESTNET_SEED_PRIVATE_KEY\s*=\s*["']?(0x[0-9a-fA-F]{64})["']?\s*$/m)?.[1];
+const secret = raw.match(/^(?:TESTNET_SEED_PRIVATE_KEY|ARKIV_PRIVATE_KEY)\s*=\s*["']?(0x[0-9a-fA-F]{64})["']?\s*$/m)?.[1];
 if (!secret) { console.log("SEED_KEY_PENDING: private env file is empty or invalid. No transaction sent."); process.exit(2); }
 const account = privateKeyToAccount(secret);
 if (account.address.toLowerCase() !== expectedOwner) throw new Error("The key does not belong to the requested sample owner. No transaction sent.");
@@ -33,7 +33,8 @@ if (existing.entities.length) {
   console.log(JSON.stringify({ status: "already-created", count: existing.entities.length, owner: account.address, project }));
   process.exit(existing.entities.length === batch.length ? 0 : 3);
 }
-const pendingPath = `${envPath}.pending.json`;
+// An explicit evidence path keeps recovery artifacts away from the credential file.
+const pendingPath = process.argv[3] ? resolve(process.argv[3]) : `${envPath}.pending.json`;
 if (existsSync(pendingPath)) {
   console.log("A previous seed attempt exists. Inspect the public receipt file before retrying. No transaction sent.");
   process.exit(4);
