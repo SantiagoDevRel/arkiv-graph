@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ estimateGas: vi.fn(), getEntity: vi.fn(), getBlockTiming: vi.fn(), extendEntity: vi.fn(), deleteEntity: vi.fn(), executeBatch: vi.fn(), createEntity: vi.fn(), getChainId: vi.fn(), getTransactionReceipt: vi.fn(), waitForTransactionReceipt: vi.fn(), rpcRequest: vi.fn(), selected: vi.fn(), request: vi.fn(), walletConfig: null as any }));
+const mocks = vi.hoisted(() => ({ estimateGas: vi.fn(), getEntity: vi.fn(), getBlockTiming: vi.fn(), extendEntity: vi.fn(), deleteEntity: vi.fn(), executeBatch: vi.fn(), createEntity: vi.fn(), getChainId: vi.fn(), getTransaction: vi.fn(), getTransactionCount: vi.fn(), getTransactionReceipt: vi.fn(), waitForTransactionReceipt: vi.fn(), rpcRequest: vi.fn(), selected: vi.fn(), request: vi.fn(), walletConfig: null as any }));
 vi.mock("@arkiv-network/sdk", async () => {
   const actual = await vi.importActual<typeof import("@arkiv-network/sdk")>("@arkiv-network/sdk");
   return { ...actual, createPublicClient: () => ({ ...mocks, request: mocks.rpcRequest, select: () => ({ ownedBy() { return this; }, where() { return this; }, limit() { return this; }, fetch: mocks.selected }) }), createWalletClient: (config: any) => { mocks.walletConfig = config; return mocks; } };
@@ -7,8 +7,8 @@ vi.mock("@arkiv-network/sdk", async () => {
 vi.mock("viem/actions", async () => ({ ...await vi.importActual("viem/actions"), estimateGas: mocks.estimateGas }));
 import { deleteEntityWithWallet, extendEntityWithWallet, createSocialSampleWithWallet, ensureChain } from "./wallet-client";
 import { socialSample } from "./social-sample";
-import { ENTITY_EVENTS_ABI } from "@arkiv-network/sdk";
-import { encodeAbiParameters, encodeEventTopics } from "viem";
+import { ENTITY_EVENTS_ABI, OperationType } from "@arkiv-network/sdk";
+import { encodeAbiParameters, encodeEventTopics, encodeFunctionData, parseAbi, parseAbiParameters } from "viem";
 const account: `0x${string}` = `0x${"a".repeat(40)}`;
 const entityKey: `0x${string}` = `0x${"b".repeat(64)}`;
 beforeEach(() => {
@@ -19,6 +19,8 @@ beforeEach(() => {
   vi.stubGlobal("localStorage", { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => store.set(k, v), removeItem: (k: string) => store.delete(k) });
   mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [account] : method === "eth_chainId" ? "0x7614d1" : null);
   mocks.getChainId.mockResolvedValue(7738577);
+  mocks.getTransactionCount.mockResolvedValue(29);
+  mocks.getTransaction.mockRejectedValue(new Error("Transaction not found"));
   mocks.estimateGas.mockResolvedValue(3533541n);
   mocks.getEntity.mockResolvedValue({ owner: account, expiresAt: 200n });
   mocks.getBlockTiming.mockResolvedValue({ currentBlock: 100n, currentBlockTime: 1000, blockDuration: 2 });
@@ -69,6 +71,7 @@ describe("wallet writes", () => {
     expect(mocks.estimateGas).toHaveBeenCalledWith(expect.anything(), { account, to: tx.to, data: tx.data, value: 0n });
     const sent = mocks.request.mock.calls.find(([arg]) => arg.method === "eth_sendTransaction")![0];
     expect(BigInt(sent.params[0].gas)).toBe(4240250n);
+    expect(sent.params[0].nonce).toBe("0x1d");
     mocks.request.mockClear();
     mocks.estimateGas.mockRejectedValue(new Error("Execution reverted"));
     await expect(transport.request({ method: "eth_sendTransaction", params: [tx] })).rejects.toThrow("reverted");
@@ -163,7 +166,7 @@ describe("extension confirmation recovery", () => {
     expect(mocks.waitForTransactionReceipt).toHaveBeenCalledWith({ hash: entityKey, timeout: 30000, pollingInterval: 1000 });
     expect(localStorage.getItem(pendingKey)).toBe(entityKey);
     mocks.getTransactionReceipt.mockRejectedValueOnce(new Error("Still pending"));
-    await expect(extendEntityWithWallet(account, entityKey, 1300)).rejects.toThrow("confirmation is still pending");
+    await expect(extendEntityWithWallet(account, entityKey, 1300)).rejects.toThrow("requested expiration has not been confirmed");
     expect(mocks.request.mock.calls.filter(([args]) => args.method === "eth_sendTransaction")).toHaveLength(1);
   });
   it("uses the public RPC and cached verified receipt rather than the injected wallet", async () => {
@@ -210,6 +213,63 @@ describe("extension confirmation recovery", () => {
     await expect(extendEntityWithWallet(account, entityKey, 1300)).rejects.toMatchObject({ txUrl: expect.stringContaining(entityKey) });
     expect(localStorage.getItem(pendingKey)).toBe(entityKey);
     expect(mocks.extendEntity).not.toHaveBeenCalled();
+  });
+  it("does not confirm a new requested date by recovering an older extension", async () => {
+    localStorage.setItem(pendingKey, entityKey);
+    mocks.getTransactionReceipt.mockResolvedValueOnce({ status: "success", logs: [{
+      address: tx.to,
+      topics: encodeEventTopics({ abi: ENTITY_EVENTS_ABI, eventName: "ExpiryExtended", args: { entityKey, owner: account } }),
+      data: encodeAbiParameters([{ type: "uint64" }], [251n]),
+    }] });
+    mocks.getEntity.mockResolvedValue({ owner: account, expiresAt: 251n });
+    await expect(extendEntityWithWallet(account, entityKey, 1400)).rejects.toThrow("requested date");
+    expect(mocks.extendEntity).not.toHaveBeenCalled();
+    expect(mocks.request.mock.calls.some(([args]) => args.method === "eth_sendTransaction")).toBe(false);
+  });
+  const pendingTransaction = (expiresAt: bigint, key = entityKey) => ({
+    hash: entityKey, from: account, to: tx.to, value: 0n, chainId: 7738577, nonce: 68,
+    input: encodeFunctionData({ abi: parseAbi(["function execute((uint8 operation, bytes operationData)[] ops) external returns (bytes32[] keys)"]), functionName: "execute", args: [[{
+      operation: OperationType.ExtendExpiry,
+      operationData: encodeAbiParameters(parseAbiParameters("(bytes32 entityKey, uint64 expiresAt, uint64 minLifetime)"), [{ entityKey: key, expiresAt, minLifetime: 0n }]),
+    }]] }),
+  });
+  it("reports the actual nonce gap while retaining an unfulfilled request without signing", async () => {
+    localStorage.setItem(pendingKey, entityKey);
+    mocks.getTransaction.mockResolvedValue(pendingTransaction(300n));
+    await expect(extendEntityWithWallet(account, entityKey, 1400)).rejects.toThrow("nonce 68; Tiramisu's next nonce is 29");
+    expect(localStorage.getItem(pendingKey)).toBe(entityKey);
+    expect(mocks.extendEntity).not.toHaveBeenCalled();
+  });
+  it("preserves an unconfirmed hash whose exact target is already on-chain, without claiming its receipt confirmed", async () => {
+    localStorage.setItem(pendingKey, entityKey);
+    mocks.getTransaction.mockResolvedValue(pendingTransaction(251n));
+    mocks.getEntity.mockResolvedValue({ owner: account, expiresAt: 260n });
+    const result = await extendEntityWithWallet(account, entityKey, 1300);
+    expect(result).toMatchObject({ expiresAt: 1320, alreadyApplied: true });
+    expect(localStorage.getItem(pendingKey)).toBe(entityKey);
+    expect(JSON.parse(localStorage.getItem(`${pendingKey}:observed:${entityKey}`)!)).toMatchObject({ hash: entityKey, state: "target-observed" });
+    expect(mocks.extendEntity).not.toHaveBeenCalled();
+  });
+  it("allows a distinct later request after observing the old target, preserving the old hash", async () => {
+    localStorage.setItem(pendingKey, entityKey);
+    mocks.getTransaction.mockResolvedValue(pendingTransaction(251n));
+    mocks.getEntity.mockResolvedValue({ owner: account, expiresAt: 260n });
+    mocks.extendEntity.mockResolvedValue({ txHash: `0x${"c".repeat(64)}`, expiresAt: 300n });
+    expect(await extendEntityWithWallet(account, entityKey, 1400)).toMatchObject({ expiresAt: 1400 });
+    expect(mocks.extendEntity).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem(`${pendingKey}:observed:${entityKey}`)).toContain(entityKey);
+  });
+  it("does not unblock using another entity's operation even when this entity has a later expiry", async () => {
+    localStorage.setItem(pendingKey, entityKey);
+    mocks.getTransaction.mockResolvedValue(pendingTransaction(251n, `0x${"c".repeat(64)}`));
+    mocks.getEntity.mockResolvedValue({ owner: account, expiresAt: 260n });
+    await expect(extendEntityWithWallet(account, entityKey, 1400)).rejects.toThrow("requested expiration has not been confirmed");
+    expect(localStorage.getItem(pendingKey)).toBe(entityKey);
+    expect(mocks.extendEntity).not.toHaveBeenCalled();
+  });
+  it("rejects an SDK result whose confirmed expiration is before the requested block", async () => {
+    mocks.extendEntity.mockResolvedValue({ txHash: entityKey, expiresAt: 220n });
+    await expect(extendEntityWithWallet(account, entityKey, 1300)).rejects.toThrow("does not confirm the requested date");
   });
   it("reports a confirmed revert without automatically signing again", async () => {
     localStorage.setItem(pendingKey, entityKey);

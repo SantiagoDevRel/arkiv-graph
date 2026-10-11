@@ -95,8 +95,10 @@ export function Showcase() {
       const result = await extendEntityWithWallet(account, entityKey, Math.floor(targetExpiresAt), url => {
         setNotice("Transaction submitted. Waiting for confirmation on Tiramisu.");
         setTxUrl(url);
+      }, nonce => {
+        setNotice(`Tiramisu's next nonce is ${nonce}. Check that your wallet uses this nonce before signing.`);
       });
-      setNotice("Lifetime Extension confirmed. The table is fetching the updated expiration.");
+      setNotice(result.alreadyApplied ? "The requested expiration is already present on Tiramisu. The earlier transaction remains unconfirmed; its hash has been preserved." : "Lifetime Extension confirmed. The table is fetching the updated expiration.");
       setTxUrl(result.txUrl ?? "");
       return result;
     } catch (error) {

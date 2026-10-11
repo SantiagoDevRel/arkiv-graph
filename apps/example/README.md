@@ -118,8 +118,18 @@ not implement a distributed rate limiter in application code.
   A pending result releases the dialog and retains that hash across reloads; trying
   again checks the same transaction instead of submitting another extension. Confirmed
   recovery verifies its extension event and fetches the entity's current expiration.
+  Recovering an older confirmed extension does not confirm a later requested date:
+  check the refreshed expiration, then select Extend again for the new date. A queued
+  transaction reports its actual nonce and the network's next nonce when its exact
+  single-extension calldata can be verified. The date picker previews a requested
+  target; only a confirmed result or authoritative entity expiration proves it applied.
+  If another confirmed operation already achieved a queued transaction's exact
+  absolute target, its original hash is preserved in a local `:observed:<hash>` entry.
+  A distinct later request can then proceed; the older transaction is neither declared
+  confirmed nor cancelled. Unknown or unfulfilled pending operations still block resubmission.
   After a testnet reset, Rabby can retain a higher nonce from its old local history.
   Compare its proposed nonce with the network's current account nonce before signing;
+  the sample supplies and displays that current nonce, but Rabby can override it.
   an extension cannot confirm while earlier nonce slots are missing. Resetting wallet
   history is a separate wallet action, not something this dapp performs automatically.
   Queries also stop waiting after 30 seconds and offer Retry if the API does not respond.
