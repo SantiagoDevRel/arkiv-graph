@@ -126,11 +126,21 @@ not implement a distributed rate limiter in application code.
   If another confirmed operation already achieved a queued transaction's exact
   absolute target, its original hash is preserved in a local `:observed:<hash>` entry.
   A distinct later request can then proceed; the older transaction is neither declared
-  confirmed nor cancelled. Unknown or unfulfilled pending operations still block resubmission.
+  confirmed nor cancelled. For a verified single extension with a nonce ahead of the
+  network, selecting Extend expiry again for the same date explicitly requests a
+  recovery signature with the current nonce. Changing the date or hash does not
+  authorize that recovery. The original hash is preserved in a `:recovery:<hash>` entry;
+  the original transaction remains unconfirmed. The nonce is checked again immediately
+  before opening the wallet. Unknown pending operations still block resubmission.
+  Public signed legacy transactions can be cached as `:transaction:<hash>` evidence
+  when queued lookups are intermittent. Every cache read verifies the transaction
+  hash, recovered signer, chain and exact zero-value extension. This cache contains
+  no signing key and never proves receipt confirmation.
   After a testnet reset, Rabby can retain a higher nonce from its old local history.
   Compare its proposed nonce with the network's current account nonce before signing;
   the sample supplies and displays that current nonce, but Rabby can override it.
-  an extension cannot confirm while earlier nonce slots are missing. Resetting wallet
+  an extension cannot confirm while earlier nonce slots are missing. In Rabby, use
+  Advanced Settings to set the displayed current nonce before signing. Resetting wallet
   history is a separate wallet action, not something this dapp performs automatically.
   Queries also stop waiting after 30 seconds and offer Retry if the API does not respond.
 

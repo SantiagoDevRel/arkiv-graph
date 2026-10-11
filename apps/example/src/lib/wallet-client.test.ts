@@ -8,11 +8,12 @@ vi.mock("viem/actions", async () => ({ ...await vi.importActual("viem/actions"),
 import { deleteEntityWithWallet, extendEntityWithWallet, createSocialSampleWithWallet, ensureChain } from "./wallet-client";
 import { socialSample } from "./social-sample";
 import { ENTITY_EVENTS_ABI, OperationType } from "@arkiv-network/sdk";
-import { encodeAbiParameters, encodeEventTopics, encodeFunctionData, parseAbi, parseAbiParameters } from "viem";
+import { encodeAbiParameters, encodeEventTopics, encodeFunctionData, keccak256, parseAbi, parseAbiParameters, parseTransaction } from "viem";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 const account: `0x${string}` = `0x${"a".repeat(40)}`;
 const entityKey: `0x${string}` = `0x${"b".repeat(64)}`;
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   vi.stubGlobal("window", { ethereum: { request: mocks.request } });
   vi.stubGlobal("navigator", {});
   const store = new Map<string, string>();
@@ -240,6 +241,56 @@ describe("extension confirmation recovery", () => {
     expect(localStorage.getItem(pendingKey)).toBe(entityKey);
     expect(mocks.extendEntity).not.toHaveBeenCalled();
   });
+  it("offers an explicit recovery for the exact queued target and opens the wallet only on that second request", async () => {
+    localStorage.setItem(pendingKey, entityKey);
+    mocks.getTransaction.mockResolvedValue(pendingTransaction(300n));
+    await expect(extendEntityWithWallet(account, entityKey, 1400)).rejects.toMatchObject({ recoverPendingHash: entityKey });
+    expect(mocks.extendEntity).not.toHaveBeenCalled();
+    const newHash = `0x${"c".repeat(64)}`;
+    mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [account] : method === "eth_chainId" ? "0x7614d1" : newHash);
+    mocks.extendEntity.mockImplementationOnce(async () => {
+      await mocks.walletConfig.transport({}).request({ method: "eth_sendTransaction", params: [{ ...tx, data: pendingTransaction(300n).input }] });
+      return { txHash: newHash, expiresAt: 300n };
+    });
+    const onSigning = vi.fn();
+    await expect(extendEntityWithWallet(account, entityKey, 1400, undefined, onSigning, { recoverPendingHash: entityKey })).resolves.toMatchObject({ expiresAt: 1400 });
+    expect(onSigning).toHaveBeenCalledWith(29);
+    const calls = mocks.request.mock.calls.filter(([args]) => args.method === "eth_sendTransaction");
+    expect(calls).toHaveLength(1);
+    expect(calls[0]![0].params[0]).toMatchObject({ nonce: "0x1d", data: pendingTransaction(300n).input });
+    expect(JSON.parse(localStorage.getItem(`${pendingKey}:recovery:${entityKey}`)!)).toMatchObject({ version: 1, hash: entityKey, originalNonce: 68, recoveryNonce: 29 });
+  });
+  it("does not recover a different target, another hash, or a queue with no nonce gap", async () => {
+    localStorage.setItem(pendingKey, entityKey);
+    mocks.getTransaction.mockResolvedValue(pendingTransaction(300n));
+    for (const [target, hash] of [[1402, entityKey], [1400, `0x${"c".repeat(64)}`]] as const) {
+      await expect(extendEntityWithWallet(account, entityKey, target, undefined, undefined, { recoverPendingHash: hash })).rejects.toThrow("requested expiration has not been confirmed");
+    }
+    mocks.getTransactionCount.mockResolvedValue(68);
+    await expect(extendEntityWithWallet(account, entityKey, 1400, undefined, undefined, { recoverPendingHash: entityKey })).rejects.toThrow("requested expiration has not been confirmed");
+    expect(mocks.extendEntity).not.toHaveBeenCalled();
+  });
+  it("rechecks the recovery nonce at the signing boundary and never sends if it changed", async () => {
+    localStorage.setItem(pendingKey, entityKey);
+    mocks.getTransaction.mockResolvedValue(pendingTransaction(300n));
+    mocks.getTransactionCount.mockResolvedValueOnce(29).mockResolvedValueOnce(30);
+    mocks.extendEntity.mockImplementationOnce(submit);
+    await expect(extendEntityWithWallet(account, entityKey, 1400, undefined, undefined, { recoverPendingHash: entityKey })).rejects.toThrow("nonce changed");
+    expect(mocks.request.mock.calls.some(([args]) => args.method === "eth_sendTransaction")).toBe(false);
+    expect(localStorage.getItem(pendingKey)).toBe(entityKey);
+  });
+  it("restores the original pending hash when the recovery signature is rejected", async () => {
+    localStorage.setItem(pendingKey, entityKey);
+    mocks.getTransaction.mockResolvedValue(pendingTransaction(300n));
+    mocks.request.mockImplementation(async ({ method }) => {
+      if (method === "eth_sendTransaction") throw Object.assign(new Error("Rejected"), { code: 4001 });
+      return method === "eth_accounts" ? [account] : "0x7614d1";
+    });
+    mocks.extendEntity.mockImplementationOnce(submit);
+    await expect(extendEntityWithWallet(account, entityKey, 1400, undefined, undefined, { recoverPendingHash: entityKey })).rejects.toThrow("Rejected");
+    expect(localStorage.getItem(pendingKey)).toBe(entityKey);
+    expect(localStorage.getItem(`${pendingKey}:recovery:${entityKey}`)).toContain(entityKey);
+  });
   it("preserves an unconfirmed hash whose exact target is already on-chain, without claiming its receipt confirmed", async () => {
     localStorage.setItem(pendingKey, entityKey);
     mocks.getTransaction.mockResolvedValue(pendingTransaction(251n));
@@ -277,6 +328,58 @@ describe("extension confirmation recovery", () => {
     await expect(extendEntityWithWallet(account, entityKey, 1300)).rejects.toThrow("transaction reverted");
     expect(localStorage.getItem(pendingKey)).toBeNull();
     expect(mocks.extendEntity).not.toHaveBeenCalled();
+  });
+});
+
+describe("public signed pending evidence", () => {
+  const fixture = async (overrides: Record<string, unknown> = {}) => {
+    const signer = privateKeyToAccount(generatePrivateKey());
+    const input = encodeFunctionData({ abi: parseAbi(["function execute((uint8 operation, bytes operationData)[] ops) external returns (bytes32[] keys)"]), functionName: "execute", args: [[{
+      operation: OperationType.ExtendExpiry,
+      operationData: encodeAbiParameters(parseAbiParameters("(bytes32 entityKey, uint64 expiresAt, uint64 minLifetime)"), [{ entityKey, expiresAt: 251n, minLifetime: 0n }]),
+    }]] });
+    const serializedTransaction = await signer.signTransaction({ type: "legacy", chainId: 7738577, nonce: 68, gas: 150000n, gasPrice: 1000000000n, to: "0x4400000000000000000000000000000000000044", value: 0n, data: input, ...overrides });
+    const hash = keccak256(serializedTransaction);
+    const owner = signer.address.toLowerCase();
+    const pendingKey = `arkiv-graph:extend:7738577:${owner}:${entityKey}`;
+    mocks.getEntity.mockResolvedValue({ owner, expiresAt: 260n });
+    mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [owner] : "0x7614d1");
+    localStorage.setItem(pendingKey, hash);
+    return { serializedTransaction, hash, owner, pendingKey, cacheKey: `${pendingKey}:transaction:${hash}`, input };
+  };
+  it("verifies cached signed bytes when the RPC no longer exposes an old queued transaction", async () => {
+    const f = await fixture();
+    localStorage.setItem(f.cacheKey, JSON.stringify({ version: 1, serializedTransaction: f.serializedTransaction }));
+    expect(await extendEntityWithWallet(f.owner, entityKey, 1300)).toMatchObject({ alreadyApplied: true, expiresAt: 1320 });
+    expect(mocks.getTransaction).not.toHaveBeenCalled();
+    expect(mocks.extendEntity).not.toHaveBeenCalled();
+    expect(localStorage.getItem(f.pendingKey)).toBe(f.hash);
+  });
+  it("does not trust altered signed bytes or a forged sender in browser storage", async () => {
+    const f = await fixture();
+    localStorage.setItem(f.cacheKey, JSON.stringify({ version: 1, serializedTransaction: `${f.serializedTransaction}00` }));
+    await expect(extendEntityWithWallet(f.owner, entityKey, 1300)).rejects.toThrow("not been confirmed");
+    const wrongKey = `arkiv-graph:extend:7738577:${account}:${entityKey}`;
+    localStorage.setItem(wrongKey, f.hash);
+    localStorage.setItem(`${wrongKey}:transaction:${f.hash}`, JSON.stringify({ version: 1, serializedTransaction: f.serializedTransaction }));
+    mocks.getEntity.mockResolvedValue({ owner: account, expiresAt: 260n });
+    await expect(extendEntityWithWallet(account, entityKey, 1300)).rejects.toThrow("not been confirmed");
+    expect(mocks.extendEntity).not.toHaveBeenCalled();
+  });
+  it("rejects signed evidence for another chain or a value transfer", async () => {
+    for (const overrides of [{ chainId: 1 }, { value: 1n }]) {
+      const f = await fixture(overrides);
+      localStorage.setItem(f.cacheKey, JSON.stringify({ version: 1, serializedTransaction: f.serializedTransaction }));
+      await expect(extendEntityWithWallet(f.owner, entityKey, 1300)).rejects.toThrow("not been confirmed");
+    }
+    expect(mocks.extendEntity).not.toHaveBeenCalled();
+  });
+  it("caches only the verified public signed transaction returned by the RPC", async () => {
+    const f = await fixture();
+    const parsed = parseTransaction(f.serializedTransaction);
+    mocks.getTransaction.mockResolvedValue({ ...parsed, hash: f.hash, from: f.owner, input: f.input, value: parsed.value ?? 0n });
+    expect(await extendEntityWithWallet(f.owner, entityKey, 1300)).toMatchObject({ alreadyApplied: true });
+    expect(JSON.parse(localStorage.getItem(f.cacheKey)!)).toEqual({ version: 1, serializedTransaction: f.serializedTransaction });
   });
 });
 

@@ -40,6 +40,7 @@ export function Showcase() {
   const [showCreate, setShowCreate] = useState(false);
   const [advanced, setAdvanced] = useState(false);
   const appInput = useRef<HTMLInputElement>(null);
+  const extensionRecoveries = useRef(new Map<string, `0x${string}`>());
   useEffect(() => {
     appInput.current?.setCustomValidity(new TextEncoder().encode(form.project).length > 128 ? "The app value must fit in 128 UTF-8 bytes." : "");
   }, [form.project]);
@@ -90,6 +91,9 @@ export function Showcase() {
   };
   const extend = async ({ entityKey, targetExpiresAt }: ExtendEntityParams) => {
     if (!account) throw new Error("Connect the owner's wallet before extending this entity.");
+    const recoveryKey = `${account.toLowerCase()}:${entityKey.toLowerCase()}:${Math.floor(targetExpiresAt)}`;
+    const recoverPendingHash = extensionRecoveries.current.get(recoveryKey);
+    extensionRecoveries.current.delete(recoveryKey);
     setNotice(""); setNoticeError(false); setTxUrl("");
     try {
       const result = await extendEntityWithWallet(account, entityKey, Math.floor(targetExpiresAt), url => {
@@ -97,11 +101,13 @@ export function Showcase() {
         setTxUrl(url);
       }, nonce => {
         setNotice(`Tiramisu's next nonce is ${nonce}. Check that your wallet uses this nonce before signing.`);
-      });
+      }, { recoverPendingHash });
       setNotice(result.alreadyApplied ? "The requested expiration is already present on Tiramisu. The earlier transaction remains unconfirmed; its hash has been preserved." : "Lifetime Extension confirmed. The table is fetching the updated expiration.");
       setTxUrl(result.txUrl ?? "");
       return result;
     } catch (error) {
+      const recoverable = (error as { recoverPendingHash?: `0x${string}` })?.recoverPendingHash;
+      if (recoverable) extensionRecoveries.current.set(recoveryKey, recoverable);
       const message = walletErrorMessage(error);
       setNotice(message); setNoticeError(true); setTxUrl((error as { txUrl?: string })?.txUrl ?? "");
       throw Object.assign(new Error(message), { txUrl: (error as { txUrl?: string })?.txUrl });

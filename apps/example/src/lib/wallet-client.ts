@@ -1,7 +1,7 @@
 "use client";
 import { createPublicClient, createWalletClient, ENTITY_EVENTS_ABI, ExpirationTime, OperationType } from "@arkiv-network/sdk";
 import { eq } from "@arkiv-network/sdk/query";
-import { custom, decodeAbiParameters, decodeEventLog, decodeFunctionData, encodeAbiParameters, encodeFunctionData, http, parseAbi, parseAbiParameters, type Hex } from "viem";
+import { custom, decodeAbiParameters, decodeEventLog, decodeFunctionData, encodeAbiParameters, encodeFunctionData, http, keccak256, parseAbi, parseAbiParameters, parseTransaction, recoverTransactionAddress, serializeTransaction, type Hex, type TransactionSerialized } from "viem";
 import { estimateGas } from "viem/actions";
 import { CHAIN, PUBLIC_CHAIN, PROJECT } from "./config";
 import { socialSample } from "./social-sample";
@@ -20,17 +20,50 @@ const pendingPub = createPublicClient({ chain: CHAIN, transport: http(PUBLIC_CHA
 const CONFIRMATION_TIMEOUT = 30000;
 const ARKIV_ADDRESS = "0x4400000000000000000000000000000000000044";
 const transactionUrl = (hash: Hex) => `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${hash}`;
-function confirmationPending(hash: Hex, nonce?: number, nextNonce?: number) {
+function confirmationPending(hash: Hex, nonce?: number, nextNonce?: number, recoverable = false) {
   const detail = nonce !== undefined && nextNonce !== undefined && nonce > nextNonce
-    ? `This transaction uses nonce ${nonce}; Tiramisu's next nonce is ${nextNonce}. Your wallet's local nonce is ahead of the network.`
+    ? `This transaction uses nonce ${nonce}; Tiramisu's next nonce is ${nextNonce}.`
     : "The submitted transaction is still pending. Check it in your wallet before signing again.";
-  return Object.assign(new Error(`The requested expiration has not been confirmed. ${detail} Retry checks the same transaction; the selected date remains a requested target.`), { txUrl: transactionUrl(hash) });
+  const next = recoverable
+    ? `Select Extend expiry again to open your wallet for the same date. In Rabby, set nonce ${nextNonce} in Advanced Settings before signing. The earlier transaction remains unconfirmed.`
+    : "Retry checks the same transaction; the selected date remains a requested target.";
+  return Object.assign(new Error(`The requested expiration has not been confirmed. ${detail} ${next}`), { txUrl: transactionUrl(hash), ...(recoverable ? { recoverPendingHash: hash } : {}) });
 }
 // SDK 0.8's exact public wire format; require canonical single-operation calldata.
 const EXECUTE_ABI = parseAbi(["function execute((uint8 operation, bytes operationData)[] ops) external returns (bytes32[] keys)"]);
 const EXTENSION_ABI = parseAbiParameters("(bytes32 entityKey, uint64 expiresAt, uint64 minLifetime)");
+function extensionFromInput(input: Hex, entityKey: string) {
+  const decoded = decodeFunctionData({ abi: EXECUTE_ABI, data: input });
+  const operations = decoded.args[0];
+  if (operations.length !== 1 || operations[0]!.operation !== OperationType.ExtendExpiry) return null;
+  const [extension] = decodeAbiParameters(EXTENSION_ABI, operations[0]!.operationData);
+  if (extension.entityKey.toLowerCase() !== entityKey.toLowerCase() || extension.minLifetime !== 0n || extension.expiresAt <= 0n) return null;
+  const canonical = encodeFunctionData({ abi: EXECUTE_ABI, functionName: "execute", args: [[{ operation: OperationType.ExtendExpiry, operationData: encodeAbiParameters(EXTENSION_ABI, [extension]) }]] });
+  return canonical.toLowerCase() === input.toLowerCase() ? extension : null;
+}
+// Cache only public signed bytes. Verify the signature and hash again on every read;
+// localStorage metadata alone can never authorize recovery or prove confirmation.
+async function signedExtension(serializedTransaction: Hex, hash: Hex, account: string, entityKey: string) {
+  if (!/^0x[0-9a-f]+$/i.test(serializedTransaction) || serializedTransaction.length > 8192 || keccak256(serializedTransaction).toLowerCase() !== hash.toLowerCase()) return null;
+  const tx = parseTransaction(serializedTransaction);
+  if (tx.type !== "legacy" || tx.chainId !== CHAIN.id || !Number.isSafeInteger(tx.nonce) || tx.nonce! < 0 || tx.to?.toLowerCase() !== ARKIV_ADDRESS || (tx.value ?? 0n) !== 0n || !tx.data || !tx.r || !tx.s || tx.v === undefined || tx.v < 35n || (tx.v - 35n) / 2n !== BigInt(CHAIN.id)) return null;
+  if ((await recoverTransactionAddress({ serializedTransaction: serializedTransaction as TransactionSerialized })).toLowerCase() !== account.toLowerCase()) return null;
+  const extension = extensionFromInput(tx.data, entityKey);
+  return extension ? { expiresAt: extension.expiresAt, nonce: tx.nonce! } : null;
+}
 async function pendingExtension(hash: Hex, account: string, entityKey: string) {
   const nextNonce = pendingPub.getTransactionCount({ address: account as Hex, blockTag: "pending" }).catch(() => undefined);
+  const cacheKey = `arkiv-graph:extend:${CHAIN.id}:${account.toLowerCase()}:${entityKey.toLowerCase()}:transaction:${hash}`;
+  try {
+    const raw = localStorage.getItem(cacheKey);
+    if (raw && raw.length <= 8300) {
+      const cache = JSON.parse(raw);
+      if (cache.version === 1 && typeof cache.serializedTransaction === "string") {
+        const extension = await signedExtension(cache.serializedTransaction, hash, account, entityKey);
+        if (extension) return { ...extension, nextNonce: await nextNonce };
+      }
+    }
+  } catch { /* Invalid or unavailable evidence does not authorize recovery. */ }
   // Viem deduplicates concurrent identical reads. Separate bounded requests are
   // necessary because this public endpoint does not consistently expose queued txs.
   for (let attempt = 0; attempt < 6; attempt++) {
@@ -38,13 +71,14 @@ async function pendingExtension(hash: Hex, account: string, entityKey: string) {
     if (!tx) continue;
     if (tx.hash.toLowerCase() !== hash.toLowerCase() || tx.from.toLowerCase() !== account.toLowerCase() || tx.to?.toLowerCase() !== ARKIV_ADDRESS || tx.value !== 0n || ("chainId" in tx && tx.chainId !== undefined && tx.chainId !== CHAIN.id)) continue;
     try {
-      const decoded = decodeFunctionData({ abi: EXECUTE_ABI, data: tx.input });
-      const operations = decoded.args[0];
-      if (operations.length !== 1 || operations[0]!.operation !== OperationType.ExtendExpiry) continue;
-      const [extension] = decodeAbiParameters(EXTENSION_ABI, operations[0]!.operationData);
-      if (extension.entityKey.toLowerCase() !== entityKey.toLowerCase() || extension.minLifetime !== 0n || extension.expiresAt <= 0n) continue;
-      const input = encodeFunctionData({ abi: EXECUTE_ABI, functionName: "execute", args: [[{ operation: OperationType.ExtendExpiry, operationData: encodeAbiParameters(EXTENSION_ABI, [extension]) }]] });
-      if (input.toLowerCase() !== tx.input.toLowerCase()) continue;
+      const extension = extensionFromInput(tx.input, entityKey);
+      if (!extension) continue;
+      if (tx.type === "legacy" && tx.chainId === CHAIN.id && tx.r && tx.s && tx.v !== undefined) {
+        try {
+          const serializedTransaction = serializeTransaction({ type: "legacy", chainId: tx.chainId, nonce: tx.nonce, gas: tx.gas, gasPrice: tx.gasPrice, to: tx.to, value: tx.value, data: tx.input }, { r: tx.r, s: tx.s, v: tx.v });
+          if (await signedExtension(serializedTransaction, hash, account, entityKey)) localStorage.setItem(cacheKey, JSON.stringify({ version: 1, serializedTransaction }));
+        } catch { /* A cache failure must preserve the active pending hash. */ }
+      }
       return { expiresAt: extension.expiresAt, nonce: tx.nonce, nextNonce: await nextNonce };
     } catch { /* Unknown calldata must never authorize a new write. */ }
   }
@@ -153,7 +187,7 @@ export function walletErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : "Could not complete the request. Check your wallet before signing again.";
   return message.split("\n")[0]!.slice(0,400);
 }
-export async function extendEntityWithWallet(account: string, entityKey: string, targetExpiresAt: number, onSubmitted?: (txUrl: string) => void, onSigning?: (nonce: number) => void): Promise<WriteResult> {
+export async function extendEntityWithWallet(account: string, entityKey: string, targetExpiresAt: number, onSubmitted?: (txUrl: string) => void, onSigning?: (nonce: number) => void, options?: { recoverPendingHash?: Hex }): Promise<WriteResult> {
   if (!KEY.test(entityKey) || !Number.isSafeInteger(targetExpiresAt)) throw new Error("Invalid entity or date.");
   const run = async (): Promise<WriteResult> => {
   const pendingKey = `arkiv-graph:extend:${CHAIN.id}:${account.toLowerCase()}:${entityKey.toLowerCase()}`;
@@ -162,9 +196,13 @@ export async function extendEntityWithWallet(account: string, entityKey: string,
   localStorage.removeItem(`${pendingKey}:available`);
   const pendingHash = localStorage.getItem(pendingKey);
   let observedPendingHash: Hex | undefined;
+  let recoveringPendingHash: Hex | undefined;
+  let recoveryNonce: number | undefined;
   let submittedHash: Hex | undefined;
-  const entity = await pub.getEntity(entityKey as Hex);
+  const [entity, timing] = await Promise.all([pub.getEntity(entityKey as Hex), pub.getBlockTiming()]);
   if (entity.owner.toLowerCase() !== account.toLowerCase()) throw new Error("You can only extend entities owned by your wallet.");
+  if (!Number.isFinite(timing.blockDuration) || timing.blockDuration <= 0) throw new Error("Could not verify block timing.");
+  const targetBlock = timing.currentBlock + BigInt(Math.ceil((targetExpiresAt - timing.currentBlockTime) / timing.blockDuration));
   if (pendingHash) {
     if (!KEY.test(pendingHash)) throw new Error("A previous extension has no verified transaction hash. Check your wallet activity before signing again; automatic resubmission is blocked.");
     const hash = pendingHash as Hex;
@@ -188,20 +226,26 @@ export async function extendEntityWithWallet(account: string, entityKey: string,
     } catch (error) {
       if ((error as { txUrl?: string })?.txUrl) throw error;
       const pending = await pendingExtension(hash, account, entityKey);
-      if (!pending || entity.expiresAt < pending.expiresAt) throw confirmationPending(hash, pending?.nonce, pending?.nextNonce);
-      // A different confirmed operation can already satisfy this absolute target.
-      // Keep the original hash: observing its target does not confirm or cancel it.
-      localStorage.setItem(`${pendingKey}:observed:${hash}`, JSON.stringify({ hash, expiresAtBlock: pending.expiresAt.toString(), nonce: pending.nonce, state: "target-observed" }));
-      observedPendingHash = hash;
+      if (!pending) throw confirmationPending(hash);
+      if (entity.expiresAt < pending.expiresAt) {
+        const recoverable = pending.expiresAt === targetBlock && pending.nextNonce !== undefined && pending.nonce > pending.nextNonce;
+        if (!recoverable || options?.recoverPendingHash !== hash) throw confirmationPending(hash, pending.nonce, pending.nextNonce, recoverable);
+        // The visitor explicitly repeats this exact, zero-value absolute extension.
+        // A future-nonce transaction cannot be included at the current next nonce.
+        // Preserve it; this recovery neither confirms nor cancels the original.
+        localStorage.setItem(`${pendingKey}:recovery:${hash}`, JSON.stringify({ version: 1, hash, expiresAtBlock: pending.expiresAt.toString(), originalNonce: pending.nonce, recoveryNonce: pending.nextNonce }));
+        recoveringPendingHash = hash;
+        recoveryNonce = pending.nextNonce;
+      } else {
+        localStorage.setItem(`${pendingKey}:observed:${hash}`, JSON.stringify({ version: 1, hash, expiresAtBlock: pending.expiresAt.toString(), nonce: pending.nonce, state: "target-observed" }));
+        observedPendingHash = hash;
+      }
     }
   }
-  const timing = await pub.getBlockTiming();
-  if (!Number.isFinite(timing.blockDuration) || timing.blockDuration <= 0) throw new Error("Could not verify block timing.");
   const currentExpiry = timing.currentBlockTime + Number(entity.expiresAt - timing.currentBlock) * timing.blockDuration;
   if (observedPendingHash && targetExpiresAt <= currentExpiry) return { expiresAt: currentExpiry, alreadyApplied: true, txUrl: transactionUrl(observedPendingHash) };
   if (entity.expiresAt <= timing.currentBlock || targetExpiresAt <= currentExpiry) throw new Error("Select a date later than the current expiration.");
   if (targetExpiresAt - currentExpiry > 365 * 86400) throw new Error("You can add up to 365 days per operation.");
-  const targetBlock = timing.currentBlock + BigInt(Math.ceil((targetExpiresAt - timing.currentBlockTime) / timing.blockDuration));
   let started = false;
   const client = await writer(account, hash => {
     submittedHash = hash;
@@ -209,7 +253,8 @@ export async function extendEntityWithWallet(account: string, entityKey: string,
     onSubmitted?.(transactionUrl(hash));
   }, nonce => {
     const activeHash = localStorage.getItem(pendingKey);
-    if (activeHash && activeHash !== observedPendingHash) throw new Error("An extension is already pending. Check your wallet activity before trying again.");
+    if (activeHash && activeHash !== observedPendingHash && activeHash !== recoveringPendingHash) throw new Error("An extension is already pending. Check your wallet activity before trying again.");
+    if (recoveryNonce !== undefined && nonce !== recoveryNonce) throw new Error("The network nonce changed. Check the pending transaction again before recovering it.");
     if (nonce !== undefined) onSigning?.(nonce);
     localStorage.setItem(pendingKey, "submitting");
     started = true;
@@ -225,7 +270,11 @@ export async function extendEntityWithWallet(account: string, entityKey: string,
     if (started) {
       let cause = error as { code?: number; name?: string; cause?: unknown } | undefined;
       for (let i = 0; cause && i < 8; i++, cause = cause.cause as typeof cause) {
-        if (cause.code === 4001 || cause.name === "UserRejectedRequestError") { localStorage.removeItem(pendingKey); throw error; }
+        if (cause.code === 4001 || cause.name === "UserRejectedRequestError") {
+          const previous = recoveringPendingHash ?? observedPendingHash;
+          if (previous) localStorage.setItem(pendingKey, previous); else localStorage.removeItem(pendingKey);
+          throw error;
+        }
       }
       throw new Error("The wallet did not return a transaction hash. Check your wallet activity before trying again; automatic resubmission is blocked.");
     }
