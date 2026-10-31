@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { checkTree, violations } from '../../../../scripts/vocabulary-guard.mjs';
+import { checkTree, violations, generatedAliasRules } from '../../../../scripts/vocabulary-guard.mjs';
 const root = fileURLToPath(new URL('../../../../', import.meta.url));
 test('complete tree uses current vocabulary, including generated files', () => {
   assert.deepEqual(checkTree(root), []);
@@ -77,4 +77,33 @@ test('dated historical allowances require exact file and content hash', () => {
     assert.ok(violations('docs/unlisted-history.md', original).length);
     assert.ok(violations(entry.file, original + '\n' + ('pay' + 'load')).length);
   }
+});
+
+test('generated registry aliases cannot authorize source, prose or new variants', () => {
+  const fixture = mkdtempSync(path.join(tmpdir(), 'graph-alias-mutation-'));
+  const cli = path.join(root, 'scripts/vocabulary-guard.mjs');
+  const run = () => spawnSync(process.execPath, [cli, fixture], { encoding: 'utf8' });
+  let rejected = 0;
+  try {
+    for (const [file, literals] of generatedAliasRules) for (const literal of literals) {
+      const target = path.join(fixture, file);
+      mkdirSync(path.dirname(target), { recursive: true });
+      writeFileSync(target, literal);
+      assert.equal(run().status, 0);
+      for (const mutation of [literal + '; ' + ('pay' + 'load'), literal.replace('pay' + 'load', 'pay' + 'load_UNLISTED')]) {
+        writeFileSync(target, mutation);
+        assert.equal(run().status, 1);
+        rejected++;
+      }
+      writeFileSync(target, 'safe');
+      const source = path.join(fixture, 'source.ts');
+      writeFileSync(source, literal);
+      assert.equal(run().status, 1);
+      rejected++;
+      writeFileSync(source, 'safe');
+      assert.ok(violations('packages/arkiv-graph/dist/index.js', literal).length);
+      assert.ok(violations('dist/index.js', literal).length);
+    }
+    console.log(JSON.stringify({ generatedRegistryAliasMutation: true, rejected, ownDistAndSourceRejected: true }));
+  } finally { rmSync(fixture, { recursive: true }); }
 });

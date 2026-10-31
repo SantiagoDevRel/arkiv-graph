@@ -4,7 +4,7 @@ A fictional social network viewed as a graph and tables using the same `arkiv-gr
 
 ## Setup
 
-Use Node.js 22 and pnpm 9. The committed sample pins `arkiv-graph@1.0.0` from npm with workspace linking disabled. From the root, `pnpm install --frozen-lockfile`, `pnpm typecheck` and `pnpm build` verify the registry consumer. No vendored tarball or staging substitution is needed for deployment.
+Use Node.js 22 and pnpm 9. The committed sample pins `arkiv-graph@1.1.0` from npm with workspace linking disabled. From the root, `pnpm install --frozen-lockfile`, `pnpm typecheck` and `pnpm build` verify the registry consumer. No vendored tarball or staging substitution is needed for deployment.
 
 Set **server-side** `ARKIV_ACCESS_KEY` to a free key from [Access Keys](https://hub.arkiv.network/access-keys), then run `pnpm dev` from the root and open http://localhost:3012. Public visitors read through `/api/graph`; they need no wallet or private key. Shared access keys are never sent to the browser.
 

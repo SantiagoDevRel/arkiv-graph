@@ -20,8 +20,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(typescript@5.9.3)(viem@2.56.3(typescript@5.9.3))
       arkiv-graph:
-        specifier: 1.0.0
-        version: 1.0.0(@arkiv-network/sdk@1.0.0(typescript@5.9.3)(viem@2.56.3(typescript@5.9.3)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(viem@2.56.3(typescript@5.9.3))
+        specifier: 1.1.0
+        version: 1.1.0(@arkiv-network/sdk@1.0.0(typescript@5.9.3)(viem@2.56.3(typescript@5.9.3)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(viem@2.56.3(typescript@5.9.3))
       next:
         specifier: 15.5.25
         version: 15.5.25(@types/node@22.19.21)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -990,8 +990,8 @@ packages:
   any-promise@1.3.0:
     resolution: {integrity: sha512-7UvmKalWRt1wgjL1RrGxoSJW/0QZFIegpeGvZG9kjp8vrRu55XTHbwnqq2GpXm9uLbcuhxm3IqX9OB4MZR1b2A==}
 
-  arkiv-graph@1.0.0:
-    resolution: {integrity: sha512-Jf/n7oDtpYnKqHGvdRBtuRIM1EnmZzf+OY+0cix1OaRChiLYnSsXQrBoJSIjC6zo42KfTqAff5Sif5SsJ1KB1Q==}
+  arkiv-graph@1.1.0:
+    resolution: {integrity: sha512-x+Cy0RF3KSEANbCQQgMm68zDdKjcYji2MPN6PROZQQH/hBmmf5eH6wUgalUo5yyvL9fI3ZeLjNHaMDeFYpog2w==}
     peerDependencies:
       '@arkiv-network/sdk': ^1.0.0
       react: '>=18'
@@ -2162,7 +2162,7 @@ snapshots:
 
   any-promise@1.3.0: {}
 
-  arkiv-graph@1.0.0(@arkiv-network/sdk@1.0.0(typescript@5.9.3)(viem@2.56.3(typescript@5.9.3)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(viem@2.56.3(typescript@5.9.3)):
+  arkiv-graph@1.1.0(@arkiv-network/sdk@1.0.0(typescript@5.9.3)(viem@2.56.3(typescript@5.9.3)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(viem@2.56.3(typescript@5.9.3)):
     dependencies:
       '@arkiv-network/sdk': 1.0.0(typescript@5.9.3)(viem@2.56.3(typescript@5.9.3))
       react-force-graph-2d: 1.29.1(react@19.2.7)
