@@ -5,7 +5,7 @@ vi.mock("@arkiv-network/sdk", async () => {
   return { ...actual, createPublicClient: () => ({ ...mocks, select: () => ({ ownedBy() { return this; }, where() { return this; }, limit() { return this; }, fetch: mocks.selected }) }), createWalletClient: (config: any) => { mocks.walletConfig = config; return mocks; } };
 });
 vi.mock("viem/actions", async () => ({ ...await vi.importActual("viem/actions"), estimateGas: mocks.estimateGas, getGasPrice: mocks.getGasPrice }));
-import { deleteEntityWithWallet, extendEntityWithWallet, createSocialSampleWithWallet, ensureChain, walletErrorMessage } from "./wallet-client";
+import { deleteEntityWithWallet, extendEntityWithWallet, createSocialSampleWithWallet, ensureChain, walletErrorMessage, SampleConfirmationError } from "./wallet-client";
 import { socialSample } from "./social-sample";
 const account = `0x${"a".repeat(40)}`;
 const entityKey = `0x${"b".repeat(64)}`;
@@ -201,7 +201,7 @@ describe("wallet writes", () => {
 
 describe("sample gas-exhaustion retry", () => {
   const historyKey = `arkiv-graph:seed:7794095:${account}:arkiv-graph-social-v3:history`;
-  function flow(outcomes: ("exhausted" | "semantic" | "null" | "success")[]) {
+  function flow(outcomes: ("exhausted" | "semantic" | "null" | "success")[], sdkSuccess = false) {
     const sent: { hash: string; gas: bigint; nonce: number }[] = [];
     let nonce = 0;
     mocks.estimateGas.mockResolvedValue(1_000_000n);
@@ -230,11 +230,52 @@ describe("sample gas-exhaustion retry", () => {
     mocks.executeBatch.mockImplementation(async () => {
       const hash = await mocks.walletConfig.transport({}).request({ method: "eth_sendTransaction", params: [{ from: account, to: "0x4400000000000000000000000000000000000044", data: "0x1234", nonce: `0x${nonce.toString(16)}` }] });
       const outcome = outcomes[sent.length - 1] ?? "success";
-      if (outcome !== "success") throw new Error("SDK confirmation failed");
+      if (outcome !== "success" && !sdkSuccess) {
+        if (outcome === "null") throw new Error("SDK confirmation timeout");
+        throw Object.assign(new Error(`Transaction ${hash} reverted. No reason provided by backend.`), { name: "EntityMutationError", txHash: hash });
+      }
       return { txHash: hash, createdEntities: [entityKey] };
     });
     return sent;
   }
+  it("persists SDK success before a disagreeing gas-exhausted lookup and never sends again", async () => {
+    const sent = flow(["exhausted"], true);
+    const lookup = mocks.getTransactionReceipt.getMockImplementation()!;
+    mocks.getTransactionReceipt.mockImplementation(async params => {
+      const attempt = JSON.parse(localStorage.getItem(historyKey)!).attempts[0];
+      expect(attempt).toMatchObject({ status: "success", sdkSuccessHash: sent[0]!.hash, entityKeys: [entityKey] });
+      return lookup(params);
+    });
+    for (let i = 0; i < 3; i++) await expect(createSocialSampleWithWallet(account)).rejects.toMatchObject({
+      name: "SampleConfirmationError", code: "RECEIPT_DISAGREES", txUrl: expect.stringContaining(sent[0]?.hash ?? "0x"),
+    });
+    expect(sent).toHaveLength(1);
+    expect(mocks.executeBatch).toHaveBeenCalledTimes(1);
+    expect(mocks.getTransaction).not.toHaveBeenCalled();
+    expect(JSON.parse(localStorage.getItem(historyKey)!).attempts[0]).toMatchObject({ status: "success", sdkSuccessHash: sent[0]!.hash });
+  });
+  it("never resends after SDK success, a null lookup, and a later gas-exhausted receipt", async () => {
+    const sent = flow(["exhausted"], true);
+    mocks.getTransactionReceipt.mockResolvedValueOnce(null);
+    await expect(createSocialSampleWithWallet(account)).rejects.toBeInstanceOf(SampleConfirmationError);
+    localStorage.removeItem(historyKey.replace(":history", ""));
+    for (let i = 0; i < 3; i++) await expect(createSocialSampleWithWallet(account)).rejects.toMatchObject({
+      code: "CONFIRMATION_PENDING", txUrl: expect.stringContaining(sent[0]!.hash),
+    });
+    expect(mocks.getTransactionReceipt).toHaveBeenCalledTimes(1);
+    expect(sent).toHaveLength(1);
+    expect(mocks.executeBatch).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(localStorage.getItem(historyKey)!).attempts[0].sdkSuccessHash).toBe(sent[0]!.hash);
+  });
+  it("never authorizes a retry from an SDK timeout even if a later lookup reports gas exhaustion", async () => {
+    const sent = flow(["exhausted"]);
+    const execute = mocks.executeBatch.getMockImplementation()!;
+    mocks.executeBatch.mockImplementation(async () => {
+      try { await execute(); } catch { throw new Error("SDK confirmation timeout"); }
+    });
+    for (let i = 0; i < 3; i++) await expect(createSocialSampleWithWallet(account)).rejects.toThrow("SDK did not confirm");
+    expect(sent).toHaveLength(1);
+  });
   it("retries a confirmed exhausted receipt exactly once with fresh nonce and doubled gas", async () => {
     const sent = flow(["exhausted", "success"]);
     await expect(createSocialSampleWithWallet(account)).resolves.toMatchObject({ alreadyCreated: false });

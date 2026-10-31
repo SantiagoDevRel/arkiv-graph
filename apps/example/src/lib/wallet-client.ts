@@ -155,6 +155,9 @@ async function extendEntity(account: string, entityKey: string, targetExpiresAt:
 }
 interface SeedAttempt {
   hash?: Hex;
+  sdkSuccessHash?: Hex;
+  sdkReverted?: boolean;
+  confirmationIssue?: "CONFIRMATION_PENDING" | "RECEIPT_DISAGREES";
   status: "submitting" | "pending" | "success" | "reverted" | "rejected";
   sampleIds: string[];
   entityKeys?: string[];
@@ -162,6 +165,10 @@ interface SeedAttempt {
   nonce?: number;
   gasUsed?: string;
   blockNumber?: string;
+}
+export class SampleConfirmationError extends Error {
+  readonly name = "SampleConfirmationError";
+  constructor(readonly code: "CONFIRMATION_PENDING" | "RECEIPT_DISAGREES", message: string) { super(message); }
 }
 async function createSocialSample(account: string, options: WriteTxOptions = {}) {
   const run = async () => {
@@ -182,7 +189,8 @@ async function createSocialSample(account: string, options: WriteTxOptions = {})
       if (journal.version !== 1 || !Array.isArray(journal.attempts) || journal.attempts.length > 2 || journal.attempts.some(a =>
         !["submitting", "pending", "success", "reverted", "rejected"].includes(a.status) ||
         !Array.isArray(a.sampleIds) || !a.sampleIds.every(id => typeof id === "string") ||
-        (a.hash !== undefined && !KEY.test(a.hash)))) throw new Error("Invalid sample transaction history. Automatic resubmission is blocked.");
+        (a.hash !== undefined && !KEY.test(a.hash)) ||
+        (a.sdkSuccessHash !== undefined && !KEY.test(a.sdkSuccessHash)))) throw new Error("Invalid sample transaction history. Automatic resubmission is blocked.");
       attempts = journal.attempts;
     }
     const persist = () => {
@@ -198,15 +206,32 @@ async function createSocialSample(account: string, options: WriteTxOptions = {})
     }
     const stopped = (message: string) => Object.assign(new Error(message), {
       txUrl: attempts.at(-1)?.hash ? `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${attempts.at(-1)!.hash}` : undefined,
-      txUrls: attempts.flatMap(a => a.hash ? [`${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${a.hash}`] : []),
+      txUrls: [...new Set(attempts.flatMap(a => [a.hash, a.sdkSuccessHash].filter(Boolean)))].map(hash => `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${hash}`),
     });
+    const confirmationIssue = (attempt: SeedAttempt, code: SampleConfirmationError["code"]) => {
+      attempt.confirmationIssue = code;
+      persist();
+      return Object.assign(new SampleConfirmationError(code, code === "RECEIPT_DISAGREES"
+        ? "The receipt disagrees with the SDK success. Check the transaction and refresh; do not sign again."
+        : "SDK success was recorded, but confirmation is pending. Check the transaction and refresh; do not sign again."), {
+        txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${attempt.sdkSuccessHash ?? attempt.hash}`,
+        txUrls: stopped("").txUrls,
+      });
+    };
     const reconcile = async (attempt: SeedAttempt): Promise<"success" | "exhausted" | "semantic"> => {
       if (!attempt.hash) throw stopped("A previous sample submission has no verified transaction hash. Automatic resubmission is blocked.");
       let receipt;
       try { receipt = await pub.getTransactionReceipt({ hash: attempt.hash }); }
-      catch { throw stopped("A sample creation is pending or its receipt is uncertain. Check the transaction before signing again."); }
+      catch {
+        if (attempt.sdkSuccessHash) throw confirmationIssue(attempt, "CONFIRMATION_PENDING");
+        throw stopped("A sample creation is pending or its receipt is uncertain. Check the transaction before signing again.");
+      }
       if (!receipt || receipt.blockNumber == null || receipt.transactionHash !== attempt.hash || !["success", "reverted"].includes(receipt.status))
-        throw stopped("A sample creation is pending or its receipt is uncertain. Automatic resubmission is blocked.");
+        throw attempt.sdkSuccessHash ? confirmationIssue(attempt, "CONFIRMATION_PENDING")
+          : stopped("A sample creation is pending or its receipt is uncertain. Automatic resubmission is blocked.");
+      // SDK success is an irreversible no-resend boundary, even if another RPC disagrees.
+      if (attempt.sdkSuccessHash && (receipt.status !== "success" || receipt.transactionHash !== attempt.sdkSuccessHash))
+        throw confirmationIssue(attempt, "RECEIPT_DISAGREES");
       attempt.status = receipt.status;
       attempt.blockNumber = String(receipt.blockNumber);
       attempt.gasUsed = String(receipt.gasUsed);
@@ -225,11 +250,13 @@ async function createSocialSample(account: string, options: WriteTxOptions = {})
     };
     const retryFloor = async () => {
       const last = attempts.at(-1)!;
+      if (attempts.some(a => a.sdkSuccessHash)) throw confirmationIssue(last, last.confirmationIssue ?? "CONFIRMATION_PENDING");
       if (last.status === "rejected") throw stopped("The sample signature was rejected. Automatic resubmission is blocked.");
       if (last.status === "success") throw stopped("Creation was confirmed, but its entities are not visible. Refresh and do not sign again.");
       const outcome = await reconcile(last);
       if (outcome === "success") throw stopped("Creation was confirmed, but its entities are not visible. Refresh and do not sign again.");
       if (outcome !== "exhausted") throw stopped("The sample transaction reverted without gas exhaustion. No retry is authorized.");
+      if (!last.sdkReverted) throw stopped("The SDK did not confirm a reverted sample transaction. Automatic resubmission is blocked.");
       if (attempts.length !== 1) throw stopped("The single gas-exhaustion retry was already used. No further sample transaction is authorized.");
       return BigInt(last.gas!) * 2n;
     };
@@ -256,9 +283,15 @@ async function createSocialSample(account: string, options: WriteTxOptions = {})
         const result = await client.executeBatch({ creates }, await txParams(account, options));
         // Also retain hashes returned by an SDK wrapper that did not expose the transport callback.
         register(); attempt.hash ??= result.txHash; attempt.entityKeys = result.createdEntities;
+        attempt.sdkSuccessHash = result.txHash; attempt.status = "success";
         persist(); markPending(attempt.hash);
       } catch (error) {
         sdkError = error;
+        // SDK 1.0 emits this specific EntityMutationError only after its reverted receipt.
+        const mutation = error as { name?: string; txHash?: Hex; message?: string } | undefined;
+        attempt.sdkReverted = !!attempt.hash && mutation?.name === "EntityMutationError" &&
+          mutation.txHash === attempt.hash && mutation.message?.startsWith(`Transaction ${attempt.hash} reverted.`) === true;
+        if (started) persist();
         if (!attempt.hash) {
           let cause = error as { code?: number; name?: string; cause?: unknown } | undefined;
           let rejected = false;
