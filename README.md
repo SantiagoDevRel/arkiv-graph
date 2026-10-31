@@ -2,11 +2,11 @@
 
 Interactive graphs and tables for Arkiv entities on Rabdi, the DB-Chain testnet for the Web3 database. Declare relationships once and inspect the same model in both views. Optional callbacks support wallet-signed Lifetime Extension and single-entity deletion.
 
-**1.0.0 is a release candidate, not a published npm release.** It targets `@arkiv-network/sdk@1.0.0`. Publication and production promotion require a separate approval. These packages are intended for testnet use.
+**arkiv-graph@1.0.0 is published on npm** and targets `@arkiv-network/sdk@1.0.0`. These packages are intended for testnet use.
 
 - [Package API and integration](packages/arkiv-graph/README.md)
 - [Social sample and setup](apps/example/README.md)
-- [Candidate verification](docs/release-1.0.0.md)
+- [Release verification](docs/release-1.0.0.md)
 - [Breaking changes](CHANGELOG.md)
 - [Official brand asset provenance](docs/brand-assets.md)
 
@@ -21,7 +21,7 @@ pnpm test
 pnpm test:wallet
 ```
 
-The versioned sample consumes a pinned published npm release. Before publication, run `scripts/pack-consumer.mjs` and `scripts/verify-sample.mjs` with a managed `TMPDIR`: these install the verified candidate tarball into an isolated staging directory and run the full workspace typecheck/build there. The preview uses that installed artifact, never workspace source imports. After publication, update the sample's exact registry pin and lockfile and verify a clean registry consumer; normal `pnpm typecheck` / `pnpm build:example` then use that registry version.
+The sample pins registry `arkiv-graph@1.0.0`; `.npmrc` disables workspace package linking. A clean `pnpm install --frozen-lockfile`, `pnpm typecheck` and `pnpm build` consume the published package. Prepublication tarball staging scripts remain available for future release candidates; they are not part of the registry sample build.
 
 The sample server requires `ARKIV_ACCESS_KEY`, obtained from [Access Keys](https://hub.arkiv.network/access-keys). Keep it server-side. Visitors configure their own Rabdi RPC in their wallet; test funds come from the [Hub faucet](https://hub.arkiv.network/faucet). No application signing key is needed.
 

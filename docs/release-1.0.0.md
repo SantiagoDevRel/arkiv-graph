@@ -1,4 +1,15 @@
-# arkiv-graph 1.0.0 candidate verification
+# arkiv-graph 1.0.0 release verification
+
+The reviewed artifact is published as [arkiv-graph@1.0.0](https://www.npmjs.com/package/arkiv-graph/v/1.0.0), dist-tag latest, targeting SDK1.0.0/Rabdi. Registry integrity and shasum match the reviewed tarball:
+
+- SHA256: `38a426464e19deee8e16e0f3f4d5b38a9c2a9c079413e38e118d96055b5b585e`
+- Integrity: `sha512-Jf/n7oDtpYnKqHGvdRBtuRIM1EnmZzf+OY+0cix1OaRChiLYnSsXQrBoJSIjC6zo42KfTqAff5Sif5SsJ1KB1Q==`
+- Shasum: `5ccf9bae378192fefec4059fc33116c8a9a1169b`
+
+The sample now pins registry1.0.0 in its manifest/lockfile, without a committed vendor artifact. Release gates require clean registry install/build/tests and a hydrated preview from this committed source before merge, followed by a version tag/release and production verification. Application signing logic and package source are unchanged from the approved312b91e review. The checkpoint below preserves the prepublication evidence and is historical; its publication/pin status is superseded by this section.
+
+## Historical prepublication checkpoint
+
 
 Target: SDK 1.0.0, Rabdi chain 7794095. Candidate base: `e2fd08e`, which contains registry release 0.3.1. Branch: `rabdi/sdk-1.0-20261030`.
 
