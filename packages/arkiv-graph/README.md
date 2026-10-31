@@ -2,13 +2,12 @@
 
 Interactive graphs and tables for Arkiv entities. Relationships are application rules, not native joins or foreign-key constraints. **Testnet use only.**
 
-**Candidate: 1.1.0**, with `@arkiv-network/sdk@1.0.0` and Rabdi (chain id `7794095`). This candidate has not been published. Consult the repository's `docs/release-1.0.0.md` for actual verification status before installing from the registry.
+**arkiv-graph 1.1.0**, with `@arkiv-network/sdk@1.0.0` and Rabdi (chain id `7794095`). Since 1.1.0, use `bytes` for binary entity data.
 
-## Install after publication
+## Install version 1.1.0 from npm:
 
 ```sh
-npm view arkiv-graph@1.1.0 version
-npm install arkiv-graph@1.0.0 @arkiv-network/sdk@1.0.0 viem
+npm install arkiv-graph@1.1.0 @arkiv-network/sdk@1.0.0 viem
 # For React rendering:
 npm install react react-dom
 ```

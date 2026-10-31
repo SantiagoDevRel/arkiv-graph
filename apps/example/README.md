@@ -1,6 +1,6 @@
 # Rabdi social sample
 
-A fictional social network viewed as a graph and tables using the same `arkiv-graph` model. These packages are intended for testnet use. Candidate status and actual checks: [release evidence](../../docs/release-1.0.0.md).
+A fictional social network viewed as a graph and tables using the same `arkiv-graph` model. These packages are intended for testnet use. Dated verification evidence: [release evidence](../../docs/release-1.0.0.md).
 
 ## Setup
 
