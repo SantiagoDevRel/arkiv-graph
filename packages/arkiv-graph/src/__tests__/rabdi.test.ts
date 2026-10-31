@@ -36,12 +36,12 @@ describe('Rabdi SDK 1.0 graph/table contract', () => {
     await expect(fetchArkivGraph({ ownedBy: owner })).rejects.toThrow('access');
   });
   it('does not confuse named SDK columns with legacy metadata', () => {
-    const row = { $key: hex(7), $owner: owner, owner: str('profile owner'), payload: str('a named column'), attributes: str('another named column'), entityType: str('user'), handle: str('carol') };
+    const row = { $key: hex(7), $owner: owner, owner: str('profile owner'), bytes: str('a named column'), attributes: str('another named column'), entityType: str('user'), handle: str('carol') };
     const graph = buildGraph([row]);
-    expect(graph.nodes[0]).toMatchObject({ owner, label: 'carol', payload: {} });
+    expect(graph.nodes[0]).toMatchObject({ owner, label: 'carol', bytes: {} });
     const tables = buildTables(graph, [row]);
     expect(tables.tables[0].rows[0].cells['attr:owner']).toBe('profile owner');
-    expect(tables.tables[0].rows[0].cells['attr:payload']).toBe('a named column');
+    expect(tables.tables[0].rows[0].cells['attr:bytes']).toBe('a named column');
     expect(tables.tables[0].rows[0].cells['attr:attributes']).toBe('another named column');
   });
 });

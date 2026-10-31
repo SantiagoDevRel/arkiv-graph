@@ -8,7 +8,7 @@ export interface NormEntity {
   attributes: ArkivAttribute[];
   /** first value per attribute key (the common case). */
   attrMap: Map<string, string | number>;
-  payload: Record<string, unknown>;
+  bytes: Record<string, unknown>;
   expiresAtBlock?: number;
   createdAtBlock?: number;
   raw: ArkivEntityLike;
@@ -24,8 +24,8 @@ function toNum(v: unknown): number | undefined {
   }
 }
 
-/** Decode a payload that may be bytes, a byte-map ({0:123,...}), a string, or an object. */
-function decodePayload(entity: ArkivEntityLike): Record<string, unknown> {
+/** Decode a bytes that may be bytes, a byte-map ({0:123,...}), a string, or an object. */
+function decodeBytes(entity: ArkivEntityLike): Record<string, unknown> {
   // Compatibility parser for legacy plain inputs; SDK 1.0 uses typed columns.
   if (typeof entity.toJson === "function") {
     try {
@@ -35,7 +35,7 @@ function decodePayload(entity: ArkivEntityLike): Record<string, unknown> {
       /* fall through */
     }
   }
-  const p = entity.payload;
+  const p = entity.bytes ?? entity.payload;
   if (p == null) return {};
   if (typeof p === "object" && !Array.isArray(p) && !isByteMap(p)) {
     return p as Record<string, unknown>;
@@ -103,7 +103,7 @@ export function normalizeEntity(entity: ArkivEntityLike): NormEntity {
     creator: typeof creator === "string" ? creator.toLowerCase() : undefined,
     attributes,
     attrMap,
-    payload: sdkRow ? {} : decodePayload(entity),
+    bytes: sdkRow ? {} : decodeBytes(entity),
     expiresAtBlock: toNum(sdkRow ? entity.$expiresAt : entity.expiresAt ?? entity.expiresAtBlock),
     createdAtBlock: toNum(sdkRow ? entity.$createdAt : entity.createdAt ?? entity.createdAtBlock),
     raw: entity,

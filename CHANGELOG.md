@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+- Add bytes fields with deprecated compatibility aliases. Guard every source-map string and clarify release installation guidance.
+
+> Historical version entries below are preserved as recorded; use README.md for the current release.
+
 ## 1.0.0 — release candidate
 
 Breaking changes:

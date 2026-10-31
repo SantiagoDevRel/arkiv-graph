@@ -16,7 +16,7 @@ const POST_1 = hex64(10);
 const LIKE_1 = hex64(20);
 const COMMENT_1 = hex64(30);
 
-function entity(key: string, type: string, payload: Record<string, unknown>, attrs: Record<string, string | number> = {}): ArkivEntityLike {
+function entity(key: string, type: string, bytes: Record<string, unknown>, attrs: Record<string, string | number> = {}): ArkivEntityLike {
   return {
     key,
     owner: "0xowner1111111111111111111111111111111111",
@@ -26,7 +26,7 @@ function entity(key: string, type: string, payload: Record<string, unknown>, att
       { key: "entityType", value: type },
       ...Object.entries(attrs).map(([k, v]) => ({ key: k, value: v })),
     ],
-    payload,
+    bytes,
   };
 }
 
@@ -71,9 +71,9 @@ describe("buildGraph", () => {
 
   it("collapses join entities that reference endpoints by a stable id (handle)", () => {
     const entities = [
-      { key: hex64(301), attributes: [{ key: "entityType", value: "user" }, { key: "handle", value: "alice" }], payload: { handle: "alice" } },
-      { key: hex64(302), attributes: [{ key: "entityType", value: "user" }, { key: "handle", value: "bob" }], payload: { handle: "bob" } },
-      { key: hex64(303), attributes: [{ key: "entityType", value: "follow" }, { key: "followerHandle", value: "alice" }, { key: "followeeHandle", value: "bob" }], payload: {} },
+      { key: hex64(301), attributes: [{ key: "entityType", value: "user" }, { key: "handle", value: "alice" }], bytes: { handle: "alice" } },
+      { key: hex64(302), attributes: [{ key: "entityType", value: "user" }, { key: "handle", value: "bob" }], bytes: { handle: "bob" } },
+      { key: hex64(303), attributes: [{ key: "entityType", value: "follow" }, { key: "followerHandle", value: "alice" }, { key: "followeeHandle", value: "bob" }], bytes: {} },
     ] as ArkivEntityLike[];
     const g = buildGraph(entities, {
       links: [
@@ -116,8 +116,8 @@ describe("buildGraph", () => {
 
   it("resolves references by a stable business id (targetAttribute)", () => {
     const entities = [
-      { key: hex64(201), attributes: [{ key: "entityType", value: "user" }, { key: "handle", value: "alice" }], payload: {} },
-      { key: hex64(202), attributes: [{ key: "entityType", value: "post" }, { key: "authorHandle", value: "alice" }], payload: { text: "x" } },
+      { key: hex64(201), attributes: [{ key: "entityType", value: "user" }, { key: "handle", value: "alice" }], bytes: {} },
+      { key: hex64(202), attributes: [{ key: "entityType", value: "post" }, { key: "authorHandle", value: "alice" }], bytes: { text: "x" } },
     ] as ArkivEntityLike[];
     const g = buildGraph(entities, {
       links: [{ type: "reference", attribute: "authorHandle", targetAttribute: "handle", targetType: "user" }],
@@ -132,7 +132,7 @@ describe("buildGraph", () => {
     const e: ArkivEntityLike = {
       key: USER_A,
       attributes: [{ key: "entityType", value: "user" }],
-      payload: {},
+      bytes: {},
       createdAtBlock: 1000n,
       expiresAtBlock: 2000n,
     };

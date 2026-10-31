@@ -33,6 +33,8 @@ export interface LegacyArkivEntityLike {
   createdAt?: bigint | number | string;
   updatedAt?: bigint | number | string;
   /** Legacy plain-input document, retained for compatibility. Not SDK 1.0 data. */
+  bytes?: unknown;
+  /** @deprecated Use bytes for legacy plain-input binary data. SDK 1.0 uses typed columns. */
   payload?: unknown;
   /** Optional legacy plain-input parser. SDK 1.0 uses typed columns. */
   toJson?: () => unknown;
@@ -80,6 +82,8 @@ export interface GraphNode {
   label: string;
   /** entityType attribute value, for kind === "entity". */
   entityType?: string;
+  bytes?: unknown;
+  /** @deprecated Use bytes. The builder retains this alias for compatibility. */
   payload?: unknown;
   attributes?: ArkivAttribute[];
   owner?: string;

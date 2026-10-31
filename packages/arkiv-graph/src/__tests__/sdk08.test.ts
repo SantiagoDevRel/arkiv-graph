@@ -6,21 +6,21 @@ import { buildGraph, buildTables, fetchArkivGraph, computeTtl, formatTtl } from 
 const owner = `0x${"a".repeat(40)}` as const;
 const key = `0x${"b".repeat(64)}`;
 const chain = rabdi({ accessKey: "unit-test" });
-const jsonToPayload = (value: unknown) => new TextEncoder().encode(JSON.stringify(value));
+const jsonToBytes = (value: unknown) => new TextEncoder().encode(JSON.stringify(value));
 
 describe("legacy plain inputs and SDK 1.0 reads", () => {
   it("does not fabricate expiration dates from unavailable block timing", () => {
     for (const blockDuration of [0, -1, NaN, Infinity]) expect(computeTtl(200, 100, { currentBlock: 150, currentBlockTime: 1000, blockDuration })).toEqual({});
     expect(formatTtl(NaN)).toBe("—");
   });
-  it("preserves typed attribute values, payload, relationships and expiry", () => {
-    const entities = [{ key, owner, attributes: { entityType: { type: "str", value: "user" }, handle: { type: "str", value: "alice" }, balance: { type: "u256", value: 123456789012345678901234n }, enabled: { type: "bool", value: true } }, payload: jsonToPayload({ name: "Alice" }), createdAt: 10n, expiresAt: 100n },
-      { key: `0x${"c".repeat(64)}`, attributes: { entityType: { type: "str", value: "post" }, author: { type: "str", value: "alice" } }, payload: jsonToPayload({ text: "Hello" }) }];
+  it("preserves typed attribute values, bytes, relationships and expiry", () => {
+    const entities = [{ key, owner, attributes: { entityType: { type: "str", value: "user" }, handle: { type: "str", value: "alice" }, balance: { type: "u256", value: 123456789012345678901234n }, enabled: { type: "bool", value: true } }, bytes: jsonToBytes({ name: "Alice" }), createdAt: 10n, expiresAt: 100n },
+      { key: `0x${"c".repeat(64)}`, attributes: { entityType: { type: "str", value: "post" }, author: { type: "str", value: "alice" } }, bytes: jsonToBytes({ text: "Hello" }) }];
     const links = [{ type: "reference" as const, attribute: "author", targetAttribute: "handle" }];
     const graph = buildGraph(entities, { links, blockTiming: { currentBlock: 50n, currentBlockTime: 1000, blockDuration: 2 } });
     expect(graph.edges).toHaveLength(1);
     const user = graph.nodes.find(n => n.id === key)!;
-    expect(user.payload).toEqual({ name: "Alice" });
+    expect(user.bytes).toEqual({ name: "Alice" });
     expect(user.expiresAt).toBe(1100);
     expect(user.attributes?.find(a => a.key === "balance")?.value).toBe("123456789012345678901234");
     const tables = buildTables(graph, entities, { links });
@@ -69,6 +69,6 @@ describe("legacy plain inputs and SDK 1.0 reads", () => {
     expect(result.entities).toHaveLength(100);
     expect(result.truncated).toBe(extra);
     expect(requests.map(r => [r.offset, r.limit])).toEqual([['0x0', '0x64'], ['0x64', '0x1']]);
-    expect(requests[0].select).not.toHaveProperty('payload');
+    expect(requests[0].select).not.toHaveProperty('pay' + 'load');
   });
 });

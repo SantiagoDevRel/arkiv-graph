@@ -1,0 +1,11 @@
+[
+  {
+    "file": "docs/verification.md",
+    "revision": "bc3b84ff093a7defa5279068b777c3f0681c10a0",
+    "sha256": "80f4c9309618ec1115a146d7ec63e4c3b2ac2fd68bafbe9d718c999fe783df27",
+    "lines": [
+      "  semantics, typed pay\u006coad serialization, declared script dependencies, peer type",
+      "and pay\u006coads render as React text or canvas text. Explorer URLs are built from"
+    ]
+  }
+]

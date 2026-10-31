@@ -1,3 +1,5 @@
+> Historical dated evidence, preserved from bc3b84f. For current API and installation guidance, use the root README and AGENTS.md.
+
 # Verification — arkiv-graph 0.3.0
 
 > Historical checkpoints below retain their status at the time. **0.3.1 is now

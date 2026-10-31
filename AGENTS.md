@@ -4,13 +4,13 @@ This repo contains a publishable library (`packages/arkiv-graph`) and a consumer
 sample (`apps/example`). Read the [root README](./README.md), the
 [package consumer guide](./packages/arkiv-graph/AGENTS.md), and the
 [sample guide](./apps/example/AGENTS.md). Commands and compatibility live in the
-READMEs; current release evidence lives in `docs/release-1.0.0.md` and historical
+READMEs; dated release evidence lives in `docs/release-1.0.0.md` and historical
 checkpoints in `docs/verification.md`.
 
 ## Maintainer invariants
 - The sample pins the published npm package. Do not ship `workspace:*` or local
   library imports as a substitute for checking a clean consumer.
-  Before publication, verify the packed candidate in an isolated sample staging
+  Verify the versioned archive in an isolated sample staging
   directory; never commit the staging tarball dependency. After publication,
   update the exact registry pin and lockfile and repeat the registry consumer check.
 - SDK 1.0 uses schema columns, $-prefixed row metadata and offset pagination.
@@ -37,3 +37,4 @@ checkpoints in `docs/verification.md`.
 Rabdi signing: read latest state; pass explicit nonce, gas (max of 1,000,000 and twice an unsigned latest estimate, never above half the head block limit; split batches before signing) and gasPrice. Check receipt.status === "success"; never retry a successful or uncertain write. Shared RPC keys stay server-side; visitor writes use the RPC configured in their wallet.
 
 Rabdi lifetime targets must stay below 7,884,000 blocks from the head (use a signing margin). No permanent/no-expiration mode; use Lifetime Extension for longer retention.
+

@@ -47,7 +47,7 @@ function Field({ label, value, theme, mono }: { label: string; value: React.Reac
   return (
     <div style={{ display: "grid", gridTemplateColumns: "78px 1fr", gap: "2px 10px", alignItems: "start", padding: "2px 0", fontSize: 12, lineHeight: 1.45 }}>
       <span style={{ color: theme.muted, wordBreak: "break-word" }}>{label}</span>
-      {/* React escapes text by default — payload/attribute values render as text, never HTML. */}
+      {/* React escapes text by default — bytes/attribute values render as text, never HTML. */}
       <span style={{ color: theme.text, wordBreak: "break-word", fontFamily: mono ? MONO : SANS, fontSize: mono ? 11 : 12 }}>{value}</span>
     </div>
   );
@@ -89,8 +89,9 @@ function Relationships({ connections, theme }: { connections: NodeConnection[]; 
 export function NodeDetail({ node, connections = [], onClose, theme = ARKIV_THEME }: NodeDetailProps): React.ReactElement | null {
   if (!node) return null;
   const color = nodeColorFor(node, theme);
-  const payload = node.payload && typeof node.payload === "object" ? (node.payload as Record<string, unknown>) : null;
-  const payloadEntries = payload ? Object.entries(payload) : [];
+  const nodeBytes = node.bytes ?? node.payload;
+  const bytes = nodeBytes && typeof nodeBytes === "object" ? (nodeBytes as Record<string, unknown>) : null;
+  const bytesEntries = bytes ? Object.entries(bytes) : [];
 
   const scrollClass = ensureScrollbarStyle(theme);
 
@@ -164,10 +165,10 @@ export function NodeDetail({ node, connections = [], onClose, theme = ARKIV_THEM
         </Section>
       )}
 
-      {/* payload */}
-      {payloadEntries.length > 0 && (
+      {/* bytes */}
+      {bytesEntries.length > 0 && (
         <Section title="Legacy document" theme={theme}>
-          {payloadEntries.map(([k, v]) => (
+          {bytesEntries.map(([k, v]) => (
             <Field key={k} label={k} value={typeof v === "object" ? JSON.stringify(v) : String(v)} theme={theme} />
           ))}
         </Section>

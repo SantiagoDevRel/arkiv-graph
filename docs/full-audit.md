@@ -1,3 +1,5 @@
+> Historical dated evidence, preserved from bc3b84f. For current API and installation guidance, use the root README and AGENTS.md.
+
 # Full repository audit — 2026-09-08
 
 > This is the historical pre-publication audit. Its publication gates have since

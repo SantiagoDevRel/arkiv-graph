@@ -1,3 +1,5 @@
+> Historical dated evidence, preserved from bc3b84f. For current API and installation guidance, use the root README and AGENTS.md.
+
 # arkiv-graph 1.0.0 release verification
 
 The reviewed artifact is published as [arkiv-graph@1.0.0](https://www.npmjs.com/package/arkiv-graph/v/1.0.0), dist-tag latest, targeting SDK1.0.0/Rabdi. Registry integrity and shasum match the reviewed tarball:

@@ -17,7 +17,7 @@ function shortKey(key: string): string {
 }
 
 function pickLabel(e: NormEntity, entityType: string | undefined, labelKey?: string): string {
-  const p = e.payload;
+  const p = e.bytes;
   if (labelKey) {
     if (p && typeof p === "object" && labelKey in p) return String((p as Record<string, unknown>)[labelKey]);
     if (e.attrMap.has(labelKey)) return String(e.attrMap.get(labelKey));
@@ -94,7 +94,8 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
       kind: "entity",
       label: pickLabel(e, typeStr, options.labelKey),
       entityType: typeStr,
-      payload: e.payload,
+      bytes: e.bytes,
+      payload: e.bytes, // Deprecated output alias; same object.
       attributes: e.attributes,
       owner: e.owner,
       creator: e.creator,

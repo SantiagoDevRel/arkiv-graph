@@ -2,7 +2,7 @@
 
 Interactive graphs and tables for Arkiv entities on Rabdi, the DB-Chain testnet for the Web3 database. Declare relationships once and inspect the same model in both views. Optional callbacks support wallet-signed Lifetime Extension and single-entity deletion.
 
-**arkiv-graph@1.0.0 is published on npm** and targets `@arkiv-network/sdk@1.0.0`. These packages are intended for testnet use.
+**arkiv-graph 1.1.0** targets `@arkiv-network/sdk@1.0.0` and Rabdi. These packages are intended for testnet use.
 
 - [Package API and integration](packages/arkiv-graph/README.md)
 - [Social sample and setup](apps/example/README.md)
@@ -21,7 +21,7 @@ pnpm test
 pnpm test:wallet
 ```
 
-The sample pins registry `arkiv-graph@1.0.0`; `.npmrc` disables workspace package linking. A clean `pnpm install --frozen-lockfile`, `pnpm typecheck` and `pnpm build` consume the published package. Prepublication tarball staging scripts remain available for future release candidates; they are not part of the registry sample build.
+The sample pins registry `arkiv-graph@1.0.0`; `.npmrc` disables workspace package linking. A clean `pnpm install --frozen-lockfile`, `pnpm typecheck` and `pnpm build` consume the published package. Tarball staging scripts verify a separate isolated consumer; they do not replace the registry dependency in the sample.
 
 The sample server requires `ARKIV_ACCESS_KEY`, obtained from [Access Keys](https://hub.arkiv.network/access-keys). Keep it server-side. Visitors configure their own Rabdi RPC in their wallet; test funds come from the [Hub faucet](https://hub.arkiv.network/faucet). No application signing key is needed.
 
@@ -34,3 +34,4 @@ The seed starts with at most ten entities per batch, estimates the exact unsigne
 Agent instructions: [maintainer](AGENTS.md), [package](packages/arkiv-graph/AGENTS.md), [sample](apps/example/AGENTS.md). Historical reports in `docs/` describe their original release only.
 
 MIT · Arkiv DevRel
+
