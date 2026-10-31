@@ -1,0 +1,1757 @@
+[
+  {
+    "literal": "d:O.S,postponed:g,staleTime:E}}catch(t){return h.signal.aborted||console.error(\"Failed to fetch RSC pay\u006coad for \"+e+\". Falling back to browser navigation.\",t),{flightData:e.toString(),canonicalUrl:void 0,cou",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/18-2c82660ce7c4918d.js",
+      "offset": 5464,
+      "line": 1
+    }
+  },
+  {
+    "literal": ":d=!0;break;case\"object\":switch(t.$$typeof){case u:case o:d=!0;break;case h:return e((d=t._init)(t._pay\u006coad),r,n,l,a)}}if(d)return a=a(t),d=\"\"===l?\".\"+A(t,0):l,O(a)?(n=\"\",null!=d&&(n=d.replace(w,\"$&/\")+\"/\"),",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/18-2c82660ce7c4918d.js",
+      "offset": 24901,
+      "line": 1
+    }
+  },
+  {
+    "literal": "f=function(e){return{$$typeof:f,render:e}},t.isValidElement=M,t.lazy=function(e){return{$$typeof:h,_pay\u006coad:{_status:-1,_result:e},_init:x}},t.memo=function(e,t){return{$$typeof:p,type:e,compare:void 0===t?n",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/18-2c82660ce7c4918d.js",
+      "offset": 28780,
+      "line": 1
+    }
+  },
+  {
+    "literal": "in},t)))}async function p(e){let{actionQueue:t,action:r,setState:n}=e,u=t.state;t.pending=r;let o=r.pay\u006coad,a=t.action(u,o);function i(e){r.discarded||(t.state=e,d(t,n),r.resolve(e))}(0,l.isThenable)(a)?a.th",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/18-2c82660ce7c4918d.js",
+      "offset": 36932,
+      "line": 1
+    }
+  },
+  {
+    "literal": "ESTORE){let e=new Promise((e,t)=>{u={resolve:e,reject:t}});(0,o.startTransition)(()=>{r(e)})}let l={pay\u006coad:t,next:null,resolve:u.resolve,reject:u.reject};null===e.pending?(e.last=l,p({actionQueue:e,action:l",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/18-2c82660ce7c4918d.js",
+      "offset": 37303,
+      "line": 1
+    }
+  },
+  {
+    "literal": ".ACTION_NAVIGATE||t.type===n.ACTION_RESTORE?(e.pending.discarded=!0,l.next=e.pending.next,e.pending.pay\u006coad.type===n.ACTION_SERVER_ACTION&&(e.needsRefresh=!0),p({actionQueue:e,action:l,setState:r})):(null!==",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/18-2c82660ce7c4918d.js",
+      "offset": 37535,
+      "line": 1
+    }
+  },
+  {
+    "literal": ",r,t):\"fulfilled\"===r.status&&null!==r.reason&&r.reason.error(t)})}function H(e){return{$$typeof:_,_pay\u006coad:e,_init:T}}function B(e,t){var r=e._chunks,n=r.get(t);return n||(n=e._closed?new j(\"rejected\",null,",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/18-2c82660ce7c4918d.js",
+      "offset": 101949,
+      "line": 1
+    }
+  },
+  {
+    "literal": "arentObject,l=e.key,a=e.map,i=e.path;try{for(var c=1;c<i.length;c++){for(;t.$$typeof===_;){var s=t._pay\u006coad;if(s===n.chunk)t=n.value;else{switch(s.status){case\"resolved_model\":I(s);break;case\"resolved_module",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/18-2c82660ce7c4918d.js",
+      "offset": 102264,
+      "line": 1
+    }
+  },
+  {
+    "literal": "(l.status){case\"fulfilled\":var a=l.value;for(l=1;l<t.length;l++){for(;a.$$typeof===_;){switch((a=a._pay\u006coad).status){case\"resolved_model\":I(a);break;case\"resolved_module\":k(a)}switch(a.status){case\"fulfilled",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/18-2c82660ce7c4918d.js",
+      "offset": 105281,
+      "line": 1
+    }
+  },
+  {
+    "literal": ",new j(\"fulfilled\",n,null));break;case 78:case 68:case 74:case 87:throw Error(\"Failed to read a RSC pay\u006coad created by a development version of React on the server while using a production version on the cli",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/18-2c82660ce7c4918d.js",
+      "offset": 113907,
+      "line": 1
+    }
+  },
+  {
+    "literal": "lient without a temporary reference set. Pass a TemporaryReferenceSet to the options.\");case _:S=p._pay\u006coad;var M=p._init;null===s&&(s=new FormData),c++;try{var w=M(S),A=i++,C=a(w,A);return s.append(\"\"+A,C),",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/18-2c82660ce7c4918d.js",
+      "offset": 115627,
+      "line": 1
+    }
+  },
+  {
+    "literal": ".value;case\"rejected\":throw lm(e=n.reason),e}throw ld=n,la}}function lf(e){try{return(0,e._init)(e._pay\u006coad)}catch(e){if(null!==e&&\"object\"==typeof e&&\"function\"==typeof e.then)throw ld=e,la;throw e}}var ld=",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 40721,
+      "line": 1
+    }
+  },
+  {
+    "literal": "lastBaseUpdate:e.lastBaseUpdate,shared:e.shared,callbacks:null})}function lC(e){return{lane:e,tag:0,pay\u006coad:null,callback:null,next:null}}function lP(e,n,t){var r=e.updateQueue;if(null===r)return null;if(r=r",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 47213,
+      "line": 1
+    }
+  },
+  {
+    "literal": "=r.updateQueue)){var l=null,a=null;if(null!==(t=t.firstBaseUpdate)){do{var o={lane:t.lane,tag:t.tag,pay\u006coad:t.pay\u006coad,callback:null,next:null};null===a?l=a=o:a=a.next=o,t=t.next}while(null!==t);null===a?l=a=",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 47768,
+      "line": 1
+    }
+  },
+  {
+    "literal": "ueue)){var l=null,a=null;if(null!==(t=t.firstBaseUpdate)){do{var o={lane:t.lane,tag:t.tag,pay\u006coad:t.pay\u006coad,callback:null,next:null};null===a?l=a=o:a=a.next=o,t=t.next}while(null!==t);null===a?l=a=n:a=a.next",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 47778,
+      "line": 1
+    }
+  },
+  {
+    "literal": "=d!==u.lane;if(p?(uI&d)===d:(r&d)===d){0!==d&&d===r5&&(lT=!0),null!==c&&(c=c.next={lane:0,tag:u.tag,pay\u006coad:u.pay\u006coad,callback:null,next:null});e:{var h=e,g=u;switch(d=n,g.tag){case 1:if(\"function\"==typeof(h",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 48675,
+      "line": 1
+    }
+  },
+  {
+    "literal": "e;if(p?(uI&d)===d:(r&d)===d){0!==d&&d===r5&&(lT=!0),null!==c&&(c=c.next={lane:0,tag:u.tag,pay\u006coad:u.pay\u006coad,callback:null,next:null});e:{var h=e,g=u;switch(d=n,g.tag){case 1:if(\"function\"==typeof(h=g.pay\u006coad",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 48685,
+      "line": 1
+    }
+  },
+  {
+    "literal": "pay\u006coad,callback:null,next:null});e:{var h=e,g=u;switch(d=n,g.tag){case 1:if(\"function\"==typeof(h=g.pay\u006coad)){f=h.call(t,f,d);break e}f=h;break e;case 3:h.flags=-65537&h.flags|128;case 0:if(null==(d=\"functio",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 48785,
+      "line": 1
+    }
+  },
+  {
+    "literal": ",d);break e}f=h;break e;case 3:h.flags=-65537&h.flags|128;case 0:if(null==(d=\"function\"==typeof(h=g.pay\u006coad)?h.call(t,f,d):h))break e;f=m({},f,d);break e;case 2:lx=!0}}null!==(d=u.callback)&&(e.flags|=64,p&&",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 48907,
+      "line": 1
+    }
+  },
+  {
+    "literal": "s|=64,p&&(e.flags|=8192),null===(p=l.callbacks)?l.callbacks=[d]:p.push(d))}else p={lane:d,tag:u.tag,pay\u006coad:u.pay\u006coad,callback:u.callback,next:null},null===c?(s=c=p,i=f):c=c.next=p,o|=d;if(null===(u=u.next))",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 49105,
+      "line": 1
+    }
+  },
+  {
+    "literal": "e.flags|=8192),null===(p=l.callbacks)?l.callbacks=[d]:p.push(d))}else p={lane:d,tag:u.tag,pay\u006coad:u.pay\u006coad,callback:u.callback,next:null},null===c?(s=c=p,i=f):c=c.next=p,o|=d;if(null===(u=u.next))if(null===",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 49115,
+      "line": 1
+    }
+  },
+  {
+    "literal": "==typeof r?r:af)}function ax(e,n,t,r,l){if(a7(e))throw Error(i(485));if(null!==(e=n.action)){var a={pay\u006coad:l,action:e,next:null,isTransition:!0,status:\"pending\",value:null,reason:null,listeners:[],then:func",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 56299,
+      "line": 1
+    }
+  },
+  {
+    "literal": "a.next=n.pending=a,aE(n,a)):(a.next=t.next,n.pending=t.next=a)}}function aE(e,n){var t=n.action,r=n.pay\u006coad,l=e.state;if(n.isTransition){var a=O.T,o={};O.T=o;try{var u=t(l,r),i=O.S;null!==i&&i(o,u),az(e,n,u)",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 56598,
+      "line": 1
+    }
+  },
+  {
+    "literal": "n.tag){case 24:case 3:var t=il(),r=lP(n,e=lC(t),t);null!==r&&(io(r,n,t),lN(r,n,t)),n={cache:r3()},e.pay\u006coad=n;return}n=n.return}}function a8(e,n,t){var r=il();t={lane:r,revertLane:0,gesture:null,action:t,has",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 61612,
+      "line": 1
+    }
+  },
+  {
+    "literal": "Queue.baseState=t)}var ou={enqueueSetState:function(e,n,t){e=e._reactInternals;var r=il(),l=lC(r);l.pay\u006coad=n,null!=t&&(l.callback=t),null!==(n=lP(e,l,r))&&(io(n,e,r),lN(n,e,r))},enqueueReplaceState:function",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 66574,
+      "line": 1
+    }
+  },
+  {
+    "literal": "r),lN(n,e,r))},enqueueReplaceState:function(e,n,t){e=e._reactInternals;var r=il(),l=lC(r);l.tag=1,l.pay\u006coad=n,null!=t&&(l.callback=t),null!==(n=lP(e,l,r))&&(io(n,e,r),lN(n,e,r))},enqueueForceUpdate:function(",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 66738,
+      "line": 1
+    }
+  },
+  {
+    "literal": "ateNode:null})}catch(e){setTimeout(function(){throw e})}}function og(e,n,t){return(t=lC(t)).tag=3,t.pay\u006coad={element:null},t.callback=function(){om(e,n)},t}function oy(e){return(e=lC(e)).tag=3,e}function ov(",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 67981,
+      "line": 1
+    }
+  },
+  {
+    "literal": "function ov(e,n,t,r){var l=t.type.getDerivedStateFromError;if(\"function\"==typeof l){var a=r.value;e.pay\u006coad=function(){return l(a)},e.callback=function(){oh(n,t,r)}}var o=t.stateNode;null!==o&&\"function\"==ty",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 68176,
+      "line": 1
+    }
+  },
+  {
+    "literal": "+n+\")\":\"ForwardRef\"),n;case C:return null!==(t=n.displayName||null)?t:e(n.type)||\"Memo\";case P:t=n._pay\u006coad,n=n._init;try{return e(n(t))}catch(e){}}return null}(e)||e,\"\"))}}return n;case 0:return o_(e,n,n.ty",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 81917,
+      "line": 1
+    }
+  },
+  {
+    "literal": "E(a),e}function ct(e,n,t,r,l,a){l=l?re:re,null===r.context?r.context=l:r.pendingContext=l,(r=lC(n)).pay\u006coad={element:t},null!==(a=void 0===a?null:a)&&(r.callback=a),null!==(t=lP(e,r,n))&&(io(t,e,n),lN(t,e,n)",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/87c73c54-24122e7b92478d00.js",
+      "offset": 162868,
+      "line": 1
+    }
+  },
+  {
+    "literal": "ure:i,...u&&\"0x\"!==u?{data:u,to:o}:{}}}function S(e){var t;let{data:r,signature:o}=e;T(e);let l=(t={pay\u006coad:function(e,t={}){let{presign:r}=t;return i.So(a.xW(\"0x05\",function(e,t={}){let{as:r=\"Hex\"}=t;return",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/94-ee2f8fff0ae06e86.js",
+      "offset": 198407,
+      "line": 1
+    }
+  },
+  {
+    "literal": "ce:e.nonce}:e))))}(e.authorization,{presign:!0}),signature:y(e.authorization)},A.bI(function(e){let{pay\u006coad:t,signature:r}=e,{r:n,s:i,yParity:s}=r,o=new $.secp256k1.Signature(BigInt(n),BigInt(i)).addRecovery",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/94-ee2f8fff0ae06e86.js",
+      "offset": 199670,
+      "line": 1
+    }
+  },
+  {
+    "literal": "}\\`.`,{name:\"RlpListBoundaryExceededError\"})}}class l extends n.C{constructor({count:e}){super(`RLP pay\u006coad encodes a single item, but \\`${e}\\` trailing ${1===e?\"byte remains\":\"bytes remain\"}.`,{name:\"RlpTra",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/94-ee2f8fff0ae06e86.js",
+      "offset": 376586,
+      "line": 31
+    }
+  },
+  {
+    "literal": "eration tag ${String(t[0])} is not one the engine knows`;case\"NonCanonicalOperationData\":return`the pay\u006coad for operation tag ${String(t[0])} is not its canonical encoding, so the engine refused it rather th",
+    "origin": "@arkiv-network/sdk@1.0.0",
+    "reason": "Upstream ABI diagnostic text. Report wording to SDK maintainers; preserve upstream implementation.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/94-ee2f8fff0ae06e86.js",
+      "offset": 386912,
+      "line": 31
+    }
+  },
+  {
+    "literal": "var t,n,l,i,s;let{node:h,connections:y=[],onClose:m,theme:b=o}=e;if(!h)return null;let k=a(h,b),v=h.pay\u006coad&&\"object\"==typeof h.pay\u006coad?h.pay\u006coad:null,j=v?Object.entries(v):[],w=c(b);return(0,r.jsxs)(\"div\",{",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/f7dc6044-d1d4ed65a4ef0634.js",
+      "offset": 5132,
+      "line": 1
+    }
+  },
+  {
+    "literal": "nections:y=[],onClose:m,theme:b=o}=e;if(!h)return null;let k=a(h,b),v=h.pay\u006coad&&\"object\"==typeof h.pay\u006coad?h.pay\u006coad:null,j=v?Object.entries(v):[],w=c(b);return(0,r.jsxs)(\"div\",{className:w,style:{position:",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/f7dc6044-d1d4ed65a4ef0634.js",
+      "offset": 5160,
+      "line": 1
+    }
+  },
+  {
+    "literal": "=[],onClose:m,theme:b=o}=e;if(!h)return null;let k=a(h,b),v=h.pay\u006coad&&\"object\"==typeof h.pay\u006coad?h.pay\u006coad:null,j=v?Object.entries(v):[],w=c(b);return(0,r.jsxs)(\"div\",{className:w,style:{position:\"absolute\"",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/f7dc6044-d1d4ed65a4ef0634.js",
+      "offset": 5170,
+      "line": 1
+    }
+  },
+  {
+    "literal": "e.id.toLowerCase().includes(et)||(null==(n=e.entityType)?void 0:n.toLowerCase().includes(et)))||!!e.pay\u006coad&&\"object\"==typeof e.pay\u006coad&&JSON.stringify(e.pay\u006coad).toLowerCase().includes(et)},[et]),el=(0,l.us",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/f7dc6044-d1d4ed65a4ef0634.js",
+      "offset": 12767,
+      "line": 1
+    }
+  },
+  {
+    "literal": "et)||(null==(n=e.entityType)?void 0:n.toLowerCase().includes(et)))||!!e.pay\u006coad&&\"object\"==typeof e.pay\u006coad&&JSON.stringify(e.pay\u006coad).toLowerCase().includes(et)},[et]),el=(0,l.useCallback)(e=>!ee(e),[ee]),e",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/f7dc6044-d1d4ed65a4ef0634.js",
+      "offset": 12795,
+      "line": 1
+    }
+  },
+  {
+    "literal": "e)?void 0:n.toLowerCase().includes(et)))||!!e.pay\u006coad&&\"object\"==typeof e.pay\u006coad&&JSON.stringify(e.pay\u006coad).toLowerCase().includes(et)},[et]),el=(0,l.useCallback)(e=>!ee(e),[ee]),er=(0,l.useCallback)(e=>{le",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/f7dc6044-d1d4ed65a4ef0634.js",
+      "offset": 12821,
+      "line": 1
+    }
+  },
+  {
+    "literal": ":d=!0;break;case\"object\":switch(t.$$typeof){case l:case a:d=!0;break;case m:return e((d=t._init)(t._pay\u006coad),n,r,o,i)}}if(d)return i=i(t),d=\"\"===o?\".\"+L(t,0):o,E(i)?(r=\"\",null!=d&&(r=d.replace(T,\"$&/\")+\"/\"),",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 2071,
+      "line": 1
+    }
+  },
+  {
+    "literal": "f=function(e){return{$$typeof:f,render:e}},t.isValidElement=N,t.lazy=function(e){return{$$typeof:m,_pay\u006coad:{_status:-1,_result:e},_init:D}},t.memo=function(e,t){return{$$typeof:p,type:e,compare:void 0===t?n",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 5963,
+      "line": 1
+    }
+  },
+  {
+    "literal": ".value;case\"rejected\":throw lm(e=t.reason),e}throw ld=t,la}}function lf(e){try{return(0,e._init)(e._pay\u006coad)}catch(e){if(null!==e&&\"object\"==typeof e&&\"function\"==typeof e.then)throw ld=e,la;throw e}}var ld=",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 48408,
+      "line": 1
+    }
+  },
+  {
+    "literal": "lastBaseUpdate:e.lastBaseUpdate,shared:e.shared,callbacks:null})}function l_(e){return{lane:e,tag:0,pay\u006coad:null,callback:null,next:null}}function lz(e,t,n){var r=e.updateQueue;if(null===r)return null;if(r=r",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 54900,
+      "line": 1
+    }
+  },
+  {
+    "literal": "=r.updateQueue)){var l=null,a=null;if(null!==(n=n.firstBaseUpdate)){do{var o={lane:n.lane,tag:n.tag,pay\u006coad:n.pay\u006coad,callback:null,next:null};null===a?l=a=o:a=a.next=o,n=n.next}while(null!==n);null===a?l=a=",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 55455,
+      "line": 1
+    }
+  },
+  {
+    "literal": "ueue)){var l=null,a=null;if(null!==(n=n.firstBaseUpdate)){do{var o={lane:n.lane,tag:n.tag,pay\u006coad:n.pay\u006coad,callback:null,next:null};null===a?l=a=o:a=a.next=o,n=n.next}while(null!==n);null===a?l=a=t:a=a.next",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 55465,
+      "line": 1
+    }
+  },
+  {
+    "literal": "=d!==i.lane;if(p?(ij&d)===d:(r&d)===d){0!==d&&d===r5&&(lT=!0),null!==c&&(c=c.next={lane:0,tag:i.tag,pay\u006coad:i.pay\u006coad,callback:null,next:null});e:{var h=e,g=i;switch(d=t,g.tag){case 1:if(\"function\"==typeof(h",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 56362,
+      "line": 1
+    }
+  },
+  {
+    "literal": "e;if(p?(ij&d)===d:(r&d)===d){0!==d&&d===r5&&(lT=!0),null!==c&&(c=c.next={lane:0,tag:i.tag,pay\u006coad:i.pay\u006coad,callback:null,next:null});e:{var h=e,g=i;switch(d=t,g.tag){case 1:if(\"function\"==typeof(h=g.pay\u006coad",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 56372,
+      "line": 1
+    }
+  },
+  {
+    "literal": "pay\u006coad,callback:null,next:null});e:{var h=e,g=i;switch(d=t,g.tag){case 1:if(\"function\"==typeof(h=g.pay\u006coad)){f=h.call(n,f,d);break e}f=h;break e;case 3:h.flags=-65537&h.flags|128;case 0:if(null==(d=\"functio",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 56472,
+      "line": 1
+    }
+  },
+  {
+    "literal": ",d);break e}f=h;break e;case 3:h.flags=-65537&h.flags|128;case 0:if(null==(d=\"function\"==typeof(h=g.pay\u006coad)?h.call(n,f,d):h))break e;f=m({},f,d);break e;case 2:lx=!0}}null!==(d=i.callback)&&(e.flags|=64,p&&",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 56594,
+      "line": 1
+    }
+  },
+  {
+    "literal": "s|=64,p&&(e.flags|=8192),null===(p=l.callbacks)?l.callbacks=[d]:p.push(d))}else p={lane:d,tag:i.tag,pay\u006coad:i.pay\u006coad,callback:i.callback,next:null},null===c?(s=c=p,u=f):c=c.next=p,o|=d;if(null===(i=i.next))",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 56792,
+      "line": 1
+    }
+  },
+  {
+    "literal": "e.flags|=8192),null===(p=l.callbacks)?l.callbacks=[d]:p.push(d))}else p={lane:d,tag:i.tag,pay\u006coad:i.pay\u006coad,callback:i.callback,next:null},null===c?(s=c=p,u=f):c=c.next=p,o|=d;if(null===(i=i.next))if(null===",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 56802,
+      "line": 1
+    }
+  },
+  {
+    "literal": "==typeof r?r:af)}function ax(e,t,n,r,l){if(oe(e))throw Error(u(485));if(null!==(e=t.action)){var a={pay\u006coad:l,action:e,next:null,isTransition:!0,status:\"pending\",value:null,reason:null,listeners:[],then:func",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 63986,
+      "line": 1
+    }
+  },
+  {
+    "literal": "a.next=t.pending=a,aE(t,a)):(a.next=n.next,t.pending=n.next=a)}}function aE(e,t){var n=t.action,r=t.pay\u006coad,l=e.state;if(t.isTransition){var a=F.T,o={};F.T=o;try{var i=n(l,r),u=F.S;null!==u&&u(o,i),aC(e,t,i)",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 64285,
+      "line": 1
+    }
+  },
+  {
+    "literal": "t.tag){case 24:case 3:var n=ui(),r=lz(t,e=l_(n),n);null!==r&&(us(r,t,n),lP(r,t,n)),t={cache:r3()},e.pay\u006coad=t;return}t=t.return}}function a8(e,t,n){var r=ui();n={lane:r,revertLane:0,gesture:null,action:n,has",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 69616,
+      "line": 1
+    }
+  },
+  {
+    "literal": ".useEffectEvent=aj;var ou={enqueueSetState:function(e,t,n){e=e._reactInternals;var r=ui(),l=l_(r);l.pay\u006coad=t,null!=n&&(l.callback=n),null!==(t=lz(e,l,r))&&(us(t,e,r),lP(t,e,r))},enqueueReplaceState:function",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 74807,
+      "line": 1
+    }
+  },
+  {
+    "literal": "r),lP(t,e,r))},enqueueReplaceState:function(e,t,n){e=e._reactInternals;var r=ui(),l=l_(r);l.tag=1,l.pay\u006coad=t,null!=n&&(l.callback=n),null!==(t=lz(e,l,r))&&(us(t,e,r),lP(t,e,r))},enqueueForceUpdate:function(",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 74971,
+      "line": 1
+    }
+  },
+  {
+    "literal": "ateNode:null})}catch(e){setTimeout(function(){throw e})}}function oy(e,t,n){return(n=l_(n)).tag=3,n.pay\u006coad={element:null},n.callback=function(){oh(e,t)},n}function ov(e){return(e=l_(e)).tag=3,e}function ob(",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 76214,
+      "line": 1
+    }
+  },
+  {
+    "literal": "function ob(e,t,n,r){var l=n.type.getDerivedStateFromError;if(\"function\"==typeof l){var a=r.value;e.pay\u006coad=function(){return l(a)},e.callback=function(){og(t,n,r)}}var o=n.stateNode;null!==o&&\"function\"==ty",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 76409,
+      "line": 1
+    }
+  },
+  {
+    "literal": "+t+\")\":\"ForwardRef\"),t;case _:return null!==(n=t.displayName||null)?n:e(t.type)||\"Memo\";case z:n=t._pay\u006coad,t=t._init;try{return e(t(n))}catch(e){}}return null}(e)||e,\"\"))}}return t;case 0:return oO(e,t,t.ty",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 90138,
+      "line": 1
+    }
+  },
+  {
+    "literal": "E(a),e}function ca(e,t,n,r,l,a){l=l?re:re,null===r.context?r.context=l:r.pendingContext=l,(r=l_(t)).pay\u006coad={element:n},null!==(a=void 0===a?null:a)&&(r.callback=a),null!==(n=lz(e,r,t))&&(us(n,e,t),lP(n,e,t)",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/static/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/static/chunks/framework-7318ce553e854ad6.js",
+      "offset": 172440,
+      "line": 1
+    }
+  },
+  {
+    "literal": "f f?f.toLowerCase():void 0,creator:\"string\"==typeof g?g.toLowerCase():void 0,attributes:d,attrMap:e,pay\u006coad:b?{}:function(a){if(\"function\"==typeof a.toJson)try{let b=a.toJson();if(b&&\"object\"==typeof b)retur",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/api/graph/route.js",
+      "offset": 166007,
+      "line": 23
+    }
+  },
+  {
+    "literal": "f(\"function\"==typeof a.toJson)try{let b=a.toJson();if(b&&\"object\"==typeof b)return b}catch{}let b=a.pay\u006coad;if(null==b)return{};if(\"object\"==typeof b&&!Array.isArray(b)&&!C(b))return b;let c=function(a){try{",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/api/graph/route.js",
+      "offset": 166133,
+      "line": 23
+    }
+  },
+  {
+    "literal": "k,a.createdAtBlock,b.blockTiming);j.set(a.key,{id:a.key,kind:\"entity\",label:function(a,b,c){let d=a.pay\u006coad;if(c){if(d&&\"object\"==typeof d&&c in d)return String(d[c]);if(a.attrMap.has(c))return String(a.attr",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/api/graph/route.js",
+      "offset": 168086,
+      "line": 23
+    }
+  },
+  {
+    "literal": "th>40?`${c.slice(0,38)}\\u2026`:c}return b?`${b} ${F(a.key)}`:F(a.key)}(a,e,b.labelKey),entityType:e,pay\u006coad:a.pay\u006coad,attributes:a.attributes,owner:a.owner,creator:a.creator,expiresAtBlock:a.expiresAtBlock,c",
+    "origin": "arkiv-graph@1.0.0 (exact registry sample pin)",
+    "reason": "Generated registry dependency compatibility field. Keep registry pin until phase 2; package source and its own dist receive no third-party exception.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/api/graph/route.js",
+      "offset": 168452,
+      "line": 23
+    }
+  },
+  {
+    "literal": ".slice(0,38)}\\u2026`:c}return b?`${b} ${F(a.key)}`:F(a.key)}(a,e,b.labelKey),entityType:e,pay\u006coad:a.pay\u006coad,attributes:a.attributes,owner:a.owner,creator:a.creator,expiresAtBlock:a.expiresAtBlock,createdAtBl",
+    "origin": "arkiv-graph@1.0.0 (exact registry sample pin)",
+    "reason": "Generated registry dependency compatibility field. Keep registry pin until phase 2; package source and its own dist receive no third-party exception.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/api/graph/route.js",
+      "offset": 168462,
+      "line": 23
+    }
+  },
+  {
+    "literal": "ure:e,...i&&\"0x\"!==i?{data:i,to:h}:{}}}function E(a){var b;let{data:c,signature:h}=a;C(a);let k=(b={pay\u006coad:function(a,b={}){let{presign:c}=b;return e.So(f.xW(\"0x05\",function(a,b={}){let{as:c=\"Hex\"}=b;return",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/page.js",
+      "offset": 290344,
+      "line": 9
+    }
+  },
+  {
+    "literal": "ce:a.nonce}:a))))}(a.authorization,{presign:!0}),signature:p(a.authorization)},y.bI(function(a){let{pay\u006coad:b,signature:c}=a,{r:d,s:e,yParity:g}=c,h=new x.secp256k1.Signature(BigInt(d),BigInt(e)).addRecovery",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/page.js",
+      "offset": 291607,
+      "line": 9
+    }
+  },
+  {
+    "literal": "}\\`.`,{name:\"RlpListBoundaryExceededError\"})}}class k extends d.C{constructor({count:a}){super(`RLP pay\u006coad encodes a single item, but \\`${a}\\` trailing ${1===a?\"byte remains\":\"bytes remain\"}.`,{name:\"RlpTra",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/page.js",
+      "offset": 372325,
+      "line": 31
+    }
+  },
+  {
+    "literal": "eration tag ${String(b[0])} is not one the engine knows`;case\"NonCanonicalOperationData\":return`the pay\u006coad for operation tag ${String(b[0])} is not its canonical encoding, so the engine refused it rather th",
+    "origin": "@arkiv-network/sdk@1.0.0",
+    "reason": "Upstream ABI diagnostic text. Report wording to SDK maintainers; preserve upstream implementation.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/page.js",
+      "offset": 60126,
+      "line": 1
+    }
+  },
+  {
+    "literal": ",a))})}function p({node:a,connections:b=[],onClose:c,theme:e=f}){if(!a)return null;let g=h(a,e),i=a.pay\u006coad&&\"object\"==typeof a.pay\u006coad?a.pay\u006coad:null,p=i?Object.entries(i):[],r=k(e);return(0,d.jsxs)(\"div\",{",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/page.js",
+      "offset": 176434,
+      "line": 6
+    }
+  },
+  {
+    "literal": "nnections:b=[],onClose:c,theme:e=f}){if(!a)return null;let g=h(a,e),i=a.pay\u006coad&&\"object\"==typeof a.pay\u006coad?a.pay\u006coad:null,p=i?Object.entries(i):[],r=k(e);return(0,d.jsxs)(\"div\",{className:r,style:{position:",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/page.js",
+      "offset": 176462,
+      "line": 6
+    }
+  },
+  {
+    "literal": "b=[],onClose:c,theme:e=f}){if(!a)return null;let g=h(a,e),i=a.pay\u006coad&&\"object\"==typeof a.pay\u006coad?a.pay\u006coad:null,p=i?Object.entries(i):[],r=k(e);return(0,d.jsxs)(\"div\",{className:r,style:{position:\"absolute\"",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/page.js",
+      "offset": 176472,
+      "line": 6
+    }
+  },
+  {
+    "literal": "erCase().includes($)||a.id.toLowerCase().includes($)||a.entityType?.toLowerCase().includes($))||!!a.pay\u006coad&&\"object\"==typeof a.pay\u006coad&&JSON.stringify(a.pay\u006coad).toLowerCase().includes($),[$]),aa=(0,e.useCa",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/page.js",
+      "offset": 182644,
+      "line": 6
+    }
+  },
+  {
+    "literal": "oLowerCase().includes($)||a.entityType?.toLowerCase().includes($))||!!a.pay\u006coad&&\"object\"==typeof a.pay\u006coad&&JSON.stringify(a.pay\u006coad).toLowerCase().includes($),[$]),aa=(0,e.useCallback)(a=>!Z(a),[Z]),ab=(0,",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/page.js",
+      "offset": 182672,
+      "line": 6
+    }
+  },
+  {
+    "literal": "a.entityType?.toLowerCase().includes($))||!!a.pay\u006coad&&\"object\"==typeof a.pay\u006coad&&JSON.stringify(a.pay\u006coad).toLowerCase().includes($),[$]),aa=(0,e.useCallback)(a=>!Z(a),[Z]),ab=(0,e.useCallback)(a=>{let c=\"",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/app/page.js",
+      "offset": 182698,
+      "line": 6
+    }
+  },
+  {
+    "literal": "isServer,this._maxBufferedChunks=0|a.maxBufferedChunks,this._maxFragments=0|a.maxFragments,this._maxPay\u006coad=0|a.maxPay\u006coad,this._skipUTF8Validation=!!a.skipUTF8Validation,this[i]=void 0,this._bufferedBytes=0",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 26882,
+      "line": 2
+    }
+  },
+  {
+    "literal": "maxBufferedChunks=0|a.maxBufferedChunks,this._maxFragments=0|a.maxFragments,this._maxPay\u006coad=0|a.maxPay\u006coad,this._skipUTF8Validation=!!a.skipUTF8Validation,this[i]=void 0,this._bufferedBytes=0,this._buffers=",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 26897,
+      "line": 2
+    }
+  },
+  {
+    "literal": ".skipUTF8Validation,this[i]=void 0,this._bufferedBytes=0,this._buffers=[],this._compressed=!1,this._pay\u006coadLength=0,this._mask=void 0,this._fragmented=0,this._masked=!1,this._fin=!1,this._opcode=0,this._tota",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 27033,
+      "line": 2
+    }
+  },
+  {
+    "literal": "ength=0,this._mask=void 0,this._fragmented=0,this._masked=!1,this._fin=!1,this._opcode=0,this._totalPay\u006coadLength=0,this._messageLength=0,this._fragments=[],this._errored=!1,this._loop=!1,this._state=0}_writ",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 27141,
+      "line": 2
+    }
+  },
+  {
+    "literal": "urn b}startLoop(a){this._loop=!0;do switch(this._state){case 0:this.getInfo(a);break;case 1:this.getPay\u006coadLength16(a);break;case 2:this.getPay\u006coadLength64(a);break;case 3:this.getMask();break;case 4:this.ge",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 28145,
+      "line": 2
+    }
+  },
+  {
+    "literal": "ch(this._state){case 0:this.getInfo(a);break;case 1:this.getPay\u006coadLength16(a);break;case 2:this.getPay\u006coadLength64(a);break;case 3:this.getMask();break;case 4:this.getData(a);break;case 5:case 6:this._loop=",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 28185,
+      "line": 2
+    }
+  },
+  {
+    "literal": " clear\",!0,1002,\"WS_ERR_UNEXPECTED_RSV_1\"));if(this._fin=(128&b[0])==128,this._opcode=15&b[0],this._pay\u006coadLength=127&b[1],0===this._opcode){if(c)return void a(this.createError(RangeError,\"RSV1 must be clear",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 28761,
+      "line": 2
+    }
+  },
+  {
+    "literal": "oid a(this.createError(RangeError,\"RSV1 must be clear\",!0,1002,\"WS_ERR_UNEXPECTED_RSV_1\"));if(this._pay\u006coadLength>125||8===this._opcode&&1===this._pay\u006coadLength)return void a(this.createError(RangeError,`inv",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 29618,
+      "line": 2
+    }
+  },
+  {
+    "literal": " clear\",!0,1002,\"WS_ERR_UNEXPECTED_RSV_1\"));if(this._pay\u006coadLength>125||8===this._opcode&&1===this._pay\u006coadLength)return void a(this.createError(RangeError,`invalid pay\u006coad length ${this._pay\u006coadLength}`,!0,",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 29665,
+      "line": 2
+    }
+  },
+  {
+    "literal": "h>125||8===this._opcode&&1===this._pay\u006coadLength)return void a(this.createError(RangeError,`invalid pay\u006coad length ${this._pay\u006coadLength}`,!0,1002,\"WS_ERR_INVALID_CONTROL_PAY\u004cOAD_LENGTH\"))}if(this._fin||this",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 29730,
+      "line": 2
+    }
+  },
+  {
+    "literal": "&&1===this._pay\u006coadLength)return void a(this.createError(RangeError,`invalid pay\u006coad length ${this._pay\u006coadLength}`,!0,1002,\"WS_ERR_INVALID_CONTROL_PAY\u004cOAD_LENGTH\"))}if(this._fin||this._fragmented||(this._fr",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 29753,
+      "line": 2
+    }
+  },
+  {
+    "literal": "ateError(RangeError,`invalid pay\u006coad length ${this._pay\u006coadLength}`,!0,1002,\"WS_ERR_INVALID_CONTROL_PAY\u004cOAD_LENGTH\"))}if(this._fin||this._fragmented||(this._fragmented=this._opcode),this._masked=(128&b[1])==",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 29801,
+      "line": 2
+    }
+  },
+  {
+    "literal": "d a(this.createError(RangeError,\"MASK must be clear\",!0,1002,\"WS_ERR_UNEXPECTED_MASK\"));126===this._pay\u006coadLength?this._state=1:127===this._pay\u006coadLength?this._state=2:this.haveLength(a)}getPay\u006coadLength16(a",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30170,
+      "line": 2
+    }
+  },
+  {
+    "literal": "st be clear\",!0,1002,\"WS_ERR_UNEXPECTED_MASK\"));126===this._pay\u006coadLength?this._state=1:127===this._pay\u006coadLength?this._state=2:this.haveLength(a)}getPay\u006coadLength16(a){if(this._bufferedBytes<2){this._loop=!",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30210,
+      "line": 2
+    }
+  },
+  {
+    "literal": "6===this._pay\u006coadLength?this._state=1:127===this._pay\u006coadLength?this._state=2:this.haveLength(a)}getPay\u006coadLength16(a){if(this._bufferedBytes<2){this._loop=!1;return}this._pay\u006coadLength=this.consume(2).readU",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30260,
+      "line": 2
+    }
+  },
+  {
+    "literal": "ate=2:this.haveLength(a)}getPay\u006coadLength16(a){if(this._bufferedBytes<2){this._loop=!1;return}this._pay\u006coadLength=this.consume(2).readUInt16BE(0),this.haveLength(a)}getPay\u006coadLength64(a){if(this._bufferedByt",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30332,
+      "line": 2
+    }
+  },
+  {
+    "literal": "s<2){this._loop=!1;return}this._pay\u006coadLength=this.consume(2).readUInt16BE(0),this.haveLength(a)}getPay\u006coadLength64(a){if(this._bufferedBytes<8){this._loop=!1;return}let b=this.consume(8),c=b.readUInt32BE(0)",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30400,
+      "line": 2
+    }
+  },
+  {
+    "literal": "eadUInt32BE(0);if(c>2097151)return void a(this.createError(RangeError,\"Unsupported WebSocket frame: pay\u006coad length > 2^53 - 1\",!1,1009,\"WS_ERR_UNSUPPORTED_DATA_PAY\u004cOAD_LENGTH\"));this._pay\u006coadLength=0x1000000",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30593,
+      "line": 2
+    }
+  },
+  {
+    "literal": "angeError,\"Unsupported WebSocket frame: pay\u006coad length > 2^53 - 1\",!1,1009,\"WS_ERR_UNSUPPORTED_DATA_PAY\u004cOAD_LENGTH\"));this._pay\u006coadLength=0x100000000*c+b.readUInt32BE(4),this.haveLength(a)}haveLength(a){if(t",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30653,
+      "line": 2
+    }
+  },
+  {
+    "literal": "ebSocket frame: pay\u006coad length > 2^53 - 1\",!1,1009,\"WS_ERR_UNSUPPORTED_DATA_PAY\u004cOAD_LENGTH\"));this._pay\u006coadLength=0x100000000*c+b.readUInt32BE(4),this.haveLength(a)}haveLength(a){if(this._pay\u006coadLength&&this",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30677,
+      "line": 2
+    }
+  },
+  {
+    "literal": "TH\"));this._pay\u006coadLength=0x100000000*c+b.readUInt32BE(4),this.haveLength(a)}haveLength(a){if(this._pay\u006coadLength&&this._opcode<8&&(this._totalPay\u006coadLength+=this._pay\u006coadLength,this._totalPay\u006coadLength>this",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30765,
+      "line": 2
+    }
+  },
+  {
+    "literal": "eadUInt32BE(4),this.haveLength(a)}haveLength(a){if(this._pay\u006coadLength&&this._opcode<8&&(this._totalPay\u006coadLength+=this._pay\u006coadLength,this._totalPay\u006coadLength>this._maxPay\u006coad&&this._maxPay\u006coad>0))return vo",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30808,
+      "line": 2
+    }
+  },
+  {
+    "literal": "aveLength(a)}haveLength(a){if(this._pay\u006coadLength&&this._opcode<8&&(this._totalPay\u006coadLength+=this._pay\u006coadLength,this._totalPay\u006coadLength>this._maxPay\u006coad&&this._maxPay\u006coad>0))return void a(this.createError",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30829,
+      "line": 2
+    }
+  },
+  {
+    "literal": "){if(this._pay\u006coadLength&&this._opcode<8&&(this._totalPay\u006coadLength+=this._pay\u006coadLength,this._totalPay\u006coadLength>this._maxPay\u006coad&&this._maxPay\u006coad>0))return void a(this.createError(RangeError,\"Max pay\u006coad ",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30854,
+      "line": 2
+    }
+  },
+  {
+    "literal": "h&&this._opcode<8&&(this._totalPay\u006coadLength+=this._pay\u006coadLength,this._totalPay\u006coadLength>this._maxPay\u006coad&&this._maxPay\u006coad>0))return void a(this.createError(RangeError,\"Max pay\u006coad size exceeded\",!1,1009,",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30877,
+      "line": 2
+    }
+  },
+  {
+    "literal": "&(this._totalPay\u006coadLength+=this._pay\u006coadLength,this._totalPay\u006coadLength>this._maxPay\u006coad&&this._maxPay\u006coad>0))return void a(this.createError(RangeError,\"Max pay\u006coad size exceeded\",!1,1009,\"WS_ERR_UNSUPPORTE",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30895,
+      "line": 2
+    }
+  },
+  {
+    "literal": "lPay\u006coadLength>this._maxPay\u006coad&&this._maxPay\u006coad>0))return void a(this.createError(RangeError,\"Max pay\u006coad size exceeded\",!1,1009,\"WS_ERR_UNSUPPORTED_MESSAGE_LENGTH\"));this._masked?this._state=3:this._state",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 30953,
+      "line": 2
+    }
+  },
+  {
+    "literal": "dBytes<4){this._loop=!1;return}this._mask=this.consume(4),this._state=4}getData(a){let b=g;if(this._pay\u006coadLength){if(this._bufferedBytes<this._pay\u006coadLength){this._loop=!1;return}b=this.consume(this._payloa",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 31189,
+      "line": 2
+    }
+  },
+  {
+    "literal": "is.consume(4),this._state=4}getData(a){let b=g;if(this._pay\u006coadLength){if(this._bufferedBytes<this._pay\u006coadLength){this._loop=!1;return}b=this.consume(this._pay\u006coadLength),this._masked&&(this._mask[0]|this._",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 31233,
+      "line": 2
+    }
+  },
+  {
+    "literal": "ayloadLength){if(this._bufferedBytes<this._pay\u006coadLength){this._loop=!1;return}b=this.consume(this._pay\u006coadLength),this._masked&&(this._mask[0]|this._mask[1]|this._mask[2]|this._mask[3])!=0&&l(b,this._mask)}",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 31290,
+      "line": 2
+    }
+  },
+  {
+    "literal": "o many message fragments\",!1,1008,\"WS_ERR_TOO_MANY_BUFFERED_PARTS\"));this._messageLength=this._totalPay\u006coadLength,this._fragments.push(b)}this.dataMessage(a)}decompress(a,b){this._extensions[e.extensionName]",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 31741,
+      "line": 2
+    }
+  },
+  {
+    "literal": "(a,c)=>{if(a)return b(a);if(c.length){if(this._messageLength+=c.length,this._messageLength>this._maxPay\u006coad&&this._maxPay\u006coad>0)return void b(this.createError(RangeError,\"Max pay\u006coad size exceeded\",!1,1009,\"",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 31972,
+      "line": 2
+    }
+  },
+  {
+    "literal": "n b(a);if(c.length){if(this._messageLength+=c.length,this._messageLength>this._maxPay\u006coad&&this._maxPay\u006coad>0)return void b(this.createError(RangeError,\"Max pay\u006coad size exceeded\",!1,1009,\"WS_ERR_UNSUPPORTED",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 31990,
+      "line": 2
+    }
+  },
+  {
+    "literal": "._messageLength>this._maxPay\u006coad&&this._maxPay\u006coad>0)return void b(this.createError(RangeError,\"Max pay\u006coad size exceeded\",!1,1009,\"WS_ERR_UNSUPPORTED_MESSAGE_LENGTH\"));if(this._maxFragments>0&&this._fragmen",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 32047,
+      "line": 2
+    }
+  },
+  {
+    "literal": "ge(a){if(!this._fin){this._state=0;return}let b=this._messageLength,c=this._fragments;if(this._totalPay\u006coadLength=0,this._messageLength=0,this._fragmented=0,this._fragments=[],2===this._opcode){let d;d=\"node",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 32488,
+      "line": 2
+    }
+  },
+  {
+    "literal": "!0,autoPong:!0,closeTimeout:s,protocolVersion:G[1],maxBufferedChunks:1048576,maxFragments:131072,maxPay\u006coad:0x6400000,skipUTF8Validation:!1,perMessageDeflate:!0,followRedirects:!1,maxRedirects:10,...g,socket",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 35338,
+      "line": 2
+    }
+  },
+  {
+    "literal": "h,p.timeout=p.handshakeTimeout,p.perMessageDeflate&&(l=new n({...p.perMessageDeflate,isServer:!1,maxPay\u006coad:p.maxPay\u006coad}),p.headers[\"Sec-WebSocket-Extensions\"]=C({[n.extensionName]:l.offer()})),d.length){fo",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 36768,
+      "line": 2
+    }
+  },
+  {
+    "literal": ".handshakeTimeout,p.perMessageDeflate&&(l=new n({...p.perMessageDeflate,isServer:!1,maxPay\u006coad:p.maxPay\u006coad}),p.headers[\"Sec-WebSocket-Extensions\"]=C({[n.extensionName]:l.offer()})),d.length){for(let a of d)",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 36781,
+      "line": 2
+    }
+  },
+  {
+    "literal": "ts,generateMask:p.generateMask,maxBufferedChunks:p.maxBufferedChunks,maxFragments:p.maxFragments,maxPay\u006coad:p.maxPay\u006coad,skipUTF8Validation:p.skipUTF8Validation})}),p.finishRequest?p.finishRequest(o,b):o.end",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 39783,
+      "line": 2
+    }
+  },
+  {
+    "literal": "sk:p.generateMask,maxBufferedChunks:p.maxBufferedChunks,maxFragments:p.maxFragments,maxPay\u006coad:p.maxPay\u006coad,skipUTF8Validation:p.skipUTF8Validation})}),p.finishRequest?p.finishRequest(o,b):o.end()}(this,a,b,",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 39796,
+      "line": 2
+    }
+  },
+  {
+    "literal": "nsions,isServer:this._isServer,maxBufferedChunks:c.maxBufferedChunks,maxFragments:c.maxFragments,maxPay\u006coad:c.maxPay\u006coad,skipUTF8Validation:c.skipUTF8Validation}),e=new p(a,this._extensions,c.generateMask);t",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 40786,
+      "line": 2
+    }
+  },
+  {
+    "literal": "er:this._isServer,maxBufferedChunks:c.maxBufferedChunks,maxFragments:c.maxFragments,maxPay\u006coad:c.maxPay\u006coad,skipUTF8Validation:c.skipUTF8Validation}),e=new p(a,this._extensions,c.generateMask);this._receiver",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 40799,
+      "line": 2
+    }
+  },
+  {
+    "literal": "(),null==(a={allowSynchronousEvents:!0,autoPong:!0,maxBufferedChunks:1048576,maxFragments:131072,maxPay\u006coad:0x6400000,skipUTF8Validation:!1,perMessageDeflate:!1,handleProtocols:null,clientTracking:!0,closeTi",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 3052,
+      "line": 1
+    }
+  },
+  {
+    "literal": "ptions.perMessageDeflate&&void 0!==m){let c=new i({...this.options.perMessageDeflate,isServer:!0,maxPay\u006coad:this.options.maxPay\u006coad});try{let a=h.parse(m);a[i.extensionName]&&(c.accept(a[i.extensionName]),n[",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 5868,
+      "line": 1
+    }
+  },
+  {
+    "literal": "&&void 0!==m){let c=new i({...this.options.perMessageDeflate,isServer:!0,maxPay\u006coad:this.options.maxPay\u006coad});try{let a=h.parse(m);a[i.extensionName]&&(c.accept(a[i.extensionName]),n[i.extensionName]=c)}catc",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 5892,
+      "line": 1
+    }
+  },
+  {
+    "literal": "usEvents,maxBufferedChunks:this.options.maxBufferedChunks,maxFragments:this.options.maxFragments,maxPay\u006coad:this.options.maxPay\u006coad,skipUTF8Validation:this.options.skipUTF8Validation}),this.clients&&(this.cl",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 7506,
+      "line": 1
+    }
+  },
+  {
+    "literal": "ks:this.options.maxBufferedChunks,maxFragments:this.options.maxFragments,maxPay\u006coad:this.options.maxPay\u006coad,skipUTF8Validation:this.options.skipUTF8Validation}),this.clients&&(this.clients.add(o),o.on(\"close",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 7530,
+      "line": 1
+    }
+  },
+  {
+    "literal": "ptions=a||{},this._threshold=void 0!==this._options.threshold?this._options.threshold:1024,this._maxPay\u006coad=0|this._options.maxPay\u006coad,this._isServer=!!this._options.isServer,this._deflate=null,this._inflate",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 13653,
+      "line": 2
+    }
+  },
+  {
+    "literal": "d=void 0!==this._options.threshold?this._options.threshold:1024,this._maxPay\u006coad=0|this._options.maxPay\u006coad,this._isServer=!!this._options.isServer,this._deflate=null,this._inflate=null,this.params=null,d||(",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 13680,
+      "line": 2
+    }
+  },
+  {
+    "literal": ")})}}function q(a){this[n].push(a),this[l]+=a.length}function r(a){if(this[l]+=a.length,this[k]._maxPay\u006coad<1||this[l]<=this[k]._maxPay\u006coad)return void this[n].push(a);this[o]=RangeError(\"Max pay\u006coad size ex",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 18522,
+      "line": 2
+    }
+  },
+  {
+    "literal": "a),this[l]+=a.length}function r(a){if(this[l]+=a.length,this[k]._maxPay\u006coad<1||this[l]<=this[k]._maxPay\u006coad)return void this[n].push(a);this[o]=RangeError(\"Max pay\u006coad size exceeded\"),this[o].code=\"WS_ERR_UN",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 18554,
+      "line": 2
+    }
+  },
+  {
+    "literal": "[k]._maxPay\u006coad<1||this[l]<=this[k]._maxPay\u006coad)return void this[n].push(a);this[o]=RangeError(\"Max pay\u006coad size exceeded\"),this[o].code=\"WS_ERR_UNSUPPORTED_MESSAGE_LENGTH\",this[o][h]=1009,this.removeListene",
+    "origin": "next@15.5.25 generated server bundle; ws@8.21.0 locked WebSocket dependency",
+    "reason": "WebSocket frame length fields and protocol diagnostics. Renaming these dependency fields changes the codec contract. Version source: pnpm-lock.yaml ws@8.21.0.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/800.js",
+      "offset": 18614,
+      "line": 2
+    }
+  },
+  {
+    "literal": "lient without a temporary reference set. Pass a TemporaryReferenceSet to the options.\");case o:B=v._pay\u006coad;var C=v._init;null===k&&(k=new FormData),j++;try{var D=C(B),E=i++,F=h(D,E);return k.append(b+E,F),\"",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/42.js",
+      "offset": 64978,
+      "line": 1
+    }
+  },
+  {
+    "literal": ",c,b):\"fulfilled\"===c.status&&null!==c.reason&&c.reason.error(b)})}function U(a){return{$$typeof:o,_pay\u006coad:a,_init:G}}function V(a,b){var c=a._chunks,d=c.get(b);return d||(d=a._closed?new F(\"rejected\",null,",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/42.js",
+      "offset": 75145,
+      "line": 1
+    }
+  },
+  {
+    "literal": "arentObject,f=a.key,h=a.map,i=a.path;try{for(var j=1;j<i.length;j++){for(;b.$$typeof===o;){var k=b._pay\u006coad;if(k===d.chunk)b=d.value;else{switch(k.status){case\"resolved_model\":R(k);break;case\"resolved_module",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/42.js",
+      "offset": 75460,
+      "line": 1
+    }
+  },
+  {
+    "literal": "(f.status){case\"fulfilled\":var h=f.value;for(f=1;f<b.length;f++){for(;h.$$typeof===o;){switch((h=h._pay\u006coad).status){case\"resolved_model\":R(h);break;case\"resolved_module\":S(h)}switch(h.status){case\"fulfilled",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/42.js",
+      "offset": 78541,
+      "line": 1
+    }
+  },
+  {
+    "literal": ",new F(\"fulfilled\",d,null));break;case 78:case 68:case 74:case 87:throw Error(\"Failed to read a RSC pay\u006coad created by a development version of React on the server while using a production version on the cli",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/42.js",
+      "offset": 85950,
+      "line": 1
+    }
+  },
+  {
+    "literal": "=m.b,o=m.f;if(1!==o.length&&3!==o[0].length)return console.error(\"Internal Next.js error: InitialRSCPay\u006coad does not match the expected shape for a prerendered page during segment prefetch generation.\"),null",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/42.js",
+      "offset": 170752,
+      "line": 11
+    }
+  },
+  {
+    "literal": "d:x.S,postponed:t,staleTime:v}}catch(b){return o.signal.aborted||console.error(\"Failed to fetch RSC pay\u006coad for \"+a+\". Falling back to browser navigation.\",b),{flightData:a.toString(),canonicalUrl:void 0,cou",
+    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
+    "paths": [
+      "apps/example/.next/server/**"
+    ],
+    "evidence": {
+      "file": "apps/example/.next/server/chunks/42.js",
+      "offset": 217302,
+      "line": 11
+    }
+  }
+]

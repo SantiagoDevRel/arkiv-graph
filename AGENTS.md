@@ -37,3 +37,5 @@ checkpoints in `docs/verification.md`.
 Rabdi signing: read latest state; pass explicit nonce, gas (max of 1,000,000 and twice an unsigned latest estimate, never above half the head block limit; split batches before signing) and gasPrice. Check receipt.status === "success"; never retry a successful or uncertain write. Shared RPC keys stay server-side; visitor writes use the RPC configured in their wallet.
 
 Rabdi lifetime targets must stay below 7,884,000 blocks from the head (use a signing margin). No permanent/no-expiration mode; use Lifetime Extension for longer retention.
+
+Release status: arkiv-graph@1.0.0 is published for SDK 1.0.0 / Rabdi. This branch prepares 1.1.0; it has not been published. Samples retain their exact registry pins until the phase-2 release sequence.

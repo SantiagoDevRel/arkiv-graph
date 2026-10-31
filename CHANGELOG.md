@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0 (unreleased)
+
+- Add bytes names for legacy binary data, with deprecated compatibility aliases.
+- Scan sources, generated artifacts and tests with a mutation-tested vocabulary guard.
+
+
 ## 1.0.0 — release candidate
 
 Breaking changes:

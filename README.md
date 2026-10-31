@@ -34,3 +34,5 @@ The seed starts with at most ten entities per batch, estimates the exact unsigne
 Agent instructions: [maintainer](AGENTS.md), [package](packages/arkiv-graph/AGENTS.md), [sample](apps/example/AGENTS.md). Historical reports in `docs/` describe their original release only.
 
 MIT · Arkiv DevRel
+
+Release status: arkiv-graph@1.0.0 is published for SDK 1.0.0 / Rabdi. This branch prepares 1.1.0; it has not been published. Samples retain their exact registry pins until the phase-2 release sequence.

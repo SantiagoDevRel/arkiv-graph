@@ -1,3 +1,5 @@
+> Historical evidence for an earlier release. It is not current SDK 1.0/Rabdi guidance or evidence of the pending 1.1.0 patch. Use the root README and AGENTS.md for the published 1.0.0 baseline and the phase-1 changes.
+
 # arkiv-graph 0.3.1: release evidence
 
 Verified 2026-09-08/09. **These packages are intended for testnet use.**

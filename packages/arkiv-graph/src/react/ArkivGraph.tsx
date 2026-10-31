@@ -257,8 +257,9 @@ export function ArkivGraph(props: ArkivGraphProps): React.ReactElement {
       if (n.label?.toLowerCase().includes(q)) return true;
       if (n.id.toLowerCase().includes(q)) return true;
       if (n.entityType?.toLowerCase().includes(q)) return true;
-      if (n.payload && typeof n.payload === "object") {
-        return JSON.stringify(n.payload).toLowerCase().includes(q);
+      const nodeBytes = n.bytes ?? n.payload;
+      if (nodeBytes && typeof nodeBytes === "object") {
+        return JSON.stringify(nodeBytes).toLowerCase().includes(q);
       }
       return false;
     },

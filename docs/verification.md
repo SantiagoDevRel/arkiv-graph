@@ -1,3 +1,5 @@
+> Historical evidence for an earlier release. It is not current SDK 1.0/Rabdi guidance or evidence of the pending 1.1.0 patch. Use the root README and AGENTS.md for the published 1.0.0 baseline and the phase-1 changes.
+
 # Verification — arkiv-graph 0.3.0
 
 > Historical checkpoints below retain their status at the time. **0.3.1 is now
@@ -69,7 +71,7 @@ Other SDK generations, runtime majors and networks are not verified by this cand
   transaction/history data may lag the RPC. The old guessed explorer hostname
   did not resolve and was removed.
 - Claude performed an initial technical audit. Corrections include SDK 0.8 expiry
-  semantics, typed payload serialization, declared script dependencies, peer type
+  semantics, typed bytes serialization, declared script dependencies, peer type
   dependencies, pending transaction recovery and explorer URLs. Final audit and follow-up results are listed below.
 
 ## Remaining release checks
@@ -116,7 +118,7 @@ no cross-device transaction uniqueness guarantee. The public hosting rate-limit
 control remains a release requirement; no new auth/infra feature was introduced.
 
 Renderer inspection found no `dangerouslySetInnerHTML`; entity labels, attributes
-and payloads render as React text or canvas text. Explorer URLs are built from
+and bytess render as React text or canvas text. Explorer URLs are built from
 configured registries and validated entity/address/hash values. Custom graph URLs
 and callback results are developer-controlled integration inputs, not trusted
 wallet data. This check does not claim an exhaustive security proof.
