@@ -1,10 +1,10 @@
 import type { ChainInfo } from "./types.js";
 
-/** Arkiv's Braga testnet chain id. Entities pointing here are NEVER external. */
+/** Historical network constants retained for plain-input consumers. */
 export const BRAGA_CHAIN_ID = 60138453102;
 export const BRAGA_EXPLORER = "https://explorer.braga.hoodi.arkiv.network";
-export const TIRAMISU_CHAIN_ID = 7738577;
-export const TIRAMISU_EXPLORER = "https://indexer.tiramisu.db-chain.testnet.arkiv.network";
+export const RABDI_CHAIN_ID = 7794095;
+export const RABDI_EXPLORER = "https://rabdi.explorer.arkiv.network";
 
 /**
  * Built-in chain registry: chainId → display info. Used to label and colour
@@ -12,14 +12,7 @@ export const TIRAMISU_EXPLORER = "https://indexer.tiramisu.db-chain.testnet.arki
  * `external.registry`. Colours are each chain's brand colour.
  */
 export const CHAIN_REGISTRY: Record<string | number, ChainInfo> = {
-  [TIRAMISU_CHAIN_ID]: { name: "Arkiv Tiramisu", short: "Arkiv", color: "#FE7446", explorer: TIRAMISU_EXPLORER },
-  [BRAGA_CHAIN_ID]: {
-    name: "Arkiv (Braga)",
-    short: "Arkiv",
-    color: "#FF6A00",
-    explorer: BRAGA_EXPLORER,
-    native: true,
-  },
+  [RABDI_CHAIN_ID]: { name: "Arkiv Rabdi", short: "Arkiv", color: "#FE7446", explorer: RABDI_EXPLORER },
   1: { name: "Ethereum", short: "ETH", color: "#627EEA", explorer: "https://etherscan.io", rpc: "https://ethereum-rpc.publicnode.com" },
   11155111: { name: "Sepolia", short: "Sep", color: "#9a86e8", explorer: "https://sepolia.etherscan.io", rpc: "https://ethereum-sepolia-rpc.publicnode.com" },
   17000: { name: "Holesky", short: "Hol", color: "#b39ddb", explorer: "https://holesky.etherscan.io", rpc: "https://holesky.drpc.org" },

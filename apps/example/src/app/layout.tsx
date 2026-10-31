@@ -4,11 +4,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "arkiv-graph — your app in tables and a graph",
   description:
-    "Query your app's entities in tables and a graph. Create a social sample on Tiramisu and sign Lifetime Extension with your wallet.",
+    "Query your app's entities in tables and a graph. Create a social sample on Rabdi and sign Lifetime Extension with your wallet.",
   metadataBase: new URL("https://arkiv-graph-example.vercel.app"),
   openGraph: {
     title: "arkiv-graph — your app in tables and a graph",
-    description: "Your Arkiv entities and their relationships in tables and a graph. Tiramisu testnet.",
+    description: "Your Arkiv entities and their relationships in tables and a graph. Rabdi testnet.",
     url: "https://arkiv-graph-example.vercel.app",
     siteName: "arkiv-graph",
   },

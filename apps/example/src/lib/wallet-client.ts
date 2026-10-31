@@ -1,8 +1,8 @@
 "use client";
 import { createPublicClient, createWalletClient, ExpirationTime } from "@arkiv-network/sdk";
 import { eq } from "@arkiv-network/sdk/query";
-import { custom, http, type Hex } from "viem";
-import { estimateGas } from "viem/actions";
+import { custom, type Hex } from "viem";
+import { estimateGas, getGasPrice } from "viem/actions";
 import { CHAIN, PUBLIC_CHAIN, PROJECT } from "./config";
 import { socialSample } from "./social-sample";
 
@@ -15,7 +15,28 @@ export interface Eip1193 {
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 const KEY = /^0x[0-9a-fA-F]{64}$/;
 const CHAIN_HEX = `0x${CHAIN.id.toString(16)}`;
-const pub = createPublicClient({ chain: CHAIN, transport: http(PUBLIC_CHAIN.rpcUrl, { timeout: 15000, retryCount: 1 }) });
+const MAX_LIFETIME_BLOCKS = 7_883_970n; // Rabdi maximum minus a small signing margin.
+export interface WriteTxOptions { gas?: bigint; gasPrice?: bigint }
+// Reads for wallet operations use the visitor's configured Rabdi RPC.
+const pub = createPublicClient({ chain: CHAIN, transport: custom({ request: async request => {
+  const provider = injected();
+  if (!provider) throw new Error("Open this app with an EIP-1193 compatible wallet.");
+  return provider.request(request);
+} }, { retryCount: 0 }) });
+async function txParams(account: string, options: WriteTxOptions = {}) {
+  const [nonce, pendingNonce, gasPrice] = await Promise.all([
+    pub.getTransactionCount({ address: account as Hex, blockTag: "latest" }),
+    pub.getTransactionCount({ address: account as Hex, blockTag: "pending" }), getGasPrice(pub),
+  ]);
+  if (pendingNonce !== nonce) throw new Error("Your wallet has a pending transaction. Verify its receipt before signing another entity operation.");
+  if (options.gas !== undefined && options.gas < 1_000_000n || options.gasPrice !== undefined && options.gasPrice <= 0n) throw new Error("Invalid transaction gas override.");
+  return { nonce, gas: options.gas ?? 1_000_000n, gasPrice: options.gasPrice ?? gasPrice };
+}
+async function confirmed(hash: Hex) {
+  const receipt = await pub.getTransactionReceipt({ hash });
+  if (receipt.status !== "success") throw new Error("Transaction reverted. No change was confirmed; check the gas limit before retrying.");
+  return receipt;
+}
 function injected(): Eip1193 | null {
   return typeof window === "undefined" ? null : (window as unknown as { ethereum?: Eip1193 }).ethereum ?? null;
 }
@@ -41,11 +62,9 @@ export async function ensureChain() {
   try { await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] }); }
   catch (error) {
     if ((error as { code?: number }).code !== 4902) throw error;
-    await provider.request({ method: "wallet_addEthereumChain", params: [{ chainId: CHAIN_HEX, chainName: CHAIN.name,
-      rpcUrls: [PUBLIC_CHAIN.rpcUrl], nativeCurrency: CHAIN.nativeCurrency, blockExplorerUrls: [PUBLIC_CHAIN.transactionExplorerUrl] }] });
-    await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] });
+    throw new Error("Add Rabdi to your wallet using your own RPC access key from https://hub.arkiv.network/access-keys, then connect again.");
   }
-  if (!await active()) throw new Error("Select Tiramisu in your wallet and try again.");
+  if (!await active()) throw new Error("Select Rabdi in your wallet and try again.");
 }
 export async function connectWallet(): Promise<string> {
   const provider = injected();
@@ -59,26 +78,36 @@ export async function connectWallet(): Promise<string> {
 async function assertSession(account: string) {
   const provider = injected();
   if (!ADDRESS.test(account) || !provider || await getConnectedAccount() !== account.toLowerCase()) throw new Error("The account changed. Connect again before signing.");
-  if (Number(await provider.request({ method: "eth_chainId" })) !== CHAIN.id) throw new Error("The network changed. Select Tiramisu before signing.");
+  if (Number(await provider.request({ method: "eth_chainId" })) !== CHAIN.id) throw new Error("The network changed. Select Rabdi before signing.");
 }
-async function writer(account: string, onSent?: (hash: Hex) => void, beforeSend?: () => void) {
+async function writer(account: string, onSent?: (hash: Hex) => void, beforeSend?: (params: { gas: bigint; nonce: number }) => void, options: WriteTxOptions = {}, retryGasFloor = 0n) {
   await ensureChain();
   await assertSession(account);
-  if (await pub.getChainId() !== CHAIN.id) throw new Error("The RPC does not match Tiramisu.");
+  if (await pub.getChainId() !== CHAIN.id) throw new Error("The RPC does not match Rabdi.");
   const provider = injected()!;
   const transport = custom({ request: async (request) => {
     let forwarded = request as { method: string; params?: unknown[] | object };
     if (request.method === "eth_sendTransaction") {
       await assertSession(account);
-      const tx = (request.params as [{ from?: string; to?: Hex; data?: Hex; value?: Hex; gas?: Hex }])[0];
+      const tx = (request.params as [{ from?: string; to?: Hex; data?: Hex; value?: Hex; gas?: Hex; nonce?: Hex }])[0];
       if (tx?.from?.toLowerCase() !== account.toLowerCase() || tx.to?.toLowerCase() !== "0x4400000000000000000000000000000000000044" || !tx.data || BigInt(tx.value ?? 0) !== 0n) throw new Error("The transaction does not match an entity operation from this app.");
       // Simulate the exact calldata on the configured public RPC before opening
       // the wallet. Some injected wallets guess an insufficient custom-chain gas limit.
-      const estimated = await estimateGas(pub, { account: account as Hex, to: tx.to, data: tx.data, value: 0n });
+      const estimated = await estimateGas(pub, { account: account as Hex, to: tx.to, data: tx.data, value: 0n, blockTag: "latest" });
       if (estimated <= 0n) throw new Error("Could not estimate gas for this operation.");
       await assertSession(account);
-      forwarded = { ...request, params: [{ ...tx, gas: `0x${((estimated * 120n + 99n) / 100n).toString(16)}` }] };
-      beforeSend?.();
+      const minimum = [estimated * 2n, 1_000_000n, retryGasFloor].reduce((a, b) => a > b ? a : b);
+      if (options.gas !== undefined && options.gas < minimum) throw new Error("Your gas override must preserve twice the unsigned estimate.");
+      const safeGas = options.gas ?? minimum;
+      const head = await pub.getBlock({ blockTag: "latest" });
+      if (safeGas > head.gasLimit / 2n) throw new Error("Split this operation into smaller batches: gas must fit within half the head block limit.");
+      const gasPrice = options.gasPrice ?? await getGasPrice(pub);
+      const nonce = await pub.getTransactionCount({ address: account as Hex, blockTag: "latest" });
+      const pending = await pub.getTransactionCount({ address: account as Hex, blockTag: "pending" });
+      if (pending !== nonce || tx.nonce !== undefined && BigInt(tx.nonce) !== BigInt(nonce)) throw new Error("The wallet nonce changed or another transaction is pending. Verify its receipt before signing.");
+      await assertSession(account);
+      forwarded = { ...request, params: [{ ...tx, nonce: `0x${nonce.toString(16)}`, gas: `0x${safeGas.toString(16)}`, gasPrice: `0x${gasPrice.toString(16)}` }] };
+      beforeSend?.({ gas: safeGas, nonce });
     }
     const result = await provider.request(forwarded);
     if (request.method === "eth_sendTransaction" && typeof result === "string" && KEY.test(result)) onSent?.(result as Hex);
@@ -91,91 +120,199 @@ export function walletErrorMessage(error: unknown): string {
   let cause = error as { code?: number; name?: string; cause?: unknown } | undefined;
   for (let i = 0; cause && i < 8; i++, cause = cause.cause as typeof cause) {
     if (cause.code === 4001 || cause.name === "UserRejectedRequestError") return "You rejected the wallet request. No change was confirmed.";
-    if (cause.code === -32000) return "Could not verify the operation on Tiramisu. Refresh the data and check your wallet before signing again.";
+    if (cause.code === -32000) return "Could not verify the operation on Rabdi. Refresh the data and check your wallet before signing again.";
   }
   const message = error instanceof Error ? error.message : "Could not complete the request. Check your wallet before signing again.";
-  return message.split("\n")[0]!.slice(0,400);
+  return message.split("\n")[0]!.replace(/(?:https?|wss?):\/\/[^\s)]+/g, url => {
+    try { const parsed = new URL(url); return ["hub.arkiv.network", "rabdi.explorer.arkiv.network"].includes(parsed.hostname) ? `${parsed.origin}${parsed.pathname}` : "[RPC endpoint]"; }
+    catch { return "[RPC endpoint]"; }
+  }).slice(0,400);
 }
-export async function extendEntityWithWallet(account: string, entityKey: string, targetExpiresAt: number): Promise<WriteResult> {
+async function extendEntity(account: string, entityKey: string, targetExpiresAt: number, options: WriteTxOptions = {}): Promise<WriteResult> {
   if (!KEY.test(entityKey) || !Number.isSafeInteger(targetExpiresAt)) throw new Error("Invalid entity or date.");
+  await assertSession(account);
   let submittedHash: Hex | undefined;
   const entity = await pub.getEntity(entityKey as Hex);
-  if (entity.owner.toLowerCase() !== account.toLowerCase()) throw new Error("You can only extend entities owned by your wallet.");
+  if (entity.$owner.toLowerCase() !== account.toLowerCase()) throw new Error("You can only extend entities owned by your wallet.");
   const timing = await pub.getBlockTiming();
   if (!Number.isFinite(timing.blockDuration) || timing.blockDuration <= 0) throw new Error("Could not verify block timing.");
-  const currentExpiry = timing.currentBlockTime + Number(entity.expiresAt - timing.currentBlock) * timing.blockDuration;
-  if (entity.expiresAt <= timing.currentBlock || targetExpiresAt <= currentExpiry) throw new Error("Select a date later than the current expiration.");
-  if (targetExpiresAt - currentExpiry > 365 * 86400) throw new Error("You can add up to 365 days per operation.");
+  const currentExpiry = timing.currentBlockTime + Number(entity.$expiresAt - timing.currentBlock) * timing.blockDuration;
+  if (entity.$expiresAt <= timing.currentBlock || targetExpiresAt <= currentExpiry) throw new Error("Select a date later than the current expiration.");
   const targetBlock = timing.currentBlock + BigInt(Math.ceil((targetExpiresAt - timing.currentBlockTime) / timing.blockDuration));
-  const client = await writer(account, hash => { submittedHash = hash; });
+  if (targetBlock - timing.currentBlock > MAX_LIFETIME_BLOCKS) throw new Error("Select a date within Rabdi's maximum lifetime (about 182 days from the chain head).");
+  const client = await writer(account, hash => { submittedHash = hash; }, undefined, options);
   await assertSession(account);
   let result;
-  try { result = await client.extendEntity({ entityKey: entityKey as Hex, expires: ExpirationTime.atBlock(targetBlock) }); }
+  try { result = await client.extendEntity({ entityKey: entityKey as Hex, expiration: ExpirationTime.atBlock(targetBlock) }, await txParams(account, options)); await confirmed(result.txHash); }
   catch (error) {
     if (submittedHash) throw Object.assign(new Error("The transaction was submitted, but its confirmation could not be verified. Check the link and refresh before signing again."), { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${submittedHash}` });
     throw error;
   }
   const { txHash, expiresAt } = result;
-  // SDK 0.8 reads the confirmed ExpiryExtended event; dates remain block-time estimates.
+  // SDK 1.0 reads the confirmed ExpiryExtended event; dates remain block-time estimates.
   return { expiresAt: timing.currentBlockTime + Number(expiresAt - timing.currentBlock) * timing.blockDuration,
     txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${txHash}` };
 }
-export async function createSocialSampleWithWallet(account: string) {
+interface SeedAttempt {
+  hash?: Hex;
+  sdkSuccessHash?: Hex;
+  sdkReverted?: boolean;
+  confirmationIssue?: "CONFIRMATION_PENDING" | "RECEIPT_DISAGREES";
+  status: "submitting" | "pending" | "success" | "reverted" | "rejected";
+  sampleIds: string[];
+  entityKeys?: string[];
+  gas?: string;
+  nonce?: number;
+  gasUsed?: string;
+  blockNumber?: string;
+}
+export class SampleConfirmationError extends Error {
+  readonly name = "SampleConfirmationError";
+  constructor(readonly code: "CONFIRMATION_PENDING" | "RECEIPT_DISAGREES", message: string) { super(message); }
+}
+async function createSocialSample(account: string, options: WriteTxOptions = {}) {
   const run = async () => {
     await assertSession(account);
     const pendingKey = `arkiv-graph:seed:${CHAIN.id}:${account.toLowerCase()}:${PROJECT}`;
-    // Check storage BEFORE signing; unavailable storage must not lose a sent hash.
+    const historyKey = `${pendingKey}:history`;
     localStorage.setItem(`${pendingKey}:available`, "1");
     localStorage.removeItem(`${pendingKey}:available`);
-    const pendingHash = localStorage.getItem(pendingKey);
-    // A successful query can recover a confirmed seed even while receipt lookup fails.
-    const existing = await pub.select({ key: true }).ownedBy(account as Hex).where(eq("project", PROJECT)).limit(1).fetch();
-    if (existing.entities.length) return { alreadyCreated: true, ...(pendingHash && KEY.test(pendingHash) ? { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash}` } : {}) };
-    if (pendingHash && !KEY.test(pendingHash)) throw new Error("A previous sample submission has no verified transaction hash. Check your wallet activity before retrying; automatic resubmission is blocked.");
-    if (pendingHash && KEY.test(pendingHash)) {
-      let receipt;
-      try { receipt = await pub.getTransactionReceipt({ hash: pendingHash as Hex }); }
-      catch { throw new Error(`A sample creation is pending. Check ${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash} before signing again.`); }
-      if (receipt.status === "success") {
-        // Confirm absence at a head that includes the receipt before allowing a new seed.
-        const timing = await pub.getBlockTiming();
-        if (timing.currentBlock <= receipt.blockNumber) throw new Error("Creation was confirmed. Wait one block, then select Refresh before trying again.");
-        const confirmed = await pub.select({ key: true }).ownedBy(account as Hex).where(eq("project", PROJECT)).limit(1).fetch();
-        if (confirmed.entities.length) return { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash}`, alreadyCreated: true };
-        throw new Error(`Creation was confirmed, but its entities are not visible. Query results may be delayed or the entities may have expired. Check ${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash}; do not sign again without verifying it.`);
-      }
-      localStorage.removeItem(pendingKey);
+    let pendingValue = localStorage.getItem(pendingKey);
+    const existing = await pub.select({ $key: true }).ownedBy(account as Hex).where(eq("project", PROJECT)).limit(1).fetch();
+    if (existing.entities.length) return { alreadyCreated: true, ...(pendingValue && KEY.test(pendingValue) ? { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingValue}` } : {}) };
+    const creates = socialSample();
+    const sampleIds = creates.map(item => String(item.values.sample_id));
+    let storedHistory = localStorage.getItem(historyKey);
+    let attempts: SeedAttempt[] = [];
+    if (storedHistory) {
+      const journal = JSON.parse(storedHistory) as { version: number; attempts: SeedAttempt[] };
+      if (journal.version !== 1 || !Array.isArray(journal.attempts) || journal.attempts.length > 2 || journal.attempts.some(a =>
+        !["submitting", "pending", "success", "reverted", "rejected"].includes(a.status) ||
+        !Array.isArray(a.sampleIds) || !a.sampleIds.every(id => typeof id === "string") ||
+        (a.hash !== undefined && !KEY.test(a.hash)) ||
+        (a.sdkSuccessHash !== undefined && !KEY.test(a.sdkSuccessHash)))) throw new Error("Invalid sample transaction history. Automatic resubmission is blocked.");
+      attempts = journal.attempts;
     }
-    let submittedHash: Hex | undefined;
-    let started = false;
-    const client = await writer(account, hash => {
-      submittedHash = hash;
-      localStorage.setItem(pendingKey, hash);
-    }, () => {
-      if (localStorage.getItem(pendingKey)) throw new Error("Sample creation is already pending. Check your wallet activity before retrying.");
-      // Persist uncertainty BEFORE sending. If storage fails after the wallet
-      // returns a hash, the marker still prevents an accidental duplicate.
-      localStorage.setItem(pendingKey, "submitting");
-      started = true;
+    const persist = () => {
+      const value = JSON.stringify({ version: 1, attempts });
+      localStorage.setItem(historyKey, value);
+      storedHistory = value;
+    };
+    const markPending = (value: string) => { localStorage.setItem(pendingKey, value); pendingValue = value; };
+    if (!attempts.length && pendingValue) {
+      if (!KEY.test(pendingValue)) throw new Error("A previous sample submission is uncertain. Automatic resubmission is blocked.");
+      attempts.push({ hash: pendingValue as Hex, status: "pending", sampleIds });
+      persist(); // Import the old hash guard without discarding its transaction identity.
+    }
+    const stopped = (message: string) => Object.assign(new Error(message), {
+      txUrl: attempts.at(-1)?.hash ? `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${attempts.at(-1)!.hash}` : undefined,
+      txUrls: [...new Set(attempts.flatMap(a => [a.hash, a.sdkSuccessHash].filter(Boolean)))].map(hash => `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${hash}`),
     });
-    await assertSession(account);
-    try {
-      const result = await client.executeBatch({ creates: socialSample() });
-      return { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${result.txHash}`, alreadyCreated: false };
-    } catch (error) {
-      if (submittedHash) throw Object.assign(new Error("The sample transaction was submitted, but its confirmation could not be verified. Check the transaction and refresh before signing again."), { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${submittedHash}` });
-      if (started) {
-        let cause = error as { code?: number; name?: string; cause?: unknown } | undefined;
-        for (let i = 0; cause && i < 8; i++, cause = cause.cause as typeof cause) {
-          if (cause.code === 4001 || cause.name === "UserRejectedRequestError") {
-            localStorage.removeItem(pendingKey);
+    const confirmationIssue = (attempt: SeedAttempt, code: SampleConfirmationError["code"]) => {
+      attempt.confirmationIssue = code;
+      persist();
+      return Object.assign(new SampleConfirmationError(code, code === "RECEIPT_DISAGREES"
+        ? "The receipt disagrees with the SDK success. Check the transaction and refresh; do not sign again."
+        : "SDK success was recorded, but confirmation is pending. Check the transaction and refresh; do not sign again."), {
+        txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${attempt.sdkSuccessHash ?? attempt.hash}`,
+        txUrls: stopped("").txUrls,
+      });
+    };
+    const reconcile = async (attempt: SeedAttempt): Promise<"success" | "exhausted" | "semantic"> => {
+      if (!attempt.hash) throw stopped("A previous sample submission has no verified transaction hash. Automatic resubmission is blocked.");
+      let receipt;
+      try { receipt = await pub.getTransactionReceipt({ hash: attempt.hash }); }
+      catch {
+        if (attempt.sdkSuccessHash) throw confirmationIssue(attempt, "CONFIRMATION_PENDING");
+        throw stopped("A sample creation is pending or its receipt is uncertain. Check the transaction before signing again.");
+      }
+      if (!receipt || receipt.blockNumber == null || receipt.transactionHash !== attempt.hash || !["success", "reverted"].includes(receipt.status))
+        throw attempt.sdkSuccessHash ? confirmationIssue(attempt, "CONFIRMATION_PENDING")
+          : stopped("A sample creation is pending or its receipt is uncertain. Automatic resubmission is blocked.");
+      // SDK success is an irreversible no-resend boundary, even if another RPC disagrees.
+      if (attempt.sdkSuccessHash && (receipt.status !== "success" || receipt.transactionHash !== attempt.sdkSuccessHash))
+        throw confirmationIssue(attempt, "RECEIPT_DISAGREES");
+      attempt.status = receipt.status;
+      attempt.blockNumber = String(receipt.blockNumber);
+      attempt.gasUsed = String(receipt.gasUsed);
+      persist();
+      if (receipt.status === "success") return "success";
+      let tx;
+      try { tx = await pub.getTransaction({ hash: attempt.hash }); }
+      catch { throw stopped("The reverted transaction's gas limit could not be verified. Automatic resubmission is blocked."); }
+      if (tx.hash !== attempt.hash || tx.blockNumber !== receipt.blockNumber || tx.from.toLowerCase() !== account.toLowerCase() ||
+        tx.to?.toLowerCase() !== "0x4400000000000000000000000000000000000044" || tx.value !== 0n || tx.gas <= 0n || receipt.gasUsed <= 0n)
+        throw stopped("The reverted transaction identity could not be verified. Automatic resubmission is blocked.");
+      attempt.gas = String(tx.gas);
+      attempt.nonce = tx.nonce;
+      persist();
+      return receipt.gasUsed === tx.gas ? "exhausted" : "semantic";
+    };
+    const retryFloor = async () => {
+      const last = attempts.at(-1)!;
+      if (attempts.some(a => a.sdkSuccessHash)) throw confirmationIssue(last, last.confirmationIssue ?? "CONFIRMATION_PENDING");
+      if (last.status === "rejected") throw stopped("The sample signature was rejected. Automatic resubmission is blocked.");
+      if (last.status === "success") throw stopped("Creation was confirmed, but its entities are not visible. Refresh and do not sign again.");
+      const outcome = await reconcile(last);
+      if (outcome === "success") throw stopped("Creation was confirmed, but its entities are not visible. Refresh and do not sign again.");
+      if (outcome !== "exhausted") throw stopped("The sample transaction reverted without gas exhaustion. No retry is authorized.");
+      if (!last.sdkReverted) throw stopped("The SDK did not confirm a reverted sample transaction. Automatic resubmission is blocked.");
+      if (attempts.length !== 1) throw stopped("The single gas-exhaustion retry was already used. No further sample transaction is authorized.");
+      return BigInt(last.gas!) * 2n;
+    };
+    let minimumRetryGas = attempts.length ? await retryFloor() : 0n;
+    while (attempts.length < 2) {
+      const attempt: SeedAttempt = { status: "submitting", sampleIds };
+      let started = false;
+      const register = () => {
+        if (started) return;
+        if (localStorage.getItem(historyKey) !== storedHistory || localStorage.getItem(pendingKey) !== pendingValue)
+          throw stopped("Sample creation changed in another tab. Automatic resubmission is blocked.");
+        attempts.push(attempt); started = true;
+      };
+      const client = await writer(account, hash => {
+        attempt.hash = hash; attempt.status = "pending";
+        persist(); markPending(hash);
+      }, params => {
+        register(); attempt.gas = String(params.gas); attempt.nonce = params.nonce;
+        persist(); markPending("submitting"); // Save uncertainty before the wallet can send.
+      }, options, minimumRetryGas);
+      await assertSession(account);
+      let sdkError: unknown;
+      try {
+        const result = await client.executeBatch({ creates }, await txParams(account, options));
+        // Also retain hashes returned by an SDK wrapper that did not expose the transport callback.
+        register(); attempt.hash ??= result.txHash; attempt.entityKeys = result.createdEntities;
+        attempt.sdkSuccessHash = result.txHash; attempt.status = "success";
+        persist(); markPending(attempt.hash);
+      } catch (error) {
+        sdkError = error;
+        // SDK 1.0 emits this specific EntityMutationError only after its reverted receipt.
+        const mutation = error as { name?: string; txHash?: Hex; message?: string } | undefined;
+        attempt.sdkReverted = !!attempt.hash && mutation?.name === "EntityMutationError" &&
+          mutation.txHash === attempt.hash && mutation.message?.startsWith(`Transaction ${attempt.hash} reverted.`) === true;
+        if (started) persist();
+        if (!attempt.hash) {
+          let cause = error as { code?: number; name?: string; cause?: unknown } | undefined;
+          let rejected = false;
+          for (let i = 0; cause && i < 8; i++, cause = cause.cause as typeof cause)
+            if (cause.code === 4001 || cause.name === "UserRejectedRequestError") rejected = true;
+          if (rejected) {
+            register(); attempt.status = "rejected"; persist(); markPending("rejected");
             throw error;
           }
+          if (started) throw stopped("The wallet did not return a transaction hash. Automatic resubmission is blocked until the result is verified.");
+          throw error; // Unsigned estimation/validation failed before the send boundary.
         }
-        throw new Error("The wallet did not return a transaction hash. Check your wallet activity; automatic resubmission is blocked until the result is verified.");
       }
-      throw error;
+      const outcome = await reconcile(attempt);
+      if (outcome === "success") {
+        if (sdkError) throw stopped("The sample transaction was confirmed. Refresh and do not sign again.");
+        return { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${attempt.hash}`, alreadyCreated: false };
+      }
+      minimumRetryGas = await retryFloor(); // Exactly one confirmed gas-exhausted revert may reach the next iteration.
     }
+    throw stopped("The single gas-exhaustion retry was already used. No further sample transaction is authorized.");
   };
   if (navigator.locks) return navigator.locks.request(`arkiv-graph-seed-${account.toLowerCase()}`, { ifAvailable: true }, lock => {
     if (!lock) throw new Error("Sample creation is already in progress in another tab.");
@@ -184,22 +321,48 @@ export async function createSocialSampleWithWallet(account: string) {
   return run();
 }
 
-export async function deleteEntityWithWallet(account: string, entityKey: string): Promise<WriteResult> {
+async function deleteEntity(account: string, entityKey: string, options: WriteTxOptions = {}): Promise<WriteResult> {
   if (!KEY.test(entityKey)) throw new Error("Invalid entity key.");
   await assertSession(account);
   const entity = await pub.getEntity(entityKey as Hex);
-  if (entity.owner.toLowerCase() !== account.toLowerCase()) throw new Error("You can only delete entities owned by your wallet.");
+  if (entity.$owner.toLowerCase() !== account.toLowerCase()) throw new Error("You can only delete entities owned by your wallet.");
   const timing = await pub.getBlockTiming();
-  if (entity.expiresAt <= timing.currentBlock) throw new Error("This entity has already expired. Refresh the table.");
+  if (entity.$expiresAt <= timing.currentBlock) throw new Error("This entity has already expired. Refresh the table.");
   let submittedHash: Hex | undefined;
-  const client = await writer(account, hash => { submittedHash = hash; });
+  const client = await writer(account, hash => { submittedHash = hash; }, undefined, options);
   await assertSession(account);
   try {
-    // SDK 0.8 waits for a successful receipt. No related entities are deleted.
-    const result = await client.deleteEntity({ entityKey: entityKey as Hex });
+    // SDK 1.0 waits for a successful receipt. No related entities are deleted.
+    const result = await client.deleteEntity({ entityKey: entityKey as Hex }, await txParams(account, options));
+    await confirmed(result.txHash);
     return { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${result.txHash}` };
   } catch (error) {
     if (submittedHash) throw Object.assign(new Error("The deletion transaction was submitted, but its confirmation could not be verified. Check the transaction and refresh before signing again."), { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${submittedHash}` });
     throw error;
   }
+}
+
+let activeWrite = false;
+async function withWriteLock<T>(account: string, action: () => Promise<T>): Promise<T> {
+  const run = async () => {
+    if (activeWrite) throw new Error("An entity operation is already in progress. Wait for its receipt.");
+    activeWrite = true;
+    try { return await action(); } finally { activeWrite = false; }
+  };
+  if (typeof navigator !== "undefined" && navigator.locks) {
+    return navigator.locks.request(`arkiv-graph-write-${CHAIN.id}-${account.toLowerCase()}`, { ifAvailable: true }, lock => {
+      if (!lock) throw new Error("An entity operation is already in progress in another tab. Wait for its receipt.");
+      return run();
+    });
+  }
+  return run();
+}
+export function extendEntityWithWallet(account: string, entityKey: string, targetExpiresAt: number, options: WriteTxOptions = {}) {
+  return withWriteLock(account, () => extendEntity(account, entityKey, targetExpiresAt, options));
+}
+export function createSocialSampleWithWallet(account: string, options: WriteTxOptions = {}) {
+  return withWriteLock(account, () => createSocialSample(account, options));
+}
+export function deleteEntityWithWallet(account: string, entityKey: string, options: WriteTxOptions = {}) {
+  return withWriteLock(account, () => deleteEntity(account, entityKey, options));
 }

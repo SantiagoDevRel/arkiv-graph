@@ -14,8 +14,8 @@ export interface NormEntity {
   raw: ArkivEntityLike;
 }
 
-function toNum(v: bigint | number | string | undefined): number | undefined {
-  if (v === undefined || v === null) return undefined;
+function toNum(v: unknown): number | undefined {
+  if (typeof v !== "bigint" && typeof v !== "number" && typeof v !== "string") return undefined;
   try {
     const n = typeof v === "bigint" ? Number(v) : Number(v);
     return Number.isFinite(n) ? n : undefined;
@@ -26,7 +26,7 @@ function toNum(v: bigint | number | string | undefined): number | undefined {
 
 /** Decode a payload that may be bytes, a byte-map ({0:123,...}), a string, or an object. */
 function decodePayload(entity: ArkivEntityLike): Record<string, unknown> {
-  // Prefer the SDK's parser.
+  // Compatibility parser for legacy plain inputs; SDK 1.0 uses typed columns.
   if (typeof entity.toJson === "function") {
     try {
       const j = entity.toJson();
@@ -80,26 +80,32 @@ function bytesToString(p: unknown): string | undefined {
 }
 
 export function normalizeEntity(entity: ArkivEntityLike): NormEntity {
-  const attributes: ArkivAttribute[] = Array.isArray(entity.attributes)
-    ? entity.attributes
-    : Object.entries(entity.attributes ?? {}).map(([key, typed]) => ({
-        key,
-        // Preserve large integers and decimal values exactly in tables and link matching.
-        value: typeof typed.value === "number" ? typed.value : String(typed.value),
-      }));
+  const sdkRow = typeof entity.$key === "string";
+  const selected = sdkRow ? entity.$attributes ?? Object.fromEntries(
+    Object.entries(entity).filter(([name, v]) => !name.startsWith("$") && v && typeof v === "object" && "type" in v && "value" in v),
+  ) : entity.attributes;
+  const attributes: ArkivAttribute[] = Array.isArray(selected)
+    ? selected
+    : Object.entries(selected && typeof selected === "object" ? selected : {}).flatMap(([key, typed]) => {
+        if (!typed || typeof typed !== "object" || !("value" in typed)) return [];
+        return [{ key, value: typeof typed.value === "number" ? typed.value : String(typed.value) }];
+      });
   const attrMap = new Map<string, string | number>();
   for (const a of attributes) {
     if (a && a.key != null && !attrMap.has(a.key)) attrMap.set(a.key, a.value);
   }
+  const owner = sdkRow ? entity.$owner : entity.owner;
+  const creator = sdkRow ? entity.$creator : entity.creator;
+  const key = sdkRow ? entity.$key : entity.key;
   return {
-    key: entity.key,
-    owner: entity.owner?.toLowerCase(),
-    creator: entity.creator?.toLowerCase(),
+    key: typeof key === "string" ? key : "",
+    owner: typeof owner === "string" ? owner.toLowerCase() : undefined,
+    creator: typeof creator === "string" ? creator.toLowerCase() : undefined,
     attributes,
     attrMap,
-    payload: decodePayload(entity),
-    expiresAtBlock: toNum(entity.expiresAt ?? entity.expiresAtBlock),
-    createdAtBlock: toNum(entity.createdAt ?? entity.createdAtBlock),
+    payload: sdkRow ? {} : decodePayload(entity),
+    expiresAtBlock: toNum(sdkRow ? entity.$expiresAt : entity.expiresAt ?? entity.expiresAtBlock),
+    createdAtBlock: toNum(sdkRow ? entity.$createdAt : entity.createdAt ?? entity.createdAtBlock),
     raw: entity,
   };
 }

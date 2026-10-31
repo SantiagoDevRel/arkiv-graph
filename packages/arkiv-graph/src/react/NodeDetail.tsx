@@ -166,7 +166,7 @@ export function NodeDetail({ node, connections = [], onClose, theme = ARKIV_THEM
 
       {/* payload */}
       {payloadEntries.length > 0 && (
-        <Section title="payload" theme={theme}>
+        <Section title="Legacy document" theme={theme}>
           {payloadEntries.map(([k, v]) => (
             <Field key={k} label={k} value={typeof v === "object" ? JSON.stringify(v) : String(v)} theme={theme} />
           ))}

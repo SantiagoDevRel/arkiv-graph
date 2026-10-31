@@ -12,7 +12,7 @@ Consume the exact arkiv-graph version pinned in package.json from npm.
 Do not replace it with a workspace link or duplicate the library to make a demo
 pass. The README documents setup and the verification report records release status.
 Ask the developer which public owner, app namespace, entity type attribute and
-link rules identify their app. Connecting a wallet and funding Tiramisu are only
+link rules identify their app. Connecting a wallet and funding Rabdi are only
 required for creation/extension/deletion; public reads need neither signing nor secrets.
 
 Keep `config.ts` authoritative for read/write network identity. Keep `arkiv.ts`
@@ -23,12 +23,12 @@ Only report receipt-confirmed success;
 refetch after changes. Never retry a possibly submitted batch blindly, accept a
 private key in the browser, or send credential-bearing RPC URLs to the client.
 
-The social dataset is a coherent example, not identity proof: handles and payloads
+The social dataset is a coherent example, not identity proof: handles and columns
 are fictional and the chain owner is the signing wallet. A project attribute is
 not authorization. Default demo owner is public configuration, never a signer.
 
 To verify: follow only the README in a clean checkout, check the npm-resolved
-version, create the sample on Tiramisu, compare query counts with table/graph,
+version, create the sample on Rabdi, compare query counts with table/graph,
 extend one owned entity and query its changed expiry. For deletion, use a
 disposable entity created for the test and verify its absence after confirmation.
 Never choose an existing user entity merely to exercise the Delete button. Test empty/error/loading,
@@ -40,3 +40,7 @@ Deletion uses the existing package callback and explicit confirmation. Recheck
 ownership and liveness before signing; delete only the selected entity, never its
 related entities. Cancellation must not invoke the wallet. Do not treat a
 confirmation error or an empty query as proof that a transaction was not sent.
+
+Rabdi signing: read latest state; pass explicit nonce, gas (max of 1,000,000 and twice an unsigned latest estimate, never above half the head block limit; split batches before signing) and gasPrice. Check receipt.status === "success"; never retry a successful or uncertain write. Shared RPC keys stay server-side; visitor writes use the RPC configured in their wallet.
+
+Rabdi lifetime targets must stay below 7,884,000 blocks from the head (use a signing margin). No permanent/no-expiration mode; use Lifetime Extension for longer retention.

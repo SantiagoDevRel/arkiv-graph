@@ -1,7 +1,7 @@
 import { addExternalForEntity } from "./external.js";
 import { attrValues, normalizeEntity, type NormEntity } from "./normalize.js";
 import { computeTtl } from "./ttl.js";
-import { TIRAMISU_EXPLORER } from "./chains.js";
+import { RABDI_EXPLORER } from "./chains.js";
 import type {
   ArkivEntityLike,
   BuildGraphOptions,
@@ -23,7 +23,7 @@ function pickLabel(e: NormEntity, entityType: string | undefined, labelKey?: str
     if (e.attrMap.has(labelKey)) return String(e.attrMap.get(labelKey));
   }
   for (const k of ["name", "title", "handle", "label", "text", "message", "body"]) {
-    const v = (p as Record<string, unknown>)?.[k];
+    const v = (p as Record<string, unknown>)?.[k] ?? e.attrMap.get(k);
     if (typeof v === "string" && v.trim()) return v.length > 40 ? `${v.slice(0, 38)}…` : v;
   }
   if (entityType) return `${entityType} ${shortKey(e.key)}`;
@@ -60,13 +60,13 @@ export function buildGraph(entities: ArkivEntityLike[], options: BuildGraphOptio
   const typeAttr = options.typeAttribute ?? "entityType";
   const links = options.links ?? [];
   const createPlaceholders = options.createPlaceholders !== false;
-  const arkivExplorer = (options.arkivExplorer ?? TIRAMISU_EXPLORER).replace(/\/$/, "");
+  const arkivExplorer = (options.arkivExplorer ?? RABDI_EXPLORER).replace(/\/$/, "");
 
   const joinTypes = new Set(
     links.filter((l): l is JoinRule => l.type === "join").map((l) => l.entityType),
   );
 
-  const norms = entities.filter((e) => e && e.key).map(normalizeEntity);
+  const norms = entities.filter((e) => e && (e.$key || e.key)).map(normalizeEntity);
   const byKey = new Map<string, NormEntity>();
   for (const n of norms) byKey.set(n.key, n);
 

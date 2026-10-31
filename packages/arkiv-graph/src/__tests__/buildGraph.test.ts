@@ -186,8 +186,8 @@ describe("external chain detection", () => {
     expect(g.edges.some((e) => e.kind === "external" && e.source === POST_1)).toBe(true);
   });
 
-  it("does NOT treat Tiramisu's own chainId as external", () => {
-    const entities = [entity(POST_1, "post", { text: "x" }, { sourceChainId: 7738577 })];
+  it("does NOT treat Rabdi's own chainId as external", () => {
+    const entities = [entity(POST_1, "post", { text: "x" }, { sourceChainId: 7794095 })];
     const g = buildGraph(entities);
     expect(g.nodes.some((n) => n.kind === "external")).toBe(false);
   });
