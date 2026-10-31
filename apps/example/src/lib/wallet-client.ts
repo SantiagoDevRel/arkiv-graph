@@ -80,7 +80,7 @@ async function assertSession(account: string) {
   if (!ADDRESS.test(account) || !provider || await getConnectedAccount() !== account.toLowerCase()) throw new Error("The account changed. Connect again before signing.");
   if (Number(await provider.request({ method: "eth_chainId" })) !== CHAIN.id) throw new Error("The network changed. Select Rabdi before signing.");
 }
-async function writer(account: string, onSent?: (hash: Hex) => void, beforeSend?: () => void, options: WriteTxOptions = {}) {
+async function writer(account: string, onSent?: (hash: Hex) => void, beforeSend?: (params: { gas: bigint; nonce: number }) => void, options: WriteTxOptions = {}, retryGasFloor = 0n) {
   await ensureChain();
   await assertSession(account);
   if (await pub.getChainId() !== CHAIN.id) throw new Error("The RPC does not match Rabdi.");
@@ -96,7 +96,7 @@ async function writer(account: string, onSent?: (hash: Hex) => void, beforeSend?
       const estimated = await estimateGas(pub, { account: account as Hex, to: tx.to, data: tx.data, value: 0n, blockTag: "latest" });
       if (estimated <= 0n) throw new Error("Could not estimate gas for this operation.");
       await assertSession(account);
-      const minimum = estimated * 2n > 1_000_000n ? estimated * 2n : 1_000_000n;
+      const minimum = [estimated * 2n, 1_000_000n, retryGasFloor].reduce((a, b) => a > b ? a : b);
       if (options.gas !== undefined && options.gas < minimum) throw new Error("Your gas override must preserve twice the unsigned estimate.");
       const safeGas = options.gas ?? minimum;
       const head = await pub.getBlock({ blockTag: "latest" });
@@ -107,7 +107,7 @@ async function writer(account: string, onSent?: (hash: Hex) => void, beforeSend?
       if (pending !== nonce || tx.nonce !== undefined && BigInt(tx.nonce) !== BigInt(nonce)) throw new Error("The wallet nonce changed or another transaction is pending. Verify its receipt before signing.");
       await assertSession(account);
       forwarded = { ...request, params: [{ ...tx, nonce: `0x${nonce.toString(16)}`, gas: `0x${safeGas.toString(16)}`, gasPrice: `0x${gasPrice.toString(16)}` }] };
-      beforeSend?.();
+      beforeSend?.({ gas: safeGas, nonce });
     }
     const result = await provider.request(forwarded);
     if (request.method === "eth_sendTransaction" && typeof result === "string" && KEY.test(result)) onSent?.(result as Hex);
@@ -153,63 +153,133 @@ async function extendEntity(account: string, entityKey: string, targetExpiresAt:
   return { expiresAt: timing.currentBlockTime + Number(expiresAt - timing.currentBlock) * timing.blockDuration,
     txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${txHash}` };
 }
+interface SeedAttempt {
+  hash?: Hex;
+  status: "submitting" | "pending" | "success" | "reverted" | "rejected";
+  sampleIds: string[];
+  entityKeys?: string[];
+  gas?: string;
+  nonce?: number;
+  gasUsed?: string;
+  blockNumber?: string;
+}
 async function createSocialSample(account: string, options: WriteTxOptions = {}) {
   const run = async () => {
     await assertSession(account);
     const pendingKey = `arkiv-graph:seed:${CHAIN.id}:${account.toLowerCase()}:${PROJECT}`;
-    // Check storage BEFORE signing; unavailable storage must not lose a sent hash.
+    const historyKey = `${pendingKey}:history`;
     localStorage.setItem(`${pendingKey}:available`, "1");
     localStorage.removeItem(`${pendingKey}:available`);
-    const pendingHash = localStorage.getItem(pendingKey);
-    // A successful query can recover a confirmed seed even while receipt lookup fails.
+    let pendingValue = localStorage.getItem(pendingKey);
     const existing = await pub.select({ $key: true }).ownedBy(account as Hex).where(eq("project", PROJECT)).limit(1).fetch();
-    if (existing.entities.length) return { alreadyCreated: true, ...(pendingHash && KEY.test(pendingHash) ? { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash}` } : {}) };
-    if (pendingHash && !KEY.test(pendingHash)) throw new Error("A previous sample submission has no verified transaction hash. Check your wallet activity before retrying; automatic resubmission is blocked.");
-    if (pendingHash && KEY.test(pendingHash)) {
-      let receipt;
-      try { receipt = await pub.getTransactionReceipt({ hash: pendingHash as Hex }); }
-      catch { throw new Error(`A sample creation is pending. Check ${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash} before signing again.`); }
-      if (receipt.status === "success") {
-        // Confirm absence at a head that includes the receipt before allowing a new seed.
-        const timing = await pub.getBlockTiming();
-        if (timing.currentBlock <= receipt.blockNumber) throw new Error("Creation was confirmed. Wait one block, then select Refresh before trying again.");
-        const loaded = await pub.select({ $key: true }).ownedBy(account as Hex).where(eq("project", PROJECT)).limit(1).fetch();
-        if (loaded.entities.length) return { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash}`, alreadyCreated: true };
-        throw new Error(`Creation was confirmed, but its entities are not visible. Query results may be delayed or the entities may have expired. Check ${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingHash}; do not sign again without verifying it.`);
-      }
-      localStorage.removeItem(pendingKey);
+    if (existing.entities.length) return { alreadyCreated: true, ...(pendingValue && KEY.test(pendingValue) ? { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${pendingValue}` } : {}) };
+    const creates = socialSample();
+    const sampleIds = creates.map(item => String(item.values.sample_id));
+    let storedHistory = localStorage.getItem(historyKey);
+    let attempts: SeedAttempt[] = [];
+    if (storedHistory) {
+      const journal = JSON.parse(storedHistory) as { version: number; attempts: SeedAttempt[] };
+      if (journal.version !== 1 || !Array.isArray(journal.attempts) || journal.attempts.length > 2 || journal.attempts.some(a =>
+        !["submitting", "pending", "success", "reverted", "rejected"].includes(a.status) ||
+        !Array.isArray(a.sampleIds) || !a.sampleIds.every(id => typeof id === "string") ||
+        (a.hash !== undefined && !KEY.test(a.hash)))) throw new Error("Invalid sample transaction history. Automatic resubmission is blocked.");
+      attempts = journal.attempts;
     }
-    let submittedHash: Hex | undefined;
-    let started = false;
-    const client = await writer(account, hash => {
-      submittedHash = hash;
-      localStorage.setItem(pendingKey, hash);
-    }, () => {
-      if (localStorage.getItem(pendingKey)) throw new Error("Sample creation is already pending. Check your wallet activity before retrying.");
-      // Persist uncertainty BEFORE sending. If storage fails after the wallet
-      // returns a hash, the marker still prevents an accidental duplicate.
-      localStorage.setItem(pendingKey, "submitting");
-      started = true;
-    }, options);
-    await assertSession(account);
-    try {
-      const result = await client.executeBatch({ creates: socialSample() }, await txParams(account, options));
-      await confirmed(result.txHash);
-      return { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${result.txHash}`, alreadyCreated: false };
-    } catch (error) {
-      if (submittedHash) throw Object.assign(new Error("The sample transaction was submitted, but its confirmation could not be verified. Check the transaction and refresh before signing again."), { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${submittedHash}` });
-      if (started) {
-        let cause = error as { code?: number; name?: string; cause?: unknown } | undefined;
-        for (let i = 0; cause && i < 8; i++, cause = cause.cause as typeof cause) {
-          if (cause.code === 4001 || cause.name === "UserRejectedRequestError") {
-            localStorage.removeItem(pendingKey);
+    const persist = () => {
+      const value = JSON.stringify({ version: 1, attempts });
+      localStorage.setItem(historyKey, value);
+      storedHistory = value;
+    };
+    const markPending = (value: string) => { localStorage.setItem(pendingKey, value); pendingValue = value; };
+    if (!attempts.length && pendingValue) {
+      if (!KEY.test(pendingValue)) throw new Error("A previous sample submission is uncertain. Automatic resubmission is blocked.");
+      attempts.push({ hash: pendingValue as Hex, status: "pending", sampleIds });
+      persist(); // Import the old hash guard without discarding its transaction identity.
+    }
+    const stopped = (message: string) => Object.assign(new Error(message), {
+      txUrl: attempts.at(-1)?.hash ? `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${attempts.at(-1)!.hash}` : undefined,
+      txUrls: attempts.flatMap(a => a.hash ? [`${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${a.hash}`] : []),
+    });
+    const reconcile = async (attempt: SeedAttempt): Promise<"success" | "exhausted" | "semantic"> => {
+      if (!attempt.hash) throw stopped("A previous sample submission has no verified transaction hash. Automatic resubmission is blocked.");
+      let receipt;
+      try { receipt = await pub.getTransactionReceipt({ hash: attempt.hash }); }
+      catch { throw stopped("A sample creation is pending or its receipt is uncertain. Check the transaction before signing again."); }
+      if (!receipt || receipt.blockNumber == null || receipt.transactionHash !== attempt.hash || !["success", "reverted"].includes(receipt.status))
+        throw stopped("A sample creation is pending or its receipt is uncertain. Automatic resubmission is blocked.");
+      attempt.status = receipt.status;
+      attempt.blockNumber = String(receipt.blockNumber);
+      attempt.gasUsed = String(receipt.gasUsed);
+      persist();
+      if (receipt.status === "success") return "success";
+      let tx;
+      try { tx = await pub.getTransaction({ hash: attempt.hash }); }
+      catch { throw stopped("The reverted transaction's gas limit could not be verified. Automatic resubmission is blocked."); }
+      if (tx.hash !== attempt.hash || tx.blockNumber !== receipt.blockNumber || tx.from.toLowerCase() !== account.toLowerCase() ||
+        tx.to?.toLowerCase() !== "0x4400000000000000000000000000000000000044" || tx.value !== 0n || tx.gas <= 0n || receipt.gasUsed <= 0n)
+        throw stopped("The reverted transaction identity could not be verified. Automatic resubmission is blocked.");
+      attempt.gas = String(tx.gas);
+      attempt.nonce = tx.nonce;
+      persist();
+      return receipt.gasUsed === tx.gas ? "exhausted" : "semantic";
+    };
+    const retryFloor = async () => {
+      const last = attempts.at(-1)!;
+      if (last.status === "rejected") throw stopped("The sample signature was rejected. Automatic resubmission is blocked.");
+      if (last.status === "success") throw stopped("Creation was confirmed, but its entities are not visible. Refresh and do not sign again.");
+      const outcome = await reconcile(last);
+      if (outcome === "success") throw stopped("Creation was confirmed, but its entities are not visible. Refresh and do not sign again.");
+      if (outcome !== "exhausted") throw stopped("The sample transaction reverted without gas exhaustion. No retry is authorized.");
+      if (attempts.length !== 1) throw stopped("The single gas-exhaustion retry was already used. No further sample transaction is authorized.");
+      return BigInt(last.gas!) * 2n;
+    };
+    let minimumRetryGas = attempts.length ? await retryFloor() : 0n;
+    while (attempts.length < 2) {
+      const attempt: SeedAttempt = { status: "submitting", sampleIds };
+      let started = false;
+      const register = () => {
+        if (started) return;
+        if (localStorage.getItem(historyKey) !== storedHistory || localStorage.getItem(pendingKey) !== pendingValue)
+          throw stopped("Sample creation changed in another tab. Automatic resubmission is blocked.");
+        attempts.push(attempt); started = true;
+      };
+      const client = await writer(account, hash => {
+        attempt.hash = hash; attempt.status = "pending";
+        persist(); markPending(hash);
+      }, params => {
+        register(); attempt.gas = String(params.gas); attempt.nonce = params.nonce;
+        persist(); markPending("submitting"); // Save uncertainty before the wallet can send.
+      }, options, minimumRetryGas);
+      await assertSession(account);
+      let sdkError: unknown;
+      try {
+        const result = await client.executeBatch({ creates }, await txParams(account, options));
+        // Also retain hashes returned by an SDK wrapper that did not expose the transport callback.
+        register(); attempt.hash ??= result.txHash; attempt.entityKeys = result.createdEntities;
+        persist(); markPending(attempt.hash);
+      } catch (error) {
+        sdkError = error;
+        if (!attempt.hash) {
+          let cause = error as { code?: number; name?: string; cause?: unknown } | undefined;
+          let rejected = false;
+          for (let i = 0; cause && i < 8; i++, cause = cause.cause as typeof cause)
+            if (cause.code === 4001 || cause.name === "UserRejectedRequestError") rejected = true;
+          if (rejected) {
+            register(); attempt.status = "rejected"; persist(); markPending("rejected");
             throw error;
           }
+          if (started) throw stopped("The wallet did not return a transaction hash. Automatic resubmission is blocked until the result is verified.");
+          throw error; // Unsigned estimation/validation failed before the send boundary.
         }
-        throw new Error("The wallet did not return a transaction hash. Check your wallet activity; automatic resubmission is blocked until the result is verified.");
       }
-      throw error;
+      const outcome = await reconcile(attempt);
+      if (outcome === "success") {
+        if (sdkError) throw stopped("The sample transaction was confirmed. Refresh and do not sign again.");
+        return { txUrl: `${PUBLIC_CHAIN.transactionExplorerUrl}/tx/${attempt.hash}`, alreadyCreated: false };
+      }
+      minimumRetryGas = await retryFloor(); // Exactly one confirmed gas-exhausted revert may reach the next iteration.
     }
+    throw stopped("The single gas-exhaustion retry was already used. No further sample transaction is authorized.");
   };
   if (navigator.locks) return navigator.locks.request(`arkiv-graph-seed-${account.toLowerCase()}`, { ifAvailable: true }, lock => {
     if (!lock) throw new Error("Sample creation is already in progress in another tab.");

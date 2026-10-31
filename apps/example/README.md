@@ -29,6 +29,8 @@ Set `GRAPH_SEED_JOURNAL` to a persistent absolute path outside the repo before r
 
 The seed starts with batches of at most ten entities. Each exact unsigned SDK transaction is estimated at `latest`, with `gas = max(1_000_000, 2 × estimate)`; a batch is split before signing until gas fits within 50% of the head block gas limit. Never use a gas limit at or near the full block limit. Each successful receipt is journaled before the next batch. Confirmed partial batches resume by stable identifiers; an uncertain submission stops the run. The browser's atomic sample operation uses the same estimate/headroom cap and refuses an oversized operation. All exported wallet write functions accept an optional per-write `{ gas, gasPrice }` override; gas cannot reduce measured headroom or exceed the half-block cap.
 
+Browser sample creation retains a persistent history of at most two attempts, including each hash, stable sample identifiers, confirmed status, gas and nonce, plus created entity keys when available. It authorizes at most one retry, only after matching a confirmed reverted receipt to the actual transaction and proving `gasUsed === gasLimit`. The retry estimates exact calldata again at `latest`, reads a fresh latest nonce, and uses at least twice the previous transaction's gas while still fitting below half the head block limit. If that budget does not fit, signing stops. Semantic reverts, a second exhausted revert, signature rejection, success and missing/uncertain receipts never authorize another send. History survives reloads and is not cleared when the old single-hash marker is absent. The maintainer seeder is separate and does not automatically retry reverted/uncertain submissions.
+
 Sample creations use 30 days, within Rabdi's maximum lifetime of 7,884,000 blocks (about 182 days). There is no permanent/no-expiration mode. The lifetime integration test successfully created with `fromBlocks(7_883_970)` and deleted that disposable entity afterward. The wallet refuses extension targets beyond this safety margin. Longer-lived data needs periodic Lifetime Extension.
 
 ## Troubleshooting
@@ -38,7 +40,7 @@ Sample creations use 30 days, within Rabdi's maximum lifetime of 7,884,000 block
 - Revert at the gas limit: estimate exact unsigned calldata at `latest`, use at least twice the estimate and split above half the head block limit; never below 1,000,000. Stop on estimate failure. Every write passes explicit gas/gasPrice and checks `receipt.status === "success"`.
 - `ExpiryBeyondMaxLifetime`: shorten the target below the maximum; permanent or maximum-uint64 expiration requests are unsupported.
 - Wrong account, owner or network: signing is blocked. Reconnect the entity owner's wallet on Rabdi.
-- Pending creation: the local browser marker preserves a submitted hash or uncertainty across reloads. Check wallet activity and receipts; never blindly resend successful or uncertain operations. Duplicate protection is local to a browser profile.
+- Pending creation: browser transaction history preserves every attempt across reloads. Check wallet activity and receipts; do not clear history to resend successful, rejected or uncertain operations. Only one confirmed gas-exhaustion retry is eligible. Duplicate protection is local to a browser profile.
 - Missing/expired/out-of-scope references share the same unresolved display; absence alone cannot identify the cause.
 - RPC unavailable or rate limited: manual Retry; no fabricated data or automatic polling loop.
 

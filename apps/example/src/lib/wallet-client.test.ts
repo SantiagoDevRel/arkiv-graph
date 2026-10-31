@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ estimateGas: vi.fn(), getTransactionCount: vi.fn(), getGasPrice: vi.fn(), getBlock: vi.fn(), getEntity: vi.fn(), getBlockTiming: vi.fn(), extendEntity: vi.fn(), deleteEntity: vi.fn(), executeBatch: vi.fn(), createEntity: vi.fn(), getChainId: vi.fn(), getTransactionReceipt: vi.fn(), selected: vi.fn(), request: vi.fn(), walletConfig: null as any }));
+const mocks = vi.hoisted(() => ({ estimateGas: vi.fn(), getTransactionCount: vi.fn(), getGasPrice: vi.fn(), getBlock: vi.fn(), getEntity: vi.fn(), getBlockTiming: vi.fn(), extendEntity: vi.fn(), deleteEntity: vi.fn(), executeBatch: vi.fn(), createEntity: vi.fn(), getChainId: vi.fn(), getTransactionReceipt: vi.fn(), getTransaction: vi.fn(), selected: vi.fn(), request: vi.fn(), walletConfig: null as any }));
 vi.mock("@arkiv-network/sdk", async () => {
   const actual = await vi.importActual<typeof import("@arkiv-network/sdk")>("@arkiv-network/sdk");
   return { ...actual, createPublicClient: () => ({ ...mocks, select: () => ({ ownedBy() { return this; }, where() { return this; }, limit() { return this; }, fetch: mocks.selected }) }), createWalletClient: (config: any) => { mocks.walletConfig = config; return mocks; } };
@@ -20,7 +20,8 @@ beforeEach(() => {
   mocks.getTransactionCount.mockResolvedValue(0);
   mocks.getGasPrice.mockResolvedValue(1n);
   mocks.getBlock.mockResolvedValue({ gasLimit: 30_000_000n });
-  mocks.getTransactionReceipt.mockResolvedValue({ status: "success", blockNumber: 90n });
+  mocks.getTransactionReceipt.mockResolvedValue({ status: "success", blockNumber: 90n, transactionHash: entityKey, gasUsed: 100000n });
+  mocks.getTransaction.mockResolvedValue({ hash: entityKey, blockNumber: 90n, from: account, to: "0x4400000000000000000000000000000000000044", value: 0n, gas: 2_000_000n, nonce: 0 });
   mocks.estimateGas.mockResolvedValue(3533541n);
   mocks.getEntity.mockResolvedValue({ $owner: account, $expiresAt: 200n });
   mocks.getBlockTiming.mockResolvedValue({ currentBlock: 100n, currentBlockTime: 1000, blockDuration: 2 });
@@ -155,13 +156,15 @@ describe("wallet writes", () => {
   it("does not reseed a confirmed transaction when its entities are absent or reads lag", async () => {
     const pendingKey = `arkiv-graph:seed:7794095:${account}:arkiv-graph-social-v3`;
     localStorage.setItem(pendingKey, entityKey);
-    mocks.getTransactionReceipt.mockResolvedValue({ status: "success", blockNumber: 90n });
+    mocks.getTransactionReceipt.mockResolvedValue({ status: "success", blockNumber: 90n, transactionHash: entityKey, gasUsed: 100000n });
+  mocks.getTransaction.mockResolvedValue({ hash: entityKey, blockNumber: 90n, from: account, to: "0x4400000000000000000000000000000000000044", value: 0n, gas: 2_000_000n, nonce: 0 });
     await expect(createSocialSampleWithWallet(account)).rejects.toThrow("do not sign again");
     expect(mocks.executeBatch).not.toHaveBeenCalled();
     expect(localStorage.getItem(pendingKey)).toBe(entityKey);
   });
   it("retains a submitted seed hash after confirmation fails and blocks duplicate submission", async () => {
     const pendingKey = `arkiv-graph:seed:7794095:${account}:arkiv-graph-social-v3`;
+    mocks.getTransactionReceipt.mockRejectedValue(new Error("Receipt timeout"));
     mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [account] : method === "eth_chainId" ? "0x76edaf" : entityKey);
     mocks.executeBatch.mockImplementation(async () => {
       await mocks.walletConfig.transport({}).request({ method: "eth_sendTransaction", params: [{ from: account, to: "0x4400000000000000000000000000000000000044", data: "0x1234" }] });
@@ -173,7 +176,7 @@ describe("wallet writes", () => {
     await expect(createSocialSampleWithWallet(account)).rejects.toThrow("pending");
     expect(mocks.executeBatch).toHaveBeenCalledTimes(1);
   });
-  it("preserves uncertainty when storage fails after sending, and recovers a known wallet rejection", async () => {
+  it("keeps transaction history when the legacy hash write fails after sending", async () => {
     const pendingKey = `arkiv-graph:seed:7794095:${account}:arkiv-graph-social-v3`;
     const original = localStorage.setItem;
     localStorage.setItem = (key, value) => { if (value === entityKey) throw new Error("Quota exceeded"); original(key, value); };
@@ -181,13 +184,102 @@ describe("wallet writes", () => {
     mocks.executeBatch.mockImplementation(async () => mocks.walletConfig.transport({}).request({ method: "eth_sendTransaction", params: [{ from: account, to: "0x4400000000000000000000000000000000000044", data: "0x1234" }] }));
     await expect(createSocialSampleWithWallet(account)).rejects.toMatchObject({ txUrl: expect.stringContaining(entityKey) });
     expect(localStorage.getItem(pendingKey)).toBe("submitting");
-    await expect(createSocialSampleWithWallet(account)).rejects.toThrow("automatic resubmission is blocked");
+    await expect(createSocialSampleWithWallet(account)).rejects.toThrow("do not sign again");
     expect(mocks.executeBatch).toHaveBeenCalledTimes(1);
-    // Simulate the developer verifying the wallet history, then testing a rejection.
-    localStorage.removeItem(pendingKey);
+    expect(JSON.parse(localStorage.getItem(`${pendingKey}:history`)!).attempts[0].hash).toBe(entityKey);
+  });
+  it("never turns a rejected signature into permission for another send", async () => {
+    const pendingKey = `arkiv-graph:seed:7794095:${account}:arkiv-graph-social-v3`;
     mocks.request.mockImplementation(async ({ method }) => { if (method === "eth_sendTransaction") throw Object.assign(new Error("Rejected"), { code: 4001 }); return method === "eth_accounts" ? [account] : "0x76edaf"; });
+    mocks.executeBatch.mockImplementation(async () => mocks.walletConfig.transport({}).request({ method: "eth_sendTransaction", params: [{ from: account, to: "0x4400000000000000000000000000000000000044", data: "0x1234" }] }));
     await expect(createSocialSampleWithWallet(account)).rejects.toThrow("Rejected");
-    expect(localStorage.getItem(pendingKey)).toBeNull();
+    await expect(createSocialSampleWithWallet(account)).rejects.toThrow("signature was rejected");
+    expect(mocks.executeBatch).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem(pendingKey)).toBe("rejected");
+  });
+});
+
+describe("sample gas-exhaustion retry", () => {
+  const historyKey = `arkiv-graph:seed:7794095:${account}:arkiv-graph-social-v3:history`;
+  function flow(outcomes: ("exhausted" | "semantic" | "null" | "success")[]) {
+    const sent: { hash: string; gas: bigint; nonce: number }[] = [];
+    let nonce = 0;
+    mocks.estimateGas.mockResolvedValue(1_000_000n);
+    mocks.getTransactionCount.mockImplementation(async () => nonce);
+    mocks.request.mockImplementation(async ({ method, params }) => {
+      if (method === "eth_accounts") return [account];
+      if (method === "eth_chainId") return "0x76edaf";
+      if (method === "eth_sendTransaction") {
+        const hash = `0x${(sent.length + 11).toString(16).padStart(64, "0")}`;
+        sent.push({ hash, gas: BigInt(params[0].gas), nonce: Number(BigInt(params[0].nonce)) });
+        return hash;
+      }
+      throw new Error("Unexpected wallet request");
+    });
+    mocks.getTransactionReceipt.mockImplementation(async ({ hash }) => {
+      const i = sent.findIndex(tx => tx.hash === hash), tx = sent[i]!;
+      const outcome = outcomes[i] ?? "success";
+      if (outcome === "null") return null;
+      nonce = tx.nonce + 1;
+      return { status: outcome === "success" ? "success" : "reverted", transactionHash: hash, blockNumber: BigInt(90 + i), gasUsed: outcome === "exhausted" ? tx.gas : tx.gas / 2n };
+    });
+    mocks.getTransaction.mockImplementation(async ({ hash }) => {
+      const i = sent.findIndex(tx => tx.hash === hash), tx = sent[i]!;
+      return { hash, from: account, to: "0x4400000000000000000000000000000000000044", value: 0n, gas: tx.gas, nonce: tx.nonce, blockNumber: BigInt(90 + i) };
+    });
+    mocks.executeBatch.mockImplementation(async () => {
+      const hash = await mocks.walletConfig.transport({}).request({ method: "eth_sendTransaction", params: [{ from: account, to: "0x4400000000000000000000000000000000000044", data: "0x1234", nonce: `0x${nonce.toString(16)}` }] });
+      const outcome = outcomes[sent.length - 1] ?? "success";
+      if (outcome !== "success") throw new Error("SDK confirmation failed");
+      return { txHash: hash, createdEntities: [entityKey] };
+    });
+    return sent;
+  }
+  it("retries a confirmed exhausted receipt exactly once with fresh nonce and doubled gas", async () => {
+    const sent = flow(["exhausted", "success"]);
+    await expect(createSocialSampleWithWallet(account)).resolves.toMatchObject({ alreadyCreated: false });
+    expect(sent).toHaveLength(2);
+    expect(sent.map(tx => tx.nonce)).toEqual([0, 1]);
+    expect(sent.map(tx => tx.gas)).toEqual([2_000_000n, 4_000_000n]);
+    expect(mocks.estimateGas).toHaveBeenCalledTimes(2);
+    expect(mocks.estimateGas.mock.calls.every(([, params]) => params.blockTag === "latest")).toBe(true);
+    const history = JSON.parse(localStorage.getItem(historyKey)!).attempts;
+    expect(history.map((tx: any) => tx.hash)).toEqual(sent.map(tx => tx.hash));
+    expect(history.map((tx: any) => tx.status)).toEqual(["reverted", "success"]);
+    expect(history.every((tx: any) => tx.sampleIds.length === socialSample().length)).toBe(true);
+    expect(history[1].entityKeys).toEqual([entityKey]);
+    await expect(createSocialSampleWithWallet(account)).rejects.toThrow("do not sign again");
+    expect(sent).toHaveLength(2);
+  });
+  it("stops after the second exhausted revert across repeated calls and cleared legacy guard", async () => {
+    const sent = flow(["exhausted", "exhausted"]);
+    await expect(createSocialSampleWithWallet(account)).rejects.toThrow("single gas-exhaustion retry");
+    localStorage.removeItem(historyKey.replace(":history", ""));
+    for (let i = 0; i < 3; i++) await expect(createSocialSampleWithWallet(account)).rejects.toThrow("single gas-exhaustion retry");
+    expect(sent).toHaveLength(2);
+    expect(JSON.parse(localStorage.getItem(historyKey)!).attempts.map((a: any) => a.hash)).toEqual(sent.map(a => a.hash));
+  });
+  it("never retries a semantic revert", async () => {
+    const sent = flow(["semantic"]);
+    for (let i = 0; i < 3; i++) await expect(createSocialSampleWithWallet(account)).rejects.toThrow("without gas exhaustion");
+    expect(sent).toHaveLength(1);
+  });
+  it("never retries a null receipt", async () => {
+    const sent = flow(["null"]);
+    for (let i = 0; i < 3; i++) await expect(createSocialSampleWithWallet(account)).rejects.toThrow("receipt is uncertain");
+    expect(sent).toHaveLength(1);
+  });
+  it("never retries a success, including after entities disappear from queries", async () => {
+    const sent = flow(["success"]);
+    await createSocialSampleWithWallet(account);
+    for (let i = 0; i < 3; i++) await expect(createSocialSampleWithWallet(account)).rejects.toThrow("do not sign again");
+    expect(sent).toHaveLength(1);
+  });
+  it("does not send a retry when doubled gas exceeds half the head limit", async () => {
+    const sent = flow(["exhausted"]);
+    mocks.getBlock.mockResolvedValue({ gasLimit: 7_000_000n });
+    await expect(createSocialSampleWithWallet(account)).rejects.toThrow("half the head block limit");
+    expect(sent).toHaveLength(1);
   });
 });
 
