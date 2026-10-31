@@ -832,32 +832,6 @@
     }
   },
   {
-    "literal": "th>40?`${c.slice(0,38)}\\u2026`:c}return b?`${b} ${F(a.key)}`:F(a.key)}(a,e,b.labelKey),entityType:e,pay\u006coad:a.pay\u006coad,attributes:a.attributes,owner:a.owner,creator:a.creator,expiresAtBlock:a.expiresAtBlock,c",
-    "origin": "arkiv-graph@1.0.0 (exact registry sample pin)",
-    "reason": "Generated registry dependency compatibility field. Keep registry pin until phase 2; package source and its own dist receive no third-party exception.",
-    "paths": [
-      "apps/example/.next/server/**"
-    ],
-    "evidence": {
-      "file": "apps/example/.next/server/app/api/graph/route.js",
-      "offset": 168452,
-      "line": 23
-    }
-  },
-  {
-    "literal": ".slice(0,38)}\\u2026`:c}return b?`${b} ${F(a.key)}`:F(a.key)}(a,e,b.labelKey),entityType:e,pay\u006coad:a.pay\u006coad,attributes:a.attributes,owner:a.owner,creator:a.creator,expiresAtBlock:a.expiresAtBlock,createdAtBl",
-    "origin": "arkiv-graph@1.0.0 (exact registry sample pin)",
-    "reason": "Generated registry dependency compatibility field. Keep registry pin until phase 2; package source and its own dist receive no third-party exception.",
-    "paths": [
-      "apps/example/.next/server/**"
-    ],
-    "evidence": {
-      "file": "apps/example/.next/server/app/api/graph/route.js",
-      "offset": 168462,
-      "line": 23
-    }
-  },
-  {
     "literal": "ure:e,...i&&\"0x\"!==i?{data:i,to:h}:{}}}function E(a){var b;let{data:c,signature:h}=a;C(a);let k=(b={pay\u006coad:function(a,b={}){let{presign:c}=b;return e.So(f.xW(\"0x05\",function(a,b={}){let{as:c=\"Hex\"}=b;return",
     "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
     "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",

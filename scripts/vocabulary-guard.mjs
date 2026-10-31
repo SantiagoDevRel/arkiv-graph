@@ -10,6 +10,13 @@ const rules = new Map([["packages/arkiv-graph/src/types.ts",["  pay\u006coad?: u
 
 
 const repoRoot = fileURLToPath(new URL('../', import.meta.url));
+// Registry 1.1.0 retains these deprecated aliases. Only the exact compatibility
+// expressions are allowed, in their inspected generated files, never own dist.
+export const generatedAliasRules = new Map([
+  ['apps/example/.next/server/app/api/graph/route.js', ['a.bytes??a.pay\u006coad', 'bytes:a.bytes,pay\u006coad:a.bytes']],
+  ['apps/example/.next/server/app/page.js', ['a.bytes??a.pay\u006coad']],
+  ['apps/example/.next/static/chunks/f7dc6044-1e04b89136858267.js', ['null!=(n=y.bytes)?n:y.pay\u006coad', 'null!=(l=e.bytes)?l:e.pay\u006coad']],
+]);
 const exceptions = JSON.parse(readFileSync(path.join(repoRoot, 'vocabulary-exceptions.json'), 'utf8'));
 const history = JSON.parse(readFileSync(path.join(repoRoot, 'vocabulary-history.json'), 'utf8'));
 const waivers = JSON.parse(readFileSync(path.join(repoRoot, 'vocabulary-waivers.json'), 'utf8'));
@@ -31,6 +38,14 @@ export function violations(file, text, parseMap = true) {
   if (archived) text = text.split(/\r?\n/).map(line => archived.lines.includes(line) ? '' : line).join('\n');
   text = waive(file, text);
   if (generated(file)) {
+    for (const literal of generatedAliasRules.get(file) ?? []) {
+      let at = text.indexOf(literal);
+      while (at !== -1) {
+        const end = at + literal.length;
+        if (!/[\w$]/.test(text[at - 1] ?? '') && !/[\w$]/.test(text[end] ?? '')) text = text.slice(0, at) + ' '.repeat(literal.length) + text.slice(end);
+        at = text.indexOf(literal, end);
+      }
+    }
     const spans=[];
     for (const entry of exceptions) if(entry.paths.some(glob => globMatch(file,glob))) {
       let at=text.indexOf(entry.literal);
