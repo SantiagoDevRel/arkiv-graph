@@ -1,4 +1,4 @@
-// Network plug-and-play. Arkiv testnets rotate (Kaolin → Braga → next). Nothing
+// Network plug-and-play. Arkiv testnets rotate (selected by the consumer). Nothing
 // here hardcodes a network: you pass an Arkiv chain object (the SDK's export, or
 // one built with `defineArkivNetwork`) and everything — RPC, explorer links, the
 // "native" chain id for external detection — follows from it.
@@ -21,7 +21,7 @@ export interface ArkivNetworkOverrides {
   name?: string;
   network?: string;
   wsUrl?: string;
-  /** gas token symbol (Braga = "GLM"). */
+  /** gas token symbol. */
   gasToken?: string;
   explorerApiUrl?: string;
 }
@@ -33,9 +33,9 @@ export interface ArkivNetworkOverrides {
  * next testnet without touching code:
  *
  * ```ts
- * import { braga } from "@arkiv-network/sdk/chains";
+ * import { rabdi } from "@arkiv-network/sdk/chains";
  * import { defineArkivNetwork } from "arkiv-graph";
- * const net = defineArkivNetwork(braga, {
+ * const net = defineArkivNetwork(rabdi({ accessKey }), {
  *   chainId: 12345, rpcUrl: "https://new.rpc/...", explorerUrl: "https://explorer...",
  * });
  * ```

@@ -1,12 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
-import { createPublicClient, jsonToPayload } from "@arkiv-network/sdk";
-import { tiramisu } from "@arkiv-network/sdk/chains";
+import { createPublicClient } from "@arkiv-network/sdk";
+import { rabdi } from "@arkiv-network/sdk/chains";
 import { custom } from "viem";
 import { buildGraph, buildTables, fetchArkivGraph, computeTtl, formatTtl } from "../index.js";
 const owner = `0x${"a".repeat(40)}` as const;
 const key = `0x${"b".repeat(64)}`;
+const chain = rabdi({ accessKey: "unit-test" });
+const jsonToPayload = (value: unknown) => new TextEncoder().encode(JSON.stringify(value));
 
-describe("SDK 0.8 entity adapter", () => {
+describe("legacy plain inputs and SDK 1.0 reads", () => {
   it("does not fabricate expiration dates from unavailable block timing", () => {
     for (const blockDuration of [0, -1, NaN, Infinity]) expect(computeTtl(200, 100, { currentBlock: 150, currentBlockTime: 1000, blockDuration })).toEqual({});
     expect(formatTtl(NaN)).toBe("—");
@@ -32,26 +34,41 @@ describe("SDK 0.8 entity adapter", () => {
   it("requires identity for a custom RPC", async () => {
     await expect(fetchArkivGraph({ ownedBy: owner, rpcUrl: "https://example.com" })).rejects.toThrow("requires chain");
   });
-  it.each([false, true])("paginates the SDK cursor and marks a capped result (extra=%s)", async (extra) => {
+  it.each([false, true])("uses bounded offset pages and a lookahead (extra=%s)", async (extra) => {
     const pages = [
-      { blockNumber: "0x10", data: [{ key }], cursor: "page2" },
-      { blockNumber: "0x10", data: [{ key: `0x${"c".repeat(64)}` }], ...(extra ? { cursor: "page3" } : {}) },
-      { blockNumber: "0x10", data: [{ key: `0x${"d".repeat(64)}` }] },
+      { blockNumber: "0x10", data: [{ key }, { key: `0x${"c".repeat(64)}` }, ...(extra ? [{ key: `0x${"d".repeat(64)}` }] : [])] },
     ];
     let i = 0;
     const request = vi.fn(async ({ method }: { method: string }) => {
       if (method !== "arkiv_query") throw new Error("Timing unavailable");
       return pages[i++];
     });
-    const client = createPublicClient({ chain: tiramisu, transport: custom({ request }, { retryCount: 0 }) });
-    const result = await fetchArkivGraph({ client, chain: tiramisu, ownedBy: owner, project: "social", limit: 2 });
+    const client = createPublicClient({ chain, transport: custom({ request }, { retryCount: 0 }) });
+    const result = await fetchArkivGraph({ client, chain, ownedBy: owner, project: "social", limit: 2 });
     expect(result.entities).toHaveLength(2);
     expect(result.truncated).toBe(extra);
     expect(result.blockTiming).toBeUndefined();
-    const calls = request.mock.calls.map(([call]) => call as { method: string; params?: [string, { cursor?: string }] }).filter(c => c.method === "arkiv_query");
+    const calls = request.mock.calls.map(([call]) => call as { method: string; params?: [string, unknown] }).filter(c => c.method === "arkiv_query");
     expect(calls[0]?.params?.[0]).toContain("project = str('social')");
     expect(calls[0]?.params?.[0]).toContain("$owner = addr(");
-    expect(calls[1]?.params?.[1].cursor).toBe("page2");
-    expect(calls).toHaveLength(extra ? 3 : 2);
+    expect(calls[0]?.params?.[0]).toContain("$key");
+    expect(calls).toHaveLength(1);
+  });
+  it.each([false, true])("advances the SDK 1.0 offset beyond its 100-row page cap (extra=%s)", async extra => {
+    const all = Array.from({ length: extra ? 101 : 100 }, (_, i) => ({ key: `0x${(i + 1).toString(16).padStart(64, '0')}` }));
+    const requests: { offset: string; limit: string; select: Record<string, unknown> }[] = [];
+    const request = async ({ method, params }: { method: string; params?: unknown[] }) => {
+      if (method !== 'arkiv_query') throw new Error('Timing unavailable');
+      const options = params![1] as typeof requests[number];
+      requests.push(options);
+      const offset = Number(BigInt(options.offset));
+      return { blockNumber: '0x10', data: all.slice(offset, offset + Number(BigInt(options.limit))) };
+    };
+    const client = createPublicClient({ chain, transport: custom({ request }, { retryCount: 0 }) });
+    const result = await fetchArkivGraph({ client, chain, ownedBy: owner, limit: 100 });
+    expect(result.entities).toHaveLength(100);
+    expect(result.truncated).toBe(extra);
+    expect(requests.map(r => [r.offset, r.limit])).toEqual([['0x0', '0x64'], ['0x64', '0x1']]);
+    expect(requests[0].select).not.toHaveProperty('payload');
   });
 });

@@ -15,5 +15,6 @@ pnpm-debug.log*
 coverage
 .playwright-mcp
 *.tmp
+/.candidate-artifacts/
 
 .vercel

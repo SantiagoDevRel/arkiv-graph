@@ -8,14 +8,18 @@ export interface ArkivAttribute {
   value: string | number;
 }
 
-/**
- * The shape returned by the Arkiv SDK's read actions, plus anything close enough.
- * `buildGraph` normalizes this, so plain objects (e.g. from tests or your own
- * indexer) work too — only `key` is strictly required.
- */
-export interface ArkivEntityLike {
-  /** Entity key — the unique id, a 0x + 64 hex string on Arkiv. */
-  key: string;
+/** A legacy plain entity or a flat SDK 1.0 selected row. */
+export interface LegacyArkivEntityLike {
+  key?: string;
+  /** SDK 1.0 selections use system fields prefixed with $. */
+  $key?: string;
+  $owner?: string;
+  $creator?: string;
+  $expiresAt?: bigint | number | string;
+  $createdAt?: bigint | number | string;
+  $attributes?: Readonly<Record<string, { readonly type: string; readonly value: unknown }>>;
+  /** Named typed columns selected through an SDK schema. */
+  [column: string]: unknown;
   owner?: string;
   creator?: string;
   contentType?: string;
@@ -24,22 +28,34 @@ export interface ArkivEntityLike {
   createdAtBlock?: bigint | number | string;
   lastModifiedAtBlock?: bigint | number | string;
   attributes?: ArkivAttribute[] | Readonly<Record<string, { readonly type: string; readonly value: unknown }>>;
-  /** SDK 0.8 block metadata. Legacy aliases above remain accepted for plain inputs. */
+  /** Legacy plain-input aliases remain accepted. SDK reads use $ fields. */
   expiresAt?: bigint | number | string;
   createdAt?: bigint | number | string;
   updatedAt?: bigint | number | string;
-  /** Raw payload bytes, an already-parsed object, or absent. */
+  /** Legacy plain-input document, retained for compatibility. Not SDK 1.0 data. */
   payload?: unknown;
-  /** SDK entities expose toJson() to parse the payload — used if present. */
+  /** Optional legacy plain-input parser. SDK 1.0 uses typed columns. */
   toJson?: () => unknown;
 }
+
+/** SDK 1.0 keeps system fields separate from arbitrary named typed columns. */
+export interface ArkivSdkRowLike {
+  $key: string;
+  $owner?: string;
+  $creator?: string;
+  $expiresAt?: bigint | number | string;
+  $createdAt?: bigint | number | string;
+  $attributes?: Readonly<Record<string, { readonly type: string; readonly value: unknown }>>;
+  [column: string]: unknown;
+}
+export type ArkivEntityLike = LegacyArkivEntityLike | ArkivSdkRowLike;
 
 /** Block timing, as returned by `publicClient.getBlockTiming()`. */
 export interface BlockTiming {
   currentBlock: bigint | number;
   /** Unix seconds of the current block. */
   currentBlockTime: number;
-  /** Seconds per block (~2 on Braga). */
+  /** Seconds per block (network-dependent). */
   blockDuration: number;
 }
 
@@ -218,7 +234,7 @@ export interface ExternalConfig {
   addressKeys?: RegExp;
   /** merge/override the built-in chain registry. */
   registry?: Record<string | number, ChainInfo>;
-  /** chain ids to treat as native (never external) — Braga is always native. */
+  /** chain ids to treat as native (never external) — Rabdi is the default native chain. */
   nativeChainIds?: (number | string)[];
 }
 
@@ -229,7 +245,7 @@ export interface BuildGraphOptions {
   external?: ExternalConfig;
   /** attribute used as the entity's type. Default "entityType". */
   typeAttribute?: string;
-  /** payload field (or attribute) to use as a node's display label. */
+  /** Attribute (or legacy document field) to use as a node's display label. */
   labelKey?: string;
   /** block timing, so remaining lifetime (fade) can be computed. */
   blockTiming?: BlockTiming;
@@ -240,7 +256,7 @@ export interface BuildGraphOptions {
   /**
    * The active Arkiv chain id — treated as "native" (never external). Convenience
    * for direct buildGraph consumers; equivalent to setting `external.nativeChainIds`.
-   * Defaults to Tiramisu when neither is set.
+   * Defaults to Rabdi when neither is set.
    */
   nativeChainId?: number;
 }

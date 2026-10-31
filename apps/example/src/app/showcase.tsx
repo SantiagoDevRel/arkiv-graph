@@ -81,7 +81,7 @@ export function Showcase() {
       const a = account ?? await connectWallet();
       setAccount(a);
       const result = await createSocialSampleWithWallet(a);
-      setNotice(result.alreadyCreated ? "The sample already exists. Its entities have been loaded." : "Sample created and confirmed on Tiramisu.");
+      setNotice(result.alreadyCreated ? "The sample already exists. Its entities have been loaded." : "Sample created and confirmed on Rabdi.");
       setTxUrl(result.txUrl ?? ""); setShowCreate(false); showWallet(a); setRevision(v => v + 1);
     } catch (e) { setNotice(walletErrorMessage(e)); setNoticeError(true); setTxUrl((e as { txUrl?: string })?.txUrl ?? ""); }
     finally { setCreating(false); }
@@ -117,7 +117,7 @@ export function Showcase() {
   return <>
     <header className="site-header">
       <a className="brand" href="/" aria-label="Arkiv Graph home"><Image className="logo-dark" src="/arkiv-wordmark-white.svg" alt="Arkiv" width={1389} height={320} priority /><Image className="logo-light" src="/arkiv-wordmark-black.svg" alt="Arkiv" width={1389} height={320} priority /><span>GRAPH</span></a>
-      <span className="network-badge">Tiramisu testnet</span>
+      <span className="network-badge">Rabdi testnet</span>
       <div className="wallet-control">
         {account ? <button className="btn" onClick={() => showWallet(account)} disabled={creating}>View my app · {short(account)}</button> :
           <button className="btn wallet-connect" onClick={connect} disabled={busy || !walletPresent}>{busy ? "Connecting…" : "Connect wallet"}</button>}
@@ -146,7 +146,7 @@ export function Showcase() {
       </div>}
     </form>
     <div className="viewbar">
-      <div><p className="entity-count">{data ? `${data.loaded} entities · ${data.graph.edges.length} relationships` : loading ? "Querying Tiramisu…" : "Query unavailable"}</p><p className="help scope-summary" title={scope.address}>Owner {short(scope.address)} · {scope.projectKey} = {scope.project || "any value"}</p></div>
+      <div><p className="entity-count">{data ? `${data.loaded} entities · ${data.graph.edges.length} relationships` : loading ? "Querying Rabdi…" : "Query unavailable"}</p><p className="help scope-summary" title={scope.address}>Owner {short(scope.address)} · {scope.projectKey} = {scope.project || "any value"}</p></div>
       <div className="toolbar">
         {!isPublicExample && <button className="btn" onClick={() => showWallet(DEMO_OWNER)} disabled={creating}>View public example</button>}
         <button className="btn" onClick={() => setShowCreate(v => !v)} disabled={creating}>Create social sample</button>
@@ -169,6 +169,6 @@ export function Showcase() {
     {data?.truncated && <p className="notice">Partial results: {data.loaded} entities loaded. Filter by app to narrow the query.</p>}
     {!walletPresent && <p className="help">To create, extend or delete entities, open this app with a compatible wallet. You can query without connecting a wallet.</p>}
     <p className="help">Queries return public data. Connect your wallet to extend or delete entities you own. Deletion affects one entity, not its related entities or historical copies. Expiration dates are estimated from block timing.</p>
-    <a className="text-button" href={`${PUBLIC_CHAIN.explorerUrl}/data?q=${encodeURIComponent(scope.address)}`} target="_blank" rel="noreferrer">View in Block Explorer ↗</a>
+    <a className="text-button" href={`${PUBLIC_CHAIN.explorerUrl}/address/${scope.address}`} target="_blank" rel="noreferrer">View owner in Block Explorer ↗</a>
   </>;
 }

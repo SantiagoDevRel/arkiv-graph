@@ -75,7 +75,7 @@ export function buildTables(graph: Graph, entities: ArkivEntityLike[], options: 
 
   // entity-key → normalized entity (to read join-entity rows back)
   const normByKey = new Map<string, NormEntity>();
-  for (const e of entities) if (e?.key) normByKey.set(e.key, normalizeEntity(e));
+  for (const e of entities) if (e?.$key || e?.key) { const n = normalizeEntity(e); normByKey.set(n.key, n); }
 
   // incident edges per node, grouped by relationship label
   const incident = new Map<string, Map<string, RelRef[]>>();
