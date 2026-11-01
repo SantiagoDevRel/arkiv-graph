@@ -13,12 +13,23 @@ function json(data: unknown, status = 200) {
     status, headers: { "content-type": "application/json", "cache-control": "no-store" },
   });
 }
+// Origin is a serialized origin, never a general URL. Forwarded headers do not select trust.
+function sameDeploymentOrigin(origin: string, host: string) {
+  if (typeof origin !== 'string' || typeof host !== 'string' || !host || !(origin.startsWith('https://') || origin.startsWith('http://'))) return false;
+  const parsed = new URL(origin);
+  const hostname = host.split(':', 1)[0].toLowerCase();
+  const scheme = hostname === 'localhost' || hostname === '127.0.0.1' ? 'http://' : 'https://';
+  const deployment = new URL(scheme + host);
+  if (/[/\\?#@\s]/.test(host) || deployment.username || deployment.password || deployment.pathname !== '/' || deployment.search || deployment.hash) return false;
+  return !parsed.username && !parsed.password && parsed.pathname === '/' && !parsed.search && !parsed.hash && parsed.origin === origin && parsed.origin === deployment.origin;
+}
+
 export async function GET(req: Request) {
   const origin = req.headers.get("origin");
   if (origin !== null) {
     try {
       const host = req.headers.get("host") ?? new URL(req.url).host;
-      if (new URL(origin).host !== host.toLowerCase()) return json({ error: "Origin not allowed." }, 403);
+      if (!sameDeploymentOrigin(origin, host)) return json({ error: "Origin not allowed." }, 403);
     } catch { return json({ error: "Origin not allowed." }, 403); }
   }
   if ((req.headers.get("sec-fetch-site") ?? "").split(",").some(site => site.trim().toLowerCase() === "cross-site")) return json({ error: "Origin not allowed." }, 403);

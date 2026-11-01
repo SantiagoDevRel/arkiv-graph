@@ -16,6 +16,14 @@ import {GET} from './route';
 
 const same = {host: 'sample.example', origin: 'https://sample.example', 'content-type': 'application/json'};
 const denied = [
+  ['strict Origin HTTP downgrade', {...same, origin: "http://sample.example"}],
+  ['strict Origin FTP scheme', {...same, origin: "ftp://sample.example"}],
+  ['strict Origin userinfo', {...same, origin: ['https://', 'user', ':', 'password', '@sample.example'].join('')}],
+  ['strict Origin path', {...same, origin: "https://sample.example/path"}],
+  ['strict Origin query', {...same, origin: "https://sample.example?x=1"}],
+  ['strict Origin fragment', {...same, origin: "https://sample.example#part"}],
+  ['strict Origin missing authority slashes', {...same, origin: "https:sample.example"}],
+
   ['foreign JSON origin', {...same, origin: 'https://foreign.example'}],
   ['foreign plain-text origin', {...same, origin: 'https://foreign.example', 'content-type': 'text/plain'}],
   ['cross-site without origin', {host: same.host, 'sec-fetch-site': 'cross-site'}],
@@ -49,6 +57,8 @@ for (const [name, headers] of denied) test(`graph GET rejects ${name} before spe
 });
 
 for (const [name, headers] of [
+  ['local HTTP localhost', {...same, host: 'localhost:17811', origin: 'http://localhost:17811'}],
+  ['local HTTP loopback', {...same, host: '127.0.0.1:17811', origin: 'http://127.0.0.1:17811'}],
   ['same-origin JSON', same],
   ['GET without content type', {host: same.host, origin: same.origin}],
   ['GET with odd content type', {...same, 'content-type': 'application/jsonp'}],
