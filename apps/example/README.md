@@ -49,3 +49,5 @@ Sample creations use 30 days, within Rabdi's maximum lifetime of 7,884,000 block
 From the root: `pnpm test`, `pnpm test:wallet`, `pnpm typecheck`, `pnpm build:lib`, `pnpm build:example`. Live integration runs with the same external secret runner and a persistent seed journal. Linux checks do not certify browser wallet extension behavior; see the evidence report.
 
 Architecture: `config.ts` owns public network identity; `social-sample.ts` owns typed indexed schema/data; `arkiv.ts` owns the server client/link rules; `/api/graph` returns shared graph/tables; `wallet-client.ts` performs visitor signing. Read the [package API](../../packages/arkiv-graph/README.md) and [sample agent guide](AGENTS.md).
+
+The GET graph endpoint rejects foreign Origin hosts and cross-site Fetch Metadata before constructing the public client or querying Rabdi. GET does not require a request content type; unsupported methods retain the framework response. JSON clients without Origin remain supported. These browser boundary checks do not authenticate arbitrary HTTP clients. Run `pnpm exec vitest run --config vitest.proxy.config.mjs` from the repository root for the boundary tests.

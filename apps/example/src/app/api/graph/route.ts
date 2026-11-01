@@ -14,6 +14,14 @@ function json(data: unknown, status = 200) {
   });
 }
 export async function GET(req: Request) {
+  const origin = req.headers.get("origin");
+  if (origin !== null) {
+    try {
+      const host = req.headers.get("host") ?? new URL(req.url).host;
+      if (new URL(origin).host !== host.toLowerCase()) return json({ error: "Origin not allowed." }, 403);
+    } catch { return json({ error: "Origin not allowed." }, 403); }
+  }
+  if ((req.headers.get("sec-fetch-site") ?? "").split(",").some(site => site.trim().toLowerCase() === "cross-site")) return json({ error: "Origin not allowed." }, 403);
   const params = new URL(req.url).searchParams;
   const address = params.get("address") ?? trustedAddress();
   const project = params.get("project") ?? PROJECT;
