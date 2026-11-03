@@ -11,16 +11,30 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { getGasPrice } from 'viem/actions';
 import { fetchArkivGraph, buildTables } from '../packages/arkiv-graph/dist/index.js';
 import { graphWriter } from './graph-writer.mjs';
+import { beginLiveRun, PendingLiveRunError } from './live-run-evidence.mjs';
 
 const evidence = { sdk: '1.0.1', queriesKeyA: 0, transactions: [] };
 let phase = 'setup';
-const persist = () => { fs.mkdirSync('.candidate-artifacts', { recursive: true }); fs.writeFileSync('.candidate-artifacts/live-sdk101.json', JSON.stringify({ ...evidence, phase }, null, 2)); };
+let run;
+const persist = () => run.persist({ ...evidence, phase });
+const submitted = hash => {
+  if (!evidence.transactions.some(tx => tx.hash === hash)) evidence.transactions.push({ kind: phase, hash, status: 'submitted' });
+  persist();
+};
 try {
+  run = beginLiveRun({ initial: evidence });
   const account = privateKeyToAccount(process.env.TEST_GRAPH_PRIVATE_KEY);
   assert.equal(account.address.toLowerCase(), process.env.TEST_GRAPH_ADDRESS.toLowerCase());
   const chain = rabdi({ accessKey: process.env.ARKIV_ACCESS_KEY_A });
   const upstream = http(undefined, { retryCount: 0 })({ chain });
-  const transport = () => custom({ request: request => { if (request.method === 'arkiv_query') evidence.queriesKeyA++; return upstream.request(request); } }, { retryCount: 0 });
+  const transport = () => custom({ request: async request => {
+    if (request.method === 'arkiv_query') evidence.queriesKeyA++;
+    const sending = request.method === 'eth_sendRawTransaction' || request.method === 'eth_sendTransaction';
+    if (sending) { run.assertCanSend(); persist(); }
+    const result = await upstream.request(request);
+    if (sending) submitted(result);
+    return result;
+  } }, { retryCount: 0 });
   const pub = createPublicClient({ chain, transport: transport() });
   const local = createWalletClient({ chain, account, transport: transport() });
   assert.equal(await pub.getChainId(), 7794095);
@@ -35,7 +49,7 @@ try {
     Object.assign(item, { kind, hash, status: receipt.status, gas: String(tx.gas), gasUsed: String(receipt.gasUsed), nonce: tx.nonce });
     persist();
   };
-  const writer = graphWriter({ chain, account, pub, transport, onSent: hash => { evidence.transactions.push({ kind: phase, hash, status: 'submitted' }); persist(); } });
+  const writer = graphWriter({ chain, account, pub, transport, onSubmitting: parameters => { evidence.lastWrite = parameters; run.assertCanSend(); persist(); }, onSent: submitted });
   const project = 'pkg3b-sdk101-' + Date.now();
   const schema = defineSchema('pkg3b_graph_sdk101', { project: str().indexed(), entity_type: str().indexed() });
   phase = 'sending-create'; Object.assign(evidence, { project, owner: account.address }); persist();
@@ -54,7 +68,7 @@ try {
       assert.equal(tx.from.toLowerCase(), account.address.toLowerCase());
       assert.equal(tx.to.toLowerCase(), '0x4400000000000000000000000000000000000044');
       const hash = await local.sendTransaction({ chain, account, to: tx.to, data: tx.data, value: 0n, gas: BigInt(tx.gas), gasPrice: BigInt(tx.gasPrice), nonce: Number(BigInt(tx.nonce)) });
-      evidence.transactions.push({ kind: phase, hash, status: 'submitted' }); persist();
+      submitted(hash);
       return hash;
     }
     return pub.request(request);
@@ -77,11 +91,13 @@ try {
     assert.equal((await fetchArkivGraph({ client: pub, chain, ownedBy: account.address, project })).entities.length, 0);
   } finally { fs.unlinkSync(bundle); }
   evidence.status = 'PASS'; evidence.cleanupConfirmed = true;
-  fs.writeFileSync('.candidate-artifacts/live-sdk101.json', JSON.stringify(evidence, null, 2));
+  phase = 'complete'; persist();
   console.log(JSON.stringify(evidence));
 } catch (error) {
-  fs.mkdirSync('.candidate-artifacts', { recursive: true });
-  fs.writeFileSync('.candidate-artifacts/live-sdk101.json', JSON.stringify({ ...evidence, status: 'FAILED', errorKind: error.name }, null, 2));
-  console.error(JSON.stringify({ status: 'FAILED', errorKind: error.name, message: 'Inspect the preserved transaction evidence; no automatic resend.' }));
+  if (run) {
+    try { run.persist({ ...evidence, phase, status: 'FAILED', errorKind: error.name }); }
+    catch { console.error(JSON.stringify({ evidenceDirectory: run.directory, hashes: evidence.transactions.map(tx => tx.hash), message: 'Evidence persistence failed; reconcile before another run.' })); }
+  }
+  console.error(JSON.stringify({ status: 'FAILED', errorKind: error.name, evidencePath: run?.latestPath, message: error instanceof PendingLiveRunError ? error.message : 'Inspect the preserved transaction evidence; no automatic resend.' }));
   process.exitCode = 1;
-}
+} finally { run?.release(); }
