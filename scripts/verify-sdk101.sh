@@ -11,6 +11,7 @@ pnpm typecheck
 node scripts/pack-consumer.mjs
 node scripts/verify-sample.mjs
 pnpm lint
+node --test scripts/isolated-checkout.test.mjs
 node scripts/sdk-runtime-check.mjs
 node scripts/sdk-peer-check.mjs
 node scripts/sdk-guidance-mutation.mjs

@@ -21,7 +21,7 @@ pnpm test
 pnpm test:wallet
 ```
 
-The sample pins registry `arkiv-graph@1.1.1`; `.npmrc` disables workspace package linking. A clean `pnpm install --frozen-lockfile`, `pnpm typecheck` and `pnpm build` consume the published package. Tarball staging scripts verify a separate isolated consumer; they do not replace the registry dependency in the sample.
+The committed sample pins registry `arkiv-graph@1.1.0`; `.npmrc` disables workspace package linking. After 1.1.1 is published, advance the sample pin and lockfile to 1.1.1. A clean `pnpm install --frozen-lockfile`, `pnpm typecheck` and `pnpm build` consume the published package. Tarball staging scripts verify a separate isolated consumer; they do not replace the registry dependency in the sample.
 
 The sample server requires `ARKIV_ACCESS_KEY`, obtained from [Access Keys](https://hub.arkiv.network/access-keys). Keep it server-side. Visitors configure their own Rabdi RPC in their wallet; test funds come from the [Hub faucet](https://hub.arkiv.network/faucet). No application signing key is needed.
 
