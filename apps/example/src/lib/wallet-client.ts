@@ -15,7 +15,7 @@ export interface Eip1193 {
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 const KEY = /^0x[0-9a-fA-F]{64}$/;
 const CHAIN_HEX = `0x${CHAIN.id.toString(16)}`;
-const MAX_LIFETIME_BLOCKS = 7_883_970n; // Rabdi maximum minus a small signing margin.
+const MAX_LIFETIME_BLOCKS = 7_883_970n; // Conservative cap retained for SDK 1.0.0 compatibility across the peer range.
 export interface WriteTxOptions { gas?: bigint; gasPrice?: bigint }
 // Reads for wallet operations use the visitor's configured Rabdi RPC.
 const pub = createPublicClient({ chain: CHAIN, transport: custom({ request: async request => {
@@ -290,7 +290,8 @@ async function createSocialSample(account: string, options: WriteTxOptions = {})
         // SDK 1.0 emits this specific EntityMutationError only after its reverted receipt.
         const mutation = error as { name?: string; txHash?: Hex; message?: string } | undefined;
         attempt.sdkReverted = !!attempt.hash && mutation?.name === "EntityMutationError" &&
-          mutation.txHash === attempt.hash && mutation.message?.startsWith(`Transaction ${attempt.hash} reverted.`) === true;
+          mutation.txHash === attempt.hash && (mutation.message?.startsWith(`Transaction ${attempt.hash} reverted.`) === true ||
+            mutation.message?.startsWith(`Transaction ${attempt.hash} ran out of gas:`) === true);
         if (started) persist();
         if (!attempt.hash) {
           let cause = error as { code?: number; name?: string; cause?: unknown } | undefined;

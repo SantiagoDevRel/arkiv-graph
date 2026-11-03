@@ -36,5 +36,5 @@ checkpoints in `docs/verification.md`.
 
 Rabdi signing: read latest state; pass explicit nonce, gas (max of 1,000,000 and twice an unsigned latest estimate, never above half the head block limit; split batches before signing) and gasPrice. Check receipt.status === "success"; never retry a successful or uncertain write. Shared RPC keys stay server-side; visitor writes use the RPC configured in their wallet.
 
-Rabdi lifetime targets must stay below 7,884,000 blocks from the head (use a signing margin). No permanent/no-expiration mode; use Lifetime Extension for longer retention.
+Rabdi permits 7,884,000 blocks from the inclusion block. With SDK 1.0.1+, use ExpirationTime.max() for the longest lifetime. A below-maximum signing margin is an SDK 1.0.0 compatibility precaution; the sample retains that conservative cap for its supported peer range. Use Lifetime Extension for longer retention.
 

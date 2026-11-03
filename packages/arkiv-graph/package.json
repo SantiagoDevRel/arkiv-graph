@@ -1,6 +1,6 @@
 {
   "name": "arkiv-graph",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Interactive graphs and tables for Arkiv entities, with scoped queries and optional wallet-signed Lifetime Extension.",
   "keywords": [
     "arkiv",
@@ -68,7 +68,7 @@
     }
   },
   "devDependencies": {
-    "@arkiv-network/sdk": "1.0.0",
+    "@arkiv-network/sdk": "1.0.1",
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

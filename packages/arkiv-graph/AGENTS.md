@@ -25,7 +25,7 @@ or infer a relational database that Arkiv does not provide.
   not private access; Arkiv entities are publicly readable.
 - Pass the same link rules and `typeAttribute` to both builders, and carry
   `blockTiming` into tables. Use indexed schema columns for every queried relationship.
-- SDK compatibility is 1.0.x (target 1.0.0). Typed attributes and new metadata are
+- SDK compatibility is `^1.0.0`, verified with 1.0.1. Typed attributes and new metadata are
   adapted by the library; do not convert 256-bit values to JavaScript numbers.
 - Custom client/RPC requires chain identity; pass explorerUrl for custom entity
   links. Never silently mix RPC, chain id and explorers from different networks.
@@ -53,4 +53,4 @@ real Rabdi evidence. Legitimate missing inputs are questions, not assumptions.
 
 Rabdi signing: read latest state; pass explicit nonce, gas (max of 1,000,000 and twice an unsigned latest estimate, never above half the head block limit; split batches before signing) and gasPrice. Check receipt.status === "success"; never retry a successful or uncertain write. Shared RPC keys stay server-side; visitor writes use the RPC configured in their wallet.
 
-Rabdi lifetime targets must stay below 7,884,000 blocks from the head (use a signing margin). No permanent/no-expiration mode; use Lifetime Extension for longer retention.
+Rabdi permits 7,884,000 blocks from the inclusion block. With SDK 1.0.1+, use ExpirationTime.max() for the longest lifetime. A below-maximum signing margin is an SDK 1.0.0 compatibility precaution; the sample retains that conservative cap for its supported peer range. Use Lifetime Extension for longer retention.
