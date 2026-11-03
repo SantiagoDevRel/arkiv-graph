@@ -23,22 +23,22 @@ for (const name of files) {
 }
 const vendor = join(stage, 'vendor');
 mkdirSync(vendor);
-copyFileSync(join(root, '.candidate-artifacts/arkiv-graph-1.1.0.tgz'), join(vendor, 'arkiv-graph-1.1.0.tgz'));
+copyFileSync(join(root, '.candidate-artifacts/arkiv-graph-1.1.1.tgz'), join(vendor, 'arkiv-graph-1.1.1.tgz'));
 const manifestPath = join(stage, 'apps/example/package.json');
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-manifest.dependencies['arkiv-graph'] = 'file:../../vendor/arkiv-graph-1.1.0.tgz';
+manifest.dependencies['arkiv-graph'] = 'file:../../vendor/arkiv-graph-1.1.1.tgz';
 writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
-appendFileSync(join(stage, '.vercelignore'), '\n!/vendor\n/vendor/*\n!/vendor/arkiv-graph-1.1.0.tgz\n');
+appendFileSync(join(stage, '.vercelignore'), '\n!/vendor\n/vendor/*\n!/vendor/arkiv-graph-1.1.1.tgz\n');
 execFileSync('pnpm', ['install', '--no-frozen-lockfile'], { cwd: stage, stdio: 'inherit' });
 const require = createRequire(manifestPath);
 const entry = realpathSync(require.resolve('arkiv-graph'));
 assert(entry.includes('/node_modules/'), 'The sample must resolve an installed package');
 assert(!entry.startsWith(join(stage, 'packages/arkiv-graph/')), 'Workspace source is not a consumer test');
-assert.equal(JSON.parse(readFileSync(join(dirname(entry), '../package.json'), 'utf8')).version, '1.1.0');
+assert.equal(JSON.parse(readFileSync(join(dirname(entry), '../package.json'), 'utf8')).version, '1.1.1');
 execFileSync('pnpm', ['typecheck'], { cwd: stage, stdio: 'inherit' });
 execFileSync('pnpm', ['build'], { cwd: stage, stdio: 'inherit' });
 const archive = join(root, '.candidate-artifacts/preview-stage.tgz');
 execFileSync('tar', ['--exclude=node_modules', '--exclude=.next', '--exclude=.next-dev', '--exclude=dist', '--exclude=*.tsbuildinfo', '--exclude=.candidate-artifacts', '-czf', archive, '-C', stage, '.']);
-const evidence = { status: 'passed', consumer: 'isolated npm tarball sample', packageVersion: '1.1.0', sourcePin: manifest.dependencies['arkiv-graph'], entry, sourceFiles: files.length, typecheck: true, build: true, stageArchive: archive };
+const evidence = { status: 'passed', consumer: 'isolated npm tarball sample', packageVersion: '1.1.1', sourcePin: manifest.dependencies['arkiv-graph'], entry, sourceFiles: files.length, typecheck: true, build: true, stageArchive: archive };
 writeFileSync(join(root, '.candidate-artifacts/sample.json'), JSON.stringify(evidence, null, 2));
 console.log(JSON.stringify(evidence, null, 2));

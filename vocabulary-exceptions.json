@@ -390,15 +390,15 @@
     }
   },
   {
-    "literal": "ure:i,...u&&\"0x\"!==u?{data:u,to:o}:{}}}function S(e){var t;let{data:r,signature:o}=e;T(e);let l=(t={pay\u006coad:function(e,t={}){let{presign:r}=t;return i.So(a.xW(\"0x05\",function(e,t={}){let{as:r=\"Hex\"}=t;return",
-    "origin": "next@15.5.25 (Next router and bundled React/Flight runtime; react@19.2.7 peer)",
+    "literal": "ure:i,...u&&\"0x\"!==u?{data:u,to:o}:{}}}function S(e){var t;let{data:r,signature:o}=e;I(e);let l=(t={pay\u006coad:function(e,t={}){let{presign:r}=t;return i.So(a.xW(\"0x05\",function(e,t={}){let{as:r=\"Hex\"}=t;return",
+    "origin": "viem@2.56.3 (bundled authorization signing helpers)",
     "reason": "Exact generated framework runtime fragment. Internal router actions, React lazy state and Flight encoding are third-party contracts, not entity data wording. Lock and generating file identify the artifact.",
     "paths": [
       "apps/example/.next/static/**"
     ],
     "evidence": {
-      "file": "apps/example/.next/static/chunks/94-ee2f8fff0ae06e86.js",
-      "offset": 198407,
+      "file": "apps/example/.next/static/chunks/147-3595517a4c6814d9.js",
+      "offset": 217956,
       "line": 1
     }
   },
@@ -430,8 +430,8 @@
   },
   {
     "literal": "eration tag ${String(t[0])} is not one the engine knows`;case\"NonCanonicalOperationData\":return`the pay\u006coad for operation tag ${String(t[0])} is not its canonical encoding, so the engine refused it rather th",
-    "origin": "@arkiv-network/sdk@1.0.0",
-    "reason": "Upstream ABI diagnostic text. Report wording to SDK maintainers; preserve upstream implementation.",
+    "origin": "@arkiv-network/sdk@1.0.1",
+    "reason": "Upstream ABI diagnostic text. Report wording to SDK maintainers; preserve upstream implementation. Rechecked against the installed 1.0.1 source and generated output.",
     "paths": [
       "apps/example/.next/static/**"
     ],
@@ -872,8 +872,8 @@
   },
   {
     "literal": "eration tag ${String(b[0])} is not one the engine knows`;case\"NonCanonicalOperationData\":return`the pay\u006coad for operation tag ${String(b[0])} is not its canonical encoding, so the engine refused it rather th",
-    "origin": "@arkiv-network/sdk@1.0.0",
-    "reason": "Upstream ABI diagnostic text. Report wording to SDK maintainers; preserve upstream implementation.",
+    "origin": "@arkiv-network/sdk@1.0.1",
+    "reason": "Upstream ABI diagnostic text. Report wording to SDK maintainers; preserve upstream implementation. Rechecked against the installed 1.0.1 source and generated output.",
     "paths": [
       "apps/example/.next/server/**"
     ],

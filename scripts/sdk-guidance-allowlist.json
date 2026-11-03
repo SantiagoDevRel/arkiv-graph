@@ -1,0 +1,51 @@
+{
+  "history": [
+    {
+      "file": "docs/release-1.0.0.md",
+      "sha256": "3d5ae9255fb44a326d031ef6018b2e9a3175a445c884cbb29d3fa4b389590c3c",
+      "reason": "Immutable dated historical receipt; current guidance is in README and AGENTS."
+    }
+  ],
+  "lines": [
+    {
+      "file": "AGENTS.md",
+      "literal": "Rabdi permits 7,884,000 blocks from the inclusion block. With SDK 1.0.1+, use ExpirationTime.max() for the longest lifetime. A below-maximum signing margin is an SDK 1.0.0 compatibility precaution; the sample retains that conservative cap for its supported peer range. Use Lifetime Extension for longer retention.",
+      "reason": "Explicitly scoped SDK compatibility behavior or labelled historical measurement; not a current exact pin."
+    },
+    {
+      "file": "apps/example/AGENTS.md",
+      "literal": "Rabdi permits 7,884,000 blocks from the inclusion block. With SDK 1.0.1+, use ExpirationTime.max() for the longest lifetime. A below-maximum signing margin is an SDK 1.0.0 compatibility precaution; the sample retains that conservative cap for its supported peer range. Use Lifetime Extension for longer retention.",
+      "reason": "Explicitly scoped SDK compatibility behavior or labelled historical measurement; not a current exact pin."
+    },
+    {
+      "file": "apps/example/README.md",
+      "literal": "Sample creations use 30 days, within Rabdi's maximum lifetime of 7,884,000 blocks (about 182 days). There is no permanent/no-expiration mode. Historical measurement with SDK 1.0.0 on 2026-10-31: the lifetime integration test successfully created with `fromBlocks(7_883_970)` and deleted that disposable entity afterward. The wallet retains this conservative cap for SDK 1.0.0 compatibility. SDK 1.0.1+ supports `ExpirationTime.max()` for the longest lifetime. Longer-lived data needs periodic Lifetime Extension.",
+      "reason": "Explicitly scoped SDK compatibility behavior or labelled historical measurement; not a current exact pin."
+    },
+    {
+      "file": "apps/example/README.md",
+      "literal": "- Over-maximum Entity Expiration: SDK 1.0.1 throws `InvalidExpiryError` before submission; SDK 1.0.0 reverts on chain with `ExpiryBeyondMaxLifetime`. Shorten the target.",
+      "reason": "Explicitly scoped SDK compatibility behavior or labelled historical measurement; not a current exact pin."
+    },
+    {
+      "file": "apps/example/src/lib/wallet-client.ts",
+      "literal": "const MAX_LIFETIME_BLOCKS = 7_883_970n; // Conservative cap retained for SDK 1.0.0 compatibility across the peer range.",
+      "reason": "Explicitly scoped SDK compatibility behavior or labelled historical measurement; not a current exact pin."
+    },
+    {
+      "file": "packages/arkiv-graph/AGENTS.md",
+      "literal": "Rabdi permits 7,884,000 blocks from the inclusion block. With SDK 1.0.1+, use ExpirationTime.max() for the longest lifetime. A below-maximum signing margin is an SDK 1.0.0 compatibility precaution; the sample retains that conservative cap for its supported peer range. Use Lifetime Extension for longer retention.",
+      "reason": "Explicitly scoped SDK compatibility behavior or labelled historical measurement; not a current exact pin."
+    },
+    {
+      "file": "packages/arkiv-graph/README.md",
+      "literal": "Rabdi caps each target lifetime at 7,884,000 blocks (about 182 days). It does not support permanent/no-expiration entities. On SDK 1.0.1+, use `ExpirationTime.max()` for the longest lifetime. Only SDK 1.0.0 needs a below-maximum signing margin such as `ExpirationTime.fromBlocks(7_883_970)`; the sample retains a conservative cap for compatibility and defaults to 30 days. Use Lifetime Extension for data that needs to remain available longer. Historical measurement with SDK 1.0.0 on 2026-10-31: the near-maximum create was [verified on Rabdi](https://rabdi.explorer.arkiv.network/tx/0x541255b0a308664af00fa73228208495061979ddfb06ab26a7196095f998503a). Extension is relative to the current head or an absolute future block, not an additive duration; keep its target within the same maximum.",
+      "reason": "Explicitly scoped SDK compatibility behavior or labelled historical measurement; not a current exact pin."
+    },
+    {
+      "file": "packages/arkiv-graph/README.md",
+      "literal": "- SDK 1.0.1 rejects over-maximum Entity Expiration with `InvalidExpiryError` before submission. SDK 1.0.0 instead reverts on chain with `ExpiryBeyondMaxLifetime`. Shorten the target, or use `ExpirationTime.max()` on 1.0.1+. Never resend an uncertain transaction.",
+      "reason": "Explicitly scoped SDK compatibility behavior or labelled historical measurement; not a current exact pin."
+    }
+  ]
+}

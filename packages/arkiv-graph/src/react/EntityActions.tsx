@@ -11,7 +11,7 @@ const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
 // ── public callback types ────────────────────────────────────────────────────
 
 /** Passed to `onExtendEntity`. The component picks an ABSOLUTE target date.
- * SDK 0.8 sets an absolute expiry with ExpirationTime.atBlock; it is not additive.
+ * SDK 1.0 sets an absolute expiry with ExpirationTime.atBlock; it is not additive.
  * Re-read ownership, expiry and block timing before signing, validate the target,
  * and resolve only after the transaction is confirmed. */
 export interface ExtendEntityParams {

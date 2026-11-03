@@ -84,7 +84,7 @@ export function violations(file, text, parseMap = true) {
 }
 
 /** Scan sources, documentation, fixtures, templates and every generated UTF-8 file. */
-export function checkTree(root) {
+export function checkTree(root, sourcePrefix = '') {
   const findings = [];
   function visit(dir, prefix = '') {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -104,7 +104,7 @@ export function checkTree(root) {
       }
     }
   }
-  visit(root);
+  visit(root, sourcePrefix);
   return findings;
 }
 

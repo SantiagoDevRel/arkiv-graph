@@ -201,7 +201,7 @@ describe("wallet writes", () => {
 
 describe("sample gas-exhaustion retry", () => {
   const historyKey = `arkiv-graph:seed:7794095:${account}:arkiv-graph-social-v3:history`;
-  function flow(outcomes: ("exhausted" | "semantic" | "null" | "success")[], sdkSuccess = false) {
+  function flow(outcomes: ("exhausted" | "semantic" | "null" | "success")[], sdkSuccess = false, sdk101 = false) {
     const sent: { hash: string; gas: bigint; nonce: number }[] = [];
     let nonce = 0;
     mocks.estimateGas.mockResolvedValue(1_000_000n);
@@ -232,7 +232,7 @@ describe("sample gas-exhaustion retry", () => {
       const outcome = outcomes[sent.length - 1] ?? "success";
       if (outcome !== "success" && !sdkSuccess) {
         if (outcome === "null") throw new Error("SDK confirmation timeout");
-        throw Object.assign(new Error(`Transaction ${hash} reverted. No reason provided by backend.`), { name: "EntityMutationError", txHash: hash });
+        throw Object.assign(new Error(sdk101 ? `Transaction ${hash} ran out of gas: it used all the gas it was given.` : `Transaction ${hash} reverted. No reason provided by backend.`), { name: "EntityMutationError", txHash: hash });
       }
       return { txHash: hash, createdEntities: [entityKey] };
     });
@@ -291,6 +291,12 @@ describe("sample gas-exhaustion retry", () => {
     expect(history[1].entityKeys).toEqual([entityKey]);
     await expect(createSocialSampleWithWallet(account)).rejects.toThrow("do not sign again");
     expect(sent).toHaveLength(2);
+  });
+  it("recognizes the SDK 1.0.1 out-of-gas diagnostic and retries only once", async () => {
+    const sent = flow(["exhausted", "success"], false, true);
+    await expect(createSocialSampleWithWallet(account)).resolves.toMatchObject({ alreadyCreated: false });
+    expect(sent).toHaveLength(2);
+    expect(sent.map(tx => tx.gas)).toEqual([2_000_000n, 4_000_000n]);
   });
   it("stops after the second exhausted revert across repeated calls and cleared legacy guard", async () => {
     const sent = flow(["exhausted", "exhausted"]);

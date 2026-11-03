@@ -2,12 +2,12 @@
 
 Interactive graphs and tables for Arkiv entities. Relationships are application rules, not native joins or foreign-key constraints. **Testnet use only.**
 
-**arkiv-graph 1.1.0**, with `@arkiv-network/sdk@1.0.0` and Rabdi (chain id `7794095`). Since 1.1.0, use `bytes` for binary entity data.
+**arkiv-graph 1.1.1**, with SDK `^1.0.0`, verified with 1.0.1, and Rabdi (chain id `7794095`). Since 1.1.0, use `bytes` for binary entity data.
 
-## Install version 1.1.0 from npm:
+## Install version 1.1.1 from npm:
 
 ```sh
-npm install arkiv-graph@1.1.0 @arkiv-network/sdk@1.0.0 viem
+npm install arkiv-graph@1.1.1 @arkiv-network/sdk@1.0.1 viem
 # For React rendering:
 npm install react react-dom
 ```
@@ -123,11 +123,11 @@ async function txParams(unsignedTx: { account: Address; to: Address; data: Hex; 
 
 Use these parameters for that exact transaction, then require `receipt.status === "success"` before success/refetch. Never set gas at or near the head block limit. The maintainer seed starts with at most ten entities per batch and splits before signing if `max(1_000_000, 2 × estimate)` exceeds 50% of the head gas limit. Confirm each batch before the next nonce. The [sample's exported wallet write paths](../../apps/example/src/lib/wallet-client.ts) enforce unsigned estimation and the same half-block cap for create, extend and delete, support per-write gas/gasPrice overrides that preserve headroom, and recheck the session after simulation. The core library never loads a signer or private key.
 
-Rabdi caps each target lifetime at 7,884,000 blocks (about 182 days). It does not support permanent/no-expiration entities. Use a margin such as `ExpirationTime.fromBlocks(7_883_970)`, or the sample's shorter 30-day lifetime; use Lifetime Extension for data that needs to remain available longer. The near-maximum create was [verified on Rabdi](https://rabdi.explorer.arkiv.network/tx/0x541255b0a308664af00fa73228208495061979ddfb06ab26a7196095f998503a). Extension is relative to the current head or an absolute future block, not an additive duration; keep its target within the same maximum.
+Rabdi caps each target lifetime at 7,884,000 blocks (about 182 days). It does not support permanent/no-expiration entities. On SDK 1.0.1+, use `ExpirationTime.max()` for the longest lifetime. Only SDK 1.0.0 needs a below-maximum signing margin such as `ExpirationTime.fromBlocks(7_883_970)`; the sample retains a conservative cap for compatibility and defaults to 30 days. Use Lifetime Extension for data that needs to remain available longer. Historical measurement with SDK 1.0.0 on 2026-10-31: the near-maximum create was [verified on Rabdi](https://rabdi.explorer.arkiv.network/tx/0x541255b0a308664af00fa73228208495061979ddfb06ab26a7196095f998503a). Extension is relative to the current head or an absolute future block, not an additive duration; keep its target within the same maximum.
 
 - `arkiv serves state at the chain head only`: old block hashes, `safe` and `finalized` are unsupported for state operations. Use `latest` or `pending`.
 - A revert at exactly the gas limit indicates under-estimation. Estimate again at `latest`, use at least twice that estimate and split if it exceeds half the head block limit; at most one explicit retry after an authoritative reverted receipt. Never retry successful or uncertain writes.
-- `ExpiryBeyondMaxLifetime`: shorten the create/extension target below the chain maximum; do not use `ExpirationTime.permanent()` or a maximum-uint64 target.
+- SDK 1.0.1 rejects over-maximum Entity Expiration with `InvalidExpiryError` before submission. SDK 1.0.0 instead reverts on chain with `ExpiryBeyondMaxLifetime`. Shorten the target, or use `ExpirationTime.max()` on 1.0.1+. Never resend an uncertain transaction.
 - Empty data: verify chain, owner, exact indexed column names/types, namespace and expiration. Missing references are not proof that a write failed.
 - RPC limits: show a manual retry. Never expose credential-bearing request errors or shared RPC URLs in a response.
 - `truncated`: narrow scope. Large force layouts can become expensive before the query ceiling.
