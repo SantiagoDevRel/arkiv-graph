@@ -2,12 +2,12 @@
 
 Interactive graphs and tables for Arkiv entities. Relationships are application rules, not native joins or foreign-key constraints. **Testnet use only.**
 
-**arkiv-graph 1.1.1**, with SDK `^1.0.0`, verified with 1.0.1, and Rabdi (chain id `7794095`). Since 1.1.0, use `bytes` for binary entity data.
+**arkiv-graph 1.1.2**, with SDK `^1.0.0`, verified with 1.0.1, and Rabdi (chain id `7794095`). Since 1.1.0, use `bytes` for binary entity data.
 
-## Install version 1.1.1 from npm:
+## Install version 1.1.2 from npm:
 
 ```sh
-npm install arkiv-graph@1.1.1 @arkiv-network/sdk@1.0.1 viem
+npm install arkiv-graph@1.1.2 @arkiv-network/sdk@1.0.1 viem
 # For React rendering:
 npm install react react-dom
 ```
@@ -97,7 +97,7 @@ export function DataView({ graph, tables }: { graph: Graph; tables: TablesModel 
 
 ## Signing and troubleshooting
 
-Visitors need their own Rabdi RPC access key configured in an EIP-1193 wallet and test funds from the [Hub faucet](https://hub.arkiv.network/faucet). Never put a private key in application code. The sample has no server signing endpoint.
+Visitors sign with an EIP-1193 wallet on Rabdi (chain id `7794095`). A wallet uses the keyless public RPC `https://rpc.rabdi.db-chain.testnet.arkiv.network`; add Rabdi to the wallet with that URL. Access keys stay server-side: never put an access key or a keyed RPC URL in a wallet, a bundle, a URL or a QR. Get test funds from the [Hub faucet](https://hub.arkiv.network/faucet). Never put a private key in application code. The sample has no server signing endpoint.
 
 Core graph/query APIs are read-only; mutation callbacks belong to the host application. At the unsigned transaction boundary, estimate the exact `to`, `data` and `value` at `latest` before opening the wallet or signing. Stop if estimation fails. Every write uses fresh explicit nonce/gas/gasPrice. A 1,000,000 gas floor alone is insufficient for large bytes columns:
 

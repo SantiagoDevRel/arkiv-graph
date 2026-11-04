@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.2
+
+- Documentation only; the library code is unchanged.
+- README and AGENTS: visitor writes go through the visitor's wallet, which gets only the keyless public Rabdi RPC `https://rpc.rabdi.db-chain.testnet.arkiv.network`; access keys stay server-side and never go into a wallet.
+- The release tag carries the sample fix that reads Arkiv state over HTTP and adds Rabdi to wallets with the keyless RPC only (PR #8).
+
 ## 1.1.1
 
 - Verify the SDK ^1.0.0 peer range with 1.0.1; update exact development and consumer SDK pins and current guidance.
