@@ -41,6 +41,6 @@ ownership and liveness before signing; delete only the selected entity, never it
 related entities. Cancellation must not invoke the wallet. Do not treat a
 confirmation error or an empty query as proof that a transaction was not sent.
 
-Rabdi signing: read latest state; pass explicit nonce, gas (max of 1,000,000 and twice an unsigned latest estimate, never above half the head block limit; split batches before signing) and gasPrice. Check receipt.status === "success"; never retry a successful or uncertain write. Shared RPC keys stay server-side; visitor writes use the RPC configured in their wallet.
+Rabdi signing: read latest state; pass explicit nonce, gas (max of 1,000,000 and twice an unsigned latest estimate, never above half the head block limit; split batches before signing) and gasPrice. Check receipt.status === "success"; never retry a successful or uncertain write. Shared RPC keys stay server-side. Reads for visitor writes use the keyless public RPC over HTTP (never `arkiv_*` through the injected wallet); the wallet only signs and sends. Only the keyless RPC may be added to a wallet.
 
 Rabdi permits 7,884,000 blocks from the inclusion block. With SDK 1.0.1+, use ExpirationTime.max() for the longest lifetime. A below-maximum signing margin is an SDK 1.0.0 compatibility precaution; the sample retains that conservative cap for its supported peer range. Use Lifetime Extension for longer retention.

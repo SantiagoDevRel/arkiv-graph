@@ -62,14 +62,39 @@ describe("wallet writes", () => {
     expect(message).not.toContain("unit-test-access-key");
     expect(message).not.toContain("unit-test-token");
   });
-  it("never installs a keyless or shared RPC when Rabdi is missing from the wallet", async () => {
-    mocks.request.mockImplementation(async ({ method }) => {
-      if (method === "eth_chainId") return "0x1";
+  it("adds Rabdi with only the keyless public RPC when the wallet does not know it", async () => {
+    let chainId = "0x1";
+    mocks.request.mockImplementation(async ({ method, params }) => {
+      if (method === "eth_chainId") return chainId;
       if (method === "wallet_switchEthereumChain") throw Object.assign(new Error("Unknown chain"), { code: 4902 });
+      if (method === "wallet_addEthereumChain") { chainId = params[0].chainId; return null; }
       return [];
     });
-    await expect(ensureChain()).rejects.toThrow("your own RPC access key");
-    expect(mocks.request.mock.calls.some(([r]) => r.method === "wallet_addEthereumChain")).toBe(false);
+    await ensureChain();
+    const added = mocks.request.mock.calls.filter(([r]) => r.method === "wallet_addEthereumChain");
+    expect(added).toHaveLength(1);
+    const [config] = added[0]![0].params;
+    expect(config.chainId).toBe("0x76edaf");
+    expect(config.rpcUrls).toEqual(["https://rpc.rabdi.db-chain.testnet.arkiv.network"]);
+    for (const url of [...config.rpcUrls, ...config.blockExplorerUrls]) expect(new URL(url).pathname).toBe("/");
+    expect(JSON.stringify(config)).not.toMatch(/rpc\.rabdi[^"]*\/[^"]/);
+  });
+  it("switches after adding when the wallet does not switch by itself, and surfaces other errors", async () => {
+    let chainId = "0x1"; let switches = 0;
+    mocks.request.mockImplementation(async ({ method }) => {
+      if (method === "eth_chainId") return chainId;
+      if (method === "wallet_switchEthereumChain") { if (switches++ === 0) throw { code: -32603, data: { originalError: { code: 4902 } } }; chainId = "0x76edaf"; return null; }
+      return null;
+    });
+    await ensureChain();
+    expect(switches).toBe(2);
+    mocks.request.mockImplementation(async ({ method }) => {
+      if (method === "eth_chainId") return "0x1";
+      if (method === "wallet_switchEthereumChain") throw Object.assign(new Error("User rejected"), { code: 4001 });
+      return null;
+    });
+    await expect(ensureChain()).rejects.toMatchObject({ code: 4001 });
+    expect(mocks.request.mock.calls.some(([r]) => r.method === "wallet_addEthereumChain" && r.params[0].chainId !== "0x76edaf")).toBe(false);
   });
   it("checks the receipt even when the SDK resolves and refuses a pending nonce", async () => {
     mocks.getTransactionReceipt.mockResolvedValueOnce({ status: "reverted" });
@@ -349,10 +374,12 @@ describe("wallet deletion", () => {
     expect(mocks.deleteEntity).not.toHaveBeenCalled();
   });
   it("rejects account or chain changes and a mismatched RPC", async () => {
-    mocks.request.mockImplementationOnce(async () => []);
+    mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [] : "0x76edaf");
     await expect(deleteEntityWithWallet(account, entityKey)).rejects.toThrow("account changed");
+    // A wallet that stays on another network after the switch request is never asked to sign.
     mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [account] : "0x1");
-    await expect(deleteEntityWithWallet(account, entityKey)).rejects.toThrow("network changed");
+    await expect(deleteEntityWithWallet(account, entityKey)).rejects.toThrow("Select Rabdi");
+    expect(mocks.request.mock.calls.some(([r]) => r.method === "wallet_switchEthereumChain")).toBe(true);
     mocks.request.mockImplementation(async ({ method }) => method === "eth_accounts" ? [account] : "0x76edaf");
     mocks.getChainId.mockResolvedValueOnce(1);
     await expect(deleteEntityWithWallet(account, entityKey)).rejects.toThrow("RPC does not match");

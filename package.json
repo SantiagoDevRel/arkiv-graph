@@ -15,7 +15,7 @@
     "dev": "pnpm --filter @arkiv-graph/example dev",
     "test": "pnpm --filter arkiv-graph test",
     "seed": "pnpm --filter @arkiv-graph/example seed",
-    "test:wallet": "vitest run apps/example/src/lib/wallet-client.test.ts",
+    "test:wallet": "vitest run apps/example/src/lib/wallet-client.test.ts apps/example/src/lib/wallet-client.rabby.test.ts",
     "typecheck": "pnpm --filter arkiv-graph typecheck && pnpm --filter @arkiv-graph/example exec tsc --noEmit",
     "guard:sdk": "node scripts/sdk-guidance-guard.mjs",
     "lint": "node scripts/sdk-guidance-guard.mjs && node scripts/vocabulary-guard.mjs"

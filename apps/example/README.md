@@ -8,14 +8,14 @@ Use Node.js 22 and pnpm 9. The committed sample pins `arkiv-graph@1.1.1` and `@a
 
 Set **server-side** `ARKIV_ACCESS_KEY` to a free key from [Access Keys](https://hub.arkiv.network/access-keys), then run `pnpm dev` from the root and open http://localhost:3012. Public visitors read through `/api/graph`; they need no wallet or private key. Shared access keys are never sent to the browser.
 
-For writes, configure Rabdi in your wallet with your own credential-bearing RPC URL. Use chain id `7794095`, explorer https://rabdi.explorer.arkiv.network and the [Hub faucet](https://hub.arkiv.network/faucet) for test funds. The app can switch to an existing Rabdi configuration; it never installs a keyless or shared-key RPC into your wallet.
+For writes, the app asks your wallet to switch to Rabdi (chain id `7794095`). If the wallet does not know Rabdi, the app offers to add it with the keyless public RPC `https://rpc.rabdi.db-chain.testnet.arkiv.network` and explorer https://rabdi.explorer.arkiv.network; it never adds an access key or shared-key URL to a wallet. Get test funds from the [Hub faucet](https://hub.arkiv.network/faucet).
 
 1. Explore the public example. Connecting a wallet preserves the public scope; **View my app** explicitly changes the owner.
 2. **Create social sample** shows the generated entity count and lifetime before one atomic wallet-signed batch.
 3. Confirmation precedes success/refetch. Separate follow entities with the same endpoints remain duplicate directed edges; absent endpoints become unresolved placeholders.
 4. Lifetime Extension requires a later expiration; deletion confirms the exact selected key. Only the owner may submit either operation. No related entities are deleted.
 
-All visitor reads used for signing go through the visitor's configured wallet RPC. Public dashboard reads stay on the server, owner-scoped, bounded, no-store and read-only. The app does not make public data private or add SQL constraints. Dates are estimates; testnet data can expire or reset. Theme behavior and official assets are preserved.
+Reads used for signing (entity ownership, block timing, gas estimate, nonce, gas price, receipts and `arkiv_*` queries) go over HTTP to the keyless public RPC, never through the injected wallet: wallets such as Rabby only forward standard `eth_*`/`wallet_*` methods. The wallet only confirms the account and network and signs the one `eth_sendTransaction`. Public dashboard reads stay on the server, owner-scoped, bounded, no-store and read-only. The app does not make public data private or add SQL constraints. Dates are estimates; testnet data can expire or reset. Theme behavior and official assets are preserved.
 
 ## Idempotent maintainer seed
 

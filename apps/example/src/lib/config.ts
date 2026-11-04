@@ -2,6 +2,9 @@ import { rabdi } from "@arkiv-network/sdk/chains";
 
 // Public network identity, shared by reads and wallet writes. No credentials.
 export const CHAIN = rabdi({ accessKey: "" });
+// Keyless public RPC: the only URL the browser reads from and the only URL the app may
+// add to a wallet. It carries no path, so no access key. Shared keys stay server-side.
+export const PUBLIC_RPC_URL = "https://rpc.rabdi.db-chain.testnet.arkiv.network";
 export const PUBLIC_CHAIN = {
   id: CHAIN.id,
   name: CHAIN.name,
