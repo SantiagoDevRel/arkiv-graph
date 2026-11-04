@@ -34,7 +34,7 @@ checkpoints in `docs/verification.md`.
 - Ask for npm authentication only when missing; never claim a local version is
   published. Demo publication requires the applicable brand review.
 
-Rabdi signing: read latest state; pass explicit nonce, gas (max of 1,000,000 and twice an unsigned latest estimate, never above half the head block limit; split batches before signing) and gasPrice. Check receipt.status === "success"; never retry a successful or uncertain write. Shared RPC keys stay server-side; visitor writes use the RPC configured in their wallet.
+Rabdi signing: read latest state; pass explicit nonce, gas (max of 1,000,000 and twice an unsigned latest estimate, never above half the head block limit; split batches before signing) and gasPrice. Check receipt.status === "success"; never retry a successful or uncertain write. Access keys stay server-side; visitor writes go through the visitor's wallet, which gets only the keyless public RPC https://rpc.rabdi.db-chain.testnet.arkiv.network. Never put an access key or a keyed RPC URL in a wallet, a bundle, a URL or a QR.
 
 Rabdi permits 7,884,000 blocks from the inclusion block. With SDK 1.0.1+, use ExpirationTime.max() for the longest lifetime. A below-maximum signing margin is an SDK 1.0.0 compatibility precaution; the sample retains that conservative cap for its supported peer range. Use Lifetime Extension for longer retention.
 
