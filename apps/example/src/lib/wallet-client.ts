@@ -1,9 +1,9 @@
 "use client";
 import { createPublicClient, createWalletClient, ExpirationTime } from "@arkiv-network/sdk";
 import { eq } from "@arkiv-network/sdk/query";
-import { custom, type Hex } from "viem";
+import { custom, http, type Hex } from "viem";
 import { estimateGas, getGasPrice } from "viem/actions";
-import { CHAIN, PUBLIC_CHAIN, PROJECT } from "./config";
+import { CHAIN, PUBLIC_CHAIN, PUBLIC_RPC_URL, PROJECT } from "./config";
 import { socialSample } from "./social-sample";
 
 export type PublicChainConfig = typeof PUBLIC_CHAIN;
@@ -17,12 +17,18 @@ const KEY = /^0x[0-9a-fA-F]{64}$/;
 const CHAIN_HEX = `0x${CHAIN.id.toString(16)}`;
 const MAX_LIFETIME_BLOCKS = 7_883_970n; // Conservative cap retained for SDK 1.0.0 compatibility across the peer range.
 export interface WriteTxOptions { gas?: bigint; gasPrice?: bigint }
-// Reads for wallet operations use the visitor's configured Rabdi RPC.
-const pub = createPublicClient({ chain: CHAIN, transport: custom({ request: async request => {
-  const provider = injected();
-  if (!provider) throw new Error("Open this app with an EIP-1193 compatible wallet.");
-  return provider.request(request);
-} }, { retryCount: 0 }) });
+// Reads for wallet operations (including arkiv_* methods) use the keyless public RPC over
+// HTTP. Wallets such as Rabby only forward standard eth_*/wallet_* methods, so Arkiv reads
+// must never go through the injected provider. The wallet only signs and sends.
+const NOT_A_READ = /^(eth_send|eth_sign|personal_|wallet_|eth_accounts$|eth_requestAccounts$)/;
+let publicRpc: ReturnType<ReturnType<typeof http>> | undefined;
+async function readRequest(request: { method: string; params?: unknown }) {
+  if (NOT_A_READ.test(request.method)) throw new Error(`Refusing to send ${request.method} to the public read RPC.`);
+  // Reads are idempotent, so a short retry on rate limits is safe; no send ever reaches this transport.
+  publicRpc ??= http(PUBLIC_RPC_URL, { timeout: 20_000, retryCount: 2, fetchOptions: { cache: "no-store" } })({ chain: CHAIN });
+  return publicRpc.request(request as Parameters<typeof publicRpc.request>[0]);
+}
+const pub = createPublicClient({ chain: CHAIN, transport: custom({ request: readRequest }, { retryCount: 0 }) });
 async function txParams(account: string, options: WriteTxOptions = {}) {
   const [nonce, pendingNonce, gasPrice] = await Promise.all([
     pub.getTransactionCount({ address: account as Hex, blockTag: "latest" }),
@@ -54,6 +60,13 @@ export function onAccountsChanged(cb: (account: string | null) => void) {
   provider?.on?.("disconnect", disconnected);
   return () => { provider?.removeListener?.("accountsChanged", handler); provider?.removeListener?.("chainChanged", handler); provider?.removeListener?.("disconnect", disconnected); };
 }
+function unknownChain(error: unknown) {
+  // EIP-3326: 4902 means the wallet does not know the chain. Some wallets nest the original code,
+  // and some answer -32603 with only an "Unrecognized chain ID" message.
+  const e = error as { code?: number; message?: string; data?: { originalError?: { code?: number } } } | undefined;
+  if (e?.code === 4902 || e?.data?.originalError?.code === 4902) return true;
+  return (e?.code === undefined || e.code === -32603) && /unrecogni[sz]ed chain|unknown chain/i.test(e?.message ?? "");
+}
 export async function ensureChain() {
   const provider = injected();
   if (!provider) throw new Error("Open this app with an EIP-1193 compatible wallet.");
@@ -61,8 +74,13 @@ export async function ensureChain() {
   if (await active()) return;
   try { await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] }); }
   catch (error) {
-    if ((error as { code?: number }).code !== 4902) throw error;
-    throw new Error("Add Rabdi to your wallet using your own RPC access key from https://hub.arkiv.network/access-keys, then connect again.");
+    if (!unknownChain(error)) throw error;
+    // Only the keyless public RPC is ever added to a wallet; access keys never leave the server.
+    await provider.request({ method: "wallet_addEthereumChain", params: [{
+      chainId: CHAIN_HEX, chainName: CHAIN.name, nativeCurrency: CHAIN.nativeCurrency,
+      rpcUrls: [PUBLIC_RPC_URL], blockExplorerUrls: [PUBLIC_CHAIN.explorerUrl],
+    }] });
+    if (!await active()) await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] });
   }
   if (!await active()) throw new Error("Select Rabdi in your wallet and try again.");
 }
@@ -87,6 +105,12 @@ async function writer(account: string, onSent?: (hash: Hex) => void, beforeSend?
   const provider = injected()!;
   const transport = custom({ request: async (request) => {
     let forwarded = request as { method: string; params?: unknown[] | object };
+    // The wallet receives only standard account/chain checks and the send itself.
+    // Every other call the SDK makes (block number, receipts, simulations) is a read over HTTP.
+    if (!["eth_sendTransaction", "eth_chainId", "eth_accounts"].includes(request.method)) {
+      if (NOT_A_READ.test(request.method)) throw new Error(`This app does not request ${request.method} from the wallet.`);
+      return readRequest(request);
+    }
     if (request.method === "eth_sendTransaction") {
       await assertSession(account);
       const tx = (request.params as [{ from?: string; to?: Hex; data?: Hex; value?: Hex; gas?: Hex; nonce?: Hex }])[0];
@@ -130,6 +154,7 @@ export function walletErrorMessage(error: unknown): string {
 }
 async function extendEntity(account: string, entityKey: string, targetExpiresAt: number, options: WriteTxOptions = {}): Promise<WriteResult> {
   if (!KEY.test(entityKey) || !Number.isSafeInteger(targetExpiresAt)) throw new Error("Invalid entity or date.");
+  await ensureChain(); // Switch (or add) Rabdi from the user's click before any session check.
   await assertSession(account);
   let submittedHash: Hex | undefined;
   const entity = await pub.getEntity(entityKey as Hex);
@@ -172,6 +197,7 @@ export class SampleConfirmationError extends Error {
 }
 async function createSocialSample(account: string, options: WriteTxOptions = {}) {
   const run = async () => {
+    await ensureChain();
     await assertSession(account);
     const pendingKey = `arkiv-graph:seed:${CHAIN.id}:${account.toLowerCase()}:${PROJECT}`;
     const historyKey = `${pendingKey}:history`;
@@ -324,6 +350,7 @@ async function createSocialSample(account: string, options: WriteTxOptions = {})
 
 async function deleteEntity(account: string, entityKey: string, options: WriteTxOptions = {}): Promise<WriteResult> {
   if (!KEY.test(entityKey)) throw new Error("Invalid entity key.");
+  await ensureChain();
   await assertSession(account);
   const entity = await pub.getEntity(entityKey as Hex);
   if (entity.$owner.toLowerCase() !== account.toLowerCase()) throw new Error("You can only delete entities owned by your wallet.");
