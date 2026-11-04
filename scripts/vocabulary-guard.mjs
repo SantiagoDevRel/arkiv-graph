@@ -15,7 +15,7 @@ const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 export const generatedAliasRules = new Map([
   ['apps/example/.next/server/app/api/graph/route.js', ['a.bytes??a.pay\u006coad', 'bytes:a.bytes,pay\u006coad:a.bytes']],
   ['apps/example/.next/server/app/page.js', ['a.bytes??a.pay\u006coad']],
-  ['apps/example/.next/static/chunks/f7dc6044-1e04b89136858267.js', ['null!=(n=y.bytes)?n:y.pay\u006coad', 'null!=(l=e.bytes)?l:e.pay\u006coad']],
+  ['apps/example/.next/static/chunks/f7dc6044-71163c616ec5460b.js', ['null!=(n=y.bytes)?n:y.pay\u006coad', 'null!=(l=e.bytes)?l:e.pay\u006coad']],
 ]);
 const exceptions = JSON.parse(readFileSync(path.join(repoRoot, 'vocabulary-exceptions.json'), 'utf8'));
 const history = JSON.parse(readFileSync(path.join(repoRoot, 'vocabulary-history.json'), 'utf8'));

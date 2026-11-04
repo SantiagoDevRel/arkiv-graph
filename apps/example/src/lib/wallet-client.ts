@@ -61,9 +61,11 @@ export function onAccountsChanged(cb: (account: string | null) => void) {
   return () => { provider?.removeListener?.("accountsChanged", handler); provider?.removeListener?.("chainChanged", handler); provider?.removeListener?.("disconnect", disconnected); };
 }
 function unknownChain(error: unknown) {
-  // EIP-3326: 4902 means the wallet does not know the chain. Some wallets nest the original code.
-  const e = error as { code?: number; data?: { originalError?: { code?: number } } } | undefined;
-  return e?.code === 4902 || e?.data?.originalError?.code === 4902;
+  // EIP-3326: 4902 means the wallet does not know the chain. Some wallets nest the original code,
+  // and some answer -32603 with only an "Unrecognized chain ID" message.
+  const e = error as { code?: number; message?: string; data?: { originalError?: { code?: number } } } | undefined;
+  if (e?.code === 4902 || e?.data?.originalError?.code === 4902) return true;
+  return (e?.code === undefined || e.code === -32603) && /unrecogni[sz]ed chain|unknown chain/i.test(e?.message ?? "");
 }
 export async function ensureChain() {
   const provider = injected();

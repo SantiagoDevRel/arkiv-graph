@@ -40,6 +40,7 @@ export function Showcase() {
   const [showCreate, setShowCreate] = useState(false);
   const [advanced, setAdvanced] = useState(false);
   const appInput = useRef<HTMLInputElement>(null);
+  const accountRef = useRef<string | null>(null);
   useEffect(() => {
     appInput.current?.setCustomValidity(new TextEncoder().encode(form.project).length > 128 ? "The app value must fit in 128 UTF-8 bytes." : "");
   }, [form.project]);
@@ -51,8 +52,10 @@ export function Showcase() {
   useEffect(() => {
     setWalletPresent(hasWallet());
     void getConnectedAccount().then(setAccount);
-    return onAccountsChanged(a => { setAccount(a); setShowCreate(false); });
+    // A chain switch made by a write also fires this; only a different account closes the dialog.
+    return onAccountsChanged(a => { setAccount(a); if (a !== accountRef.current) setShowCreate(false); accountRef.current = a; });
   }, []);
+  useEffect(() => { accountRef.current = account; }, [account]);
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError(""); setData(null);

@@ -88,6 +88,14 @@ describe("wallet writes", () => {
     });
     await ensureChain();
     expect(switches).toBe(2);
+    chainId = "0x1"; switches = 0;
+    mocks.request.mockImplementation(async ({ method }) => {
+      if (method === "eth_chainId") return chainId;
+      if (method === "wallet_switchEthereumChain") { if (switches++ === 0) throw Object.assign(new Error("Unrecognized chain ID \"0x76edaf\"."), { code: -32603 }); chainId = "0x76edaf"; return null; }
+      return null;
+    });
+    await ensureChain();
+    expect(mocks.request.mock.calls.filter(([r]) => r.method === "wallet_addEthereumChain")).toHaveLength(2);
     mocks.request.mockImplementation(async ({ method }) => {
       if (method === "eth_chainId") return "0x1";
       if (method === "wallet_switchEthereumChain") throw Object.assign(new Error("User rejected"), { code: 4001 });
